@@ -1,4 +1,4 @@
-```css
+css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,4 +20,3 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
-```
