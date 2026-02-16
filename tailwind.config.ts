@@ -1,4 +1,4 @@
-```typescript
+typescript
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -18,4 +18,3 @@ const config: Config = {
   plugins: [],
 };
 export default config;
-```

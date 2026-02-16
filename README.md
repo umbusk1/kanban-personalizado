@@ -1,4 +1,3 @@
-```markdown
 # KANBAN Personalizado
 
 Sistema de gestión de proyectos colaborativo desarrollado con Next.js, TypeScript y Tailwind CSS.
@@ -29,4 +28,3 @@ Este proyecto se desarrolla principalmente usando las interfaces web de:
 ## 📝 Notas
 
 Proyecto desarrollado usando metodología KANBAN para gestionar su propio desarrollo.
-```
