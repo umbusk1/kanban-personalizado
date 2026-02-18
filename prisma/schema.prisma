@@ -8,29 +8,28 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
+  id            String        @id @default(cuid())
+  email         String        @unique
   name          String?
   passwordHash  String
-  createdAt     DateTime       @default(now())
-  
-  ownedBoards   Board[]        @relation("BoardOwner")
+  createdAt     DateTime      @default(now())
+
+  ownedBoards   Board[]       @relation("BoardOwner")
   boardMembers  BoardMember[]
-  createdCards  Card[]         @relation("CardCreator")
-  assignedCards Card[]         @relation("CardAssignee")
-  boardMemberships BoardMember[]
+  createdCards  Card[]        @relation("CardCreator")
+  assignedCards Card[]        @relation("CardAssignee")
 
   @@map("users")
 }
 
 model Board {
-  id          String        @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
   description String?
   ownerId     String
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime          @default(now())
 
-  owner       User          @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User              @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   columns     Column[]
   members     BoardMember[]
   invitations BoardInvitation[]
@@ -47,14 +46,14 @@ model Column {
   color     String?
   createdAt DateTime @default(now())
 
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  cards     Card[]
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
 
   @@map("columns")
 }
 
 model Card {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   columnId    String
   title       String
   description String?
@@ -62,35 +61,17 @@ model Card {
   createdBy   String
   position    Int
   priority    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  creator     User      @relation("CardCreator", fields: [createdBy], references: [id])
-  assignee    User?     @relation("CardAssignee", fields: [assignedTo], references: [id])
+  column   Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  creator  User   @relation("CardCreator", fields: [createdBy], references: [id])
+  assignee User?  @relation("CardAssignee", fields: [assignedTo], references: [id])
 
   @@map("cards")
 }
 
 model BoardMember {
-  boardId   String
-  userId    String
-  role      String   @default("member")
-  createdAt DateTime @default(now())
-
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([boardId, userId])
-  @@map("board_members")
-}
-
-// ==========================================
-// SPRINT 3.1 - Colaboración
-// ==========================================
-
-model BoardMember {
-  id        String   @id @default(cuid())
   boardId   String
   userId    String
   role      String   @default("member") // "owner" o "member"
@@ -99,7 +80,8 @@ model BoardMember {
   board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([boardId, userId])
+  @@id([boardId, userId])
+  @@map("board_members")
 }
 
 model BoardInvitation {
@@ -112,4 +94,6 @@ model BoardInvitation {
   expiresAt DateTime
 
   board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@map("board_invitations")
 }
