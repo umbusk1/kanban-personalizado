@@ -29,6 +29,7 @@ type Board = {
   name: string
   description: string | null
   owner: {
+    id: string
     name: string | null
     email: string
   }
