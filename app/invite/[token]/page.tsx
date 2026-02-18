@@ -6,7 +6,10 @@ import { useSession } from 'next-auth/react'
 
 export default function InvitePage({ params }: { params: { token: string } }) {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const sessionData = useSession()          // ← sin destructurar directamente
+  const session = sessionData?.data
+  const status = sessionData?.status ?? 'loading'
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -36,7 +39,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <p className="text-gray-400">Cargando...</p>
       </div>
     )
