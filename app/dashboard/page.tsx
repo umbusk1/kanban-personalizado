@@ -24,6 +24,40 @@ type User = {
   name: string | null
 }
 
+// ── Componente auxiliar definido ANTES de usarse ──
+function BoardCard({ board }: { board: Board }) {
+  return (
+    <Link
+      href={`/board/${board.id}`}
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow block"
+    >
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-lg font-semibold">{board.name}</h3>
+        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+          board.userRole === "owner"
+            ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+            : "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+        }`}>
+          {board.userRole === "owner" ? "👑 Dueño" : "🤝 Miembro"}
+        </span>
+      </div>
+      {board.description && (
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{board.description}</p>
+      )}
+      <div className="flex items-center gap-4 text-xs text-gray-500">
+        <span>{board._count.columns} columnas</span>
+        <span>{board._count.members + 1} miembros</span>
+      </div>
+      <p className="text-xs text-gray-400 mt-2">
+        {board.userRole === "owner"
+          ? "Tú eres el propietario"
+          : `Propietario: ${board.owner.name || board.owner.email}`}
+      </p>
+    </Link>
+  )
+}
+
+// ── Componente principal ──
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -211,7 +245,12 @@ export default function DashboardPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setNewBoardName(""); setNewBoardDescription(""); setError("") }}
+                  onClick={() => {
+                    setShowModal(false)
+                    setNewBoardName("")
+                    setNewBoardDescription("")
+                    setError("")
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                              hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
