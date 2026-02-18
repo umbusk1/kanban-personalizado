@@ -1,8 +1,24 @@
+import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
+import { authOptions } from "@/lib/auth"
 import { prisma } from '@/lib/prisma'
+import Link from "next/link"
 
 export default async function BoardPage() {
-  // Obtener el primer tablero con sus columnas y tarjetas
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user) {
+    redirect("/login")
+  }
+
+  // Obtener el primer tablero del usuario
   const board = await prisma.board.findFirst({
+    where: {
+      OR: [
+        { ownerId: session.user.id },
+        { members: { some: { userId: session.user.id } } }
+      ]
+    },
     include: {
       columns: {
         orderBy: { position: 'asc' },
@@ -23,8 +39,13 @@ export default async function BoardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">No hay tableros</h1>
-          <p className="text-gray-600">Crea tu primer tablero para comenzar</p>
+          <h1 className="text-2xl font-bold mb-4">No tienes tableros</h1>
+          <Link
+            href="/dashboard"
+            className="text-blue-600 hover:underline"
+          >
+            Volver al Dashboard
+          </Link>
         </div>
       </div>
     )
@@ -32,7 +53,23 @@ export default async function BoardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      {/* Header */}
+      {/* Header con logout */}
+      <div className="mb-4 flex justify-between items-center">
+        <Link
+          href="/dashboard"
+          className="text-blue-600 hover:underline text-sm"
+        >
+          ← Volver al Dashboard
+        </Link>
+        <Link
+          href="/api/auth/signout"
+          className="text-sm text-red-600 hover:text-red-700"
+        >
+          Salir
+        </Link>
+      </div>
+
+      {/* Info del tablero */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
         {board.description && (
@@ -117,18 +154,6 @@ export default async function BoardPage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Footer - Tarjeta 1.2 Completada */}
-      <div className="mt-8 text-center">
-        <div className="inline-block bg-green-100 dark:bg-green-900 px-6 py-3 rounded-lg">
-          <p className="text-green-800 dark:text-green-200 font-semibold">
-            ✅ Tarjeta 1.2 - Base de Datos Completada
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Prisma + Neon funcionando correctamente
-          </p>
-        </div>
       </div>
     </div>
   )
