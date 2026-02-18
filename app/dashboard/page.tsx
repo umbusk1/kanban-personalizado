@@ -67,7 +67,7 @@ export default async function DashboardPage() {
           {boards.map((board) => (
             <Link
               key={board.id}
-              href={`/board/${board.id}`}
+              href="/board"
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
             >
               <h3 className="text-lg font-semibold mb-2">{board.name}</h3>
