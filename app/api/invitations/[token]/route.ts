@@ -30,14 +30,26 @@ export async function POST(
     return NextResponse.json({ error: 'Esta invitación ha expirado' }, { status: 400 })
   }
 
-  // Agregar como miembro (upsert evita duplicados)
-  await prisma.boardMember.upsert({
+  // Verificar si ya es miembro antes de insertar
+  const existingMember = await prisma.boardMember.findUnique({
     where: {
-      boardId_userId: { boardId: invitation.boardId, userId: session.user.id },
+      boardId_userId: {
+        boardId: invitation.boardId,
+        userId: session.user.id,
+      },
     },
-    create: { boardId: invitation.boardId, userId: session.user.id, role: 'member' },
-    update: {},
   })
+
+  // Solo crear si no existe ya
+  if (!existingMember) {
+    await prisma.boardMember.create({
+      data: {
+        boardId: invitation.boardId,
+        userId: session.user.id,
+        role: 'member',
+      },
+    })
+  }
 
   // Marcar invitación como aceptada
   await prisma.boardInvitation.update({
