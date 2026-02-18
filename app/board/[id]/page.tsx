@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 import InviteModal from "@/components/InviteModal"
+import { useSession } from "next-auth/react"
 
 type Card = {
   id: string
@@ -70,10 +71,11 @@ export default function BoardDetailPage({
   params: { id: string }
 }) {
   const router = useRouter()
+  const { data: session } = useSession()
   const [board, setBoard] = useState<Board | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [showInviteModal, setShowInviteModal] = useState(false)   // ← NUEVO
+  const [showInviteModal, setShowInviteModal] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [formData, setFormData] = useState<CardFormData>({
     columnId: '',
@@ -295,14 +297,16 @@ export default function BoardDetailPage({
             </div>
           </div>
 
-          {/* ── BOTÓN INVITAR ── */}
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg
-                       hover:bg-indigo-700 transition-colors font-medium text-sm"
-          >
-            📨 Invitar usuario
-          </button>
+          {/* Botón Invitar: solo visible para el dueño */}
+          {session?.user?.id === board.owner.id && (
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg
+                         hover:bg-indigo-700 transition-colors font-medium text-sm"
+            >
+              📨 Invitar usuario
+            </button>
+          )}
         </div>
 
         {/* Columnas */}
@@ -421,7 +425,7 @@ export default function BoardDetailPage({
         </div>
       )}
 
-      {/* ── MODAL INVITAR ── */}
+      {/* Modal Invitar */}
       {showInviteModal && (
         <InviteModal
           boardId={board.id}
@@ -432,7 +436,7 @@ export default function BoardDetailPage({
   )
 }
 
-// Componente de Columna Droppable
+// ── Componente de Columna Droppable ──
 import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DraggableCard } from "./DraggableCard"
