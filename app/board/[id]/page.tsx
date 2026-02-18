@@ -3,12 +3,23 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import { arrayMove } from "@dnd-kit/sortable"
 
 type Card = {
   id: string
   title: string
   description: string | null
   priority: string | null
+  position: number
   assignee: {
     id: string
     name: string | null
@@ -71,6 +82,15 @@ export default function BoardDetailPage({
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [activeCard, setActiveCard] = useState<Card | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   useEffect(() => {
     fetchBoard()
@@ -126,7 +146,6 @@ export default function BoardDetailPage({
 
     try {
       if (modalMode === 'create') {
-        // Crear tarjeta
         const response = await fetch('/api/cards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -140,7 +159,6 @@ export default function BoardDetailPage({
           return
         }
       } else {
-        // Editar tarjeta
         const response = await fetch(`/api/cards/${formData.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -155,7 +173,6 @@ export default function BoardDetailPage({
         }
       }
 
-      // Cerrar modal y recargar
       setShowModal(false)
       setSaving(false)
       fetchBoard()
@@ -183,6 +200,101 @@ export default function BoardDetailPage({
     }
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event
+    const cardId = active.id as string
+    
+    // Encontrar la tarjeta que se está arrastrando
+    for (const column of board?.columns || []) {
+      const card = column.cards.find(c => c.id === cardId)
+      if (card) {
+        setActiveCard(card)
+        break
+      }
+    }
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveCard(null)
+
+    if (!over || !board) return
+
+    const cardId = active.id as string
+    const overId = over.id as string
+
+    // Encontrar columna de origen
+    let sourceColumn: Column | undefined
+    let sourceCard: Card | undefined
+    for (const column of board.columns) {
+      const card = column.cards.find(c => c.id === cardId)
+      if (card) {
+        sourceColumn = column
+        sourceCard = card
+        break
+      }
+    }
+
+    if (!sourceColumn || !sourceCard) return
+
+    // Determinar si se soltó sobre una columna o sobre una tarjeta
+    let targetColumnId = overId
+    let isOverCard = false
+
+    // Verificar si overId es un ID de tarjeta
+    for (const column of board.columns) {
+      if (column.cards.some(c => c.id === overId)) {
+        // Se soltó sobre una tarjeta
+        targetColumnId = column.id
+        isOverCard = true
+        break
+      }
+    }
+
+    // Si se soltó sobre una tarjeta en la misma columna, reordenar
+    if (isOverCard && targetColumnId === sourceColumn.id) {
+      const oldIndex = sourceColumn.cards.findIndex(c => c.id === cardId)
+      const newIndex = sourceColumn.cards.findIndex(c => c.id === overId)
+      
+      if (oldIndex !== newIndex) {
+        const newCards = arrayMove(sourceColumn.cards, oldIndex, newIndex)
+        
+        // Actualizar estado local optimista
+        setBoard({
+          ...board,
+          columns: board.columns.map(col =>
+            col.id === sourceColumn!.id
+              ? { ...col, cards: newCards }
+              : col
+          ),
+        })
+      }
+      return
+    }
+
+    // Mover a otra columna o soltar sobre una columna vacía
+    if (targetColumnId !== sourceColumn.id) {
+      // Actualizar en el servidor
+      try {
+        const response = await fetch(`/api/cards/${cardId}/move`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            columnId: targetColumnId,
+            position: 1,
+          }),
+        })
+
+        if (response.ok) {
+          // Recargar tablero para obtener el estado actualizado
+          fetchBoard()
+        }
+      } catch (error) {
+        console.error('Error al mover tarjeta:', error)
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -199,139 +311,86 @@ export default function BoardDetailPage({
     )
   }
 
-  // Lista de usuarios para asignar
   const allMembers = [
     board.owner,
     ...board.members.map(m => m.user)
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      {/* Header */}
-      <div className="mb-4 flex justify-between items-center">
-        <Link
-          href="/dashboard"
-          className="text-blue-600 hover:underline text-sm"
-        >
-          ← Volver al Dashboard
-        </Link>
-        <Link
-          href="/api/auth/signout"
-          className="text-sm text-red-600 hover:text-red-700"
-        >
-          Salir
-        </Link>
-      </div>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        {/* Header */}
+        <div className="mb-4 flex justify-between items-center">
+          <Link
+            href="/dashboard"
+            className="text-blue-600 hover:underline text-sm"
+          >
+            ← Volver al Dashboard
+          </Link>
+          <Link
+            href="/api/auth/signout"
+            className="text-sm text-red-600 hover:text-red-700"
+          >
+            Salir
+          </Link>
+        </div>
 
-      {/* Info del tablero */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
-        {board.description && (
-          <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
-        )}
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span>Propietario: {board.owner.name || board.owner.email}</span>
-          <span>•</span>
-          <span>{board.members.length + 1} miembros</span>
-          <span>•</span>
-          <span>{board.columns.length} columnas</span>
+        {/* Info del tablero */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
+          {board.description && (
+            <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
+          )}
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span>Propietario: {board.owner.name || board.owner.email}</span>
+            <span>•</span>
+            <span>{board.members.length + 1} miembros</span>
+            <span>•</span>
+            <span>{board.columns.length} columnas</span>
+          </div>
+        </div>
+
+        {/* Columnas */}
+        <div className="flex gap-6 overflow-x-auto pb-4">
+          {board.columns.map((column) => (
+            <DroppableColumn
+              key={column.id}
+              column={column}
+              onCreateCard={handleCreateCard}
+              onEditCard={handleEditCard}
+              onDeleteCard={handleDelete}
+            />
+          ))}
+        </div>
+
+        {/* Progreso */}
+        <div className="mt-12 bg-green-100 dark:bg-green-900 p-6 rounded-lg">
+          <p className="text-green-800 dark:text-green-200 font-semibold">
+            ✅ Sprint 2 Completado (3/3)
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Core KANBAN funcionando con Drag & Drop
+          </p>
         </div>
       </div>
 
-      {/* Columnas */}
-      <div className="flex gap-6 overflow-x-auto pb-4">
-        {board.columns.map((column) => (
-          <div
-            key={column.id}
-            className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md"
-          >
-            {/* Header de Columna */}
-            <div 
-              className="p-4 border-b-4" 
-              style={{ borderColor: column.color || '#gray' }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="font-semibold text-lg">{column.name}</h2>
-                {column.wipLimit && (
-                  <span className="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                    {column.cards.length}/{column.wipLimit}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => handleCreateCard(column.id)}
-                className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                + Agregar Tarjeta
-              </button>
-            </div>
-
-            {/* Tarjetas */}
-            <div className="p-4 space-y-3 min-h-[200px]">
-              {column.cards.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">
-                  No hay tarjetas
-                </p>
-              ) : (
-                column.cards.map((card) => (
-                  <div
-                    key={card.id}
-                    className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow group"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium flex-1">{card.title}</h3>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleEditCard(card, column.id)}
-                          className="text-blue-600 hover:text-blue-700 text-xs"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleDelete(card.id)}
-                          className="text-red-600 hover:text-red-700 text-xs"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {card.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                        {card.description}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between text-xs">
-                      {card.priority && (
-                        <span
-                          className={`px-2 py-1 rounded font-medium ${
-                            card.priority === 'alta'
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                              : card.priority === 'media'
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          }`}
-                        >
-                          {card.priority}
-                        </span>
-                      )}
-                      
-                      {card.assignee && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
-                            {card.assignee.name?.[0] || card.assignee.email[0].toUpperCase()}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {activeCard ? (
+          <div className="w-80 bg-white dark:bg-gray-700 border-2 border-blue-500 rounded-lg p-4 shadow-xl opacity-90 rotate-3">
+            <h3 className="font-medium mb-2">{activeCard.title}</h3>
+            {activeCard.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                {activeCard.description}
+              </p>
+            )}
           </div>
-        ))}
-      </div>
+        ) : null}
+      </DragOverlay>
 
       {/* Modal Crear/Editar Tarjeta */}
       {showModal && (
@@ -429,6 +488,79 @@ export default function BoardDetailPage({
           </div>
         </div>
       )}
+    </DndContext>
+  )
+}
+
+// Componente de Columna Droppable
+import { useDroppable } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { DraggableCard } from "./DraggableCard"
+
+function DroppableColumn({
+  column,
+  onCreateCard,
+  onEditCard,
+  onDeleteCard,
+}: {
+  column: Column
+  onCreateCard: (columnId: string) => void
+  onEditCard: (card: Card, columnId: string) => void
+  onDeleteCard: (cardId: string) => void
+}) {
+  const { setNodeRef } = useDroppable({
+    id: column.id,
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md"
+    >
+      {/* Header de Columna */}
+      <div 
+        className="p-4 border-b-4" 
+        style={{ borderColor: column.color || '#gray' }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-semibold text-lg">{column.name}</h2>
+          {column.wipLimit && (
+            <span className="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+              {column.cards.length}/{column.wipLimit}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => onCreateCard(column.id)}
+          className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
+        >
+          + Agregar Tarjeta
+        </button>
+      </div>
+
+      {/* Tarjetas con Sortable */}
+      <div className="p-4 space-y-3 min-h-[200px]">
+        <SortableContext
+          items={column.cards.map(c => c.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {column.cards.length === 0 ? (
+            <p className="text-center text-gray-400 text-sm py-8">
+              Arrastra tarjetas aquí
+            </p>
+          ) : (
+            column.cards.map((card) => (
+              <DraggableCard
+                key={card.id}
+                card={card}
+                columnId={column.id}
+                onEdit={onEditCard}
+                onDelete={onDeleteCard}
+              />
+            ))
+          )}
+        </SortableContext>
+      </div>
     </div>
   )
 }
