@@ -82,3 +82,32 @@ model BoardMember {
   @@id([boardId, userId])
   @@map("board_members")
 }
+
+// ==========================================
+// SPRINT 3.1 - Colaboración
+// ==========================================
+
+model BoardMember {
+  id        String   @id @default(cuid())
+  boardId   String
+  userId    String
+  role      String   @default("member") // "owner" o "member"
+  createdAt DateTime @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+}
+
+model BoardInvitation {
+  id        String   @id @default(cuid())
+  boardId   String
+  email     String
+  token     String   @unique @default(cuid())
+  status    String   @default("pending") // "pending", "accepted", "expired"
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+}
