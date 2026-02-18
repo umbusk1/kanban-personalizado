@@ -13,6 +13,7 @@ import {
   useSensors,
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
+import InviteModal from "@/components/InviteModal"
 
 type Card = {
   id: string
@@ -72,6 +73,7 @@ export default function BoardDetailPage({
   const [board, setBoard] = useState<Board | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)   // ← NUEVO
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [formData, setFormData] = useState<CardFormData>({
     columnId: '',
@@ -86,9 +88,7 @@ export default function BoardDetailPage({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint: { distance: 8 },
     })
   )
 
@@ -114,13 +114,7 @@ export default function BoardDetailPage({
 
   const handleCreateCard = (columnId: string) => {
     setModalMode('create')
-    setFormData({
-      columnId,
-      title: '',
-      description: '',
-      priority: '',
-      assignedTo: '',
-    })
+    setFormData({ columnId, title: '', description: '', priority: '', assignedTo: '' })
     setShowModal(true)
     setError('')
   }
@@ -151,7 +145,6 @@ export default function BoardDetailPage({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         })
-
         if (!response.ok) {
           const data = await response.json()
           setError(data.error || 'Error al crear tarjeta')
@@ -164,7 +157,6 @@ export default function BoardDetailPage({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         })
-
         if (!response.ok) {
           const data = await response.json()
           setError(data.error || 'Error al actualizar tarjeta')
@@ -176,119 +168,79 @@ export default function BoardDetailPage({
       setShowModal(false)
       setSaving(false)
       fetchBoard()
-    } catch (error) {
+    } catch {
       setError('Error al guardar tarjeta')
       setSaving(false)
     }
   }
 
   const handleDelete = async (cardId: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta tarjeta?')) {
-      return
-    }
-
+    if (!confirm('¿Estás seguro de eliminar esta tarjeta?')) return
     try {
-      const response = await fetch(`/api/cards/${cardId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        fetchBoard()
-      }
+      const response = await fetch(`/api/cards/${cardId}`, { method: 'DELETE' })
+      if (response.ok) fetchBoard()
     } catch (error) {
       console.error('Error al eliminar:', error)
     }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event
-    const cardId = active.id as string
-    
-    // Encontrar la tarjeta que se está arrastrando
+    const cardId = event.active.id as string
     for (const column of board?.columns || []) {
       const card = column.cards.find(c => c.id === cardId)
-      if (card) {
-        setActiveCard(card)
-        break
-      }
+      if (card) { setActiveCard(card); break }
     }
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveCard(null)
-
     if (!over || !board) return
 
     const cardId = active.id as string
     const overId = over.id as string
 
-    // Encontrar columna de origen
     let sourceColumn: Column | undefined
     let sourceCard: Card | undefined
     for (const column of board.columns) {
       const card = column.cards.find(c => c.id === cardId)
-      if (card) {
-        sourceColumn = column
-        sourceCard = card
-        break
-      }
+      if (card) { sourceColumn = column; sourceCard = card; break }
     }
-
     if (!sourceColumn || !sourceCard) return
 
-    // Determinar si se soltó sobre una columna o sobre una tarjeta
     let targetColumnId = overId
     let isOverCard = false
-
-    // Verificar si overId es un ID de tarjeta
     for (const column of board.columns) {
       if (column.cards.some(c => c.id === overId)) {
-        // Se soltó sobre una tarjeta
         targetColumnId = column.id
         isOverCard = true
         break
       }
     }
 
-    // Si se soltó sobre una tarjeta en la misma columna, reordenar
     if (isOverCard && targetColumnId === sourceColumn.id) {
       const oldIndex = sourceColumn.cards.findIndex(c => c.id === cardId)
       const newIndex = sourceColumn.cards.findIndex(c => c.id === overId)
-      
       if (oldIndex !== newIndex) {
         const newCards = arrayMove(sourceColumn.cards, oldIndex, newIndex)
-        
-        // Actualizar estado local optimista
         setBoard({
           ...board,
           columns: board.columns.map(col =>
-            col.id === sourceColumn!.id
-              ? { ...col, cards: newCards }
-              : col
+            col.id === sourceColumn!.id ? { ...col, cards: newCards } : col
           ),
         })
       }
       return
     }
 
-    // Mover a otra columna o soltar sobre una columna vacía
     if (targetColumnId !== sourceColumn.id) {
-      // Actualizar en el servidor
       try {
         const response = await fetch(`/api/cards/${cardId}/move`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            columnId: targetColumnId,
-            position: 1,
-          }),
+          body: JSON.stringify({ columnId: targetColumnId, position: 1 }),
         })
-
-        if (response.ok) {
-          // Recargar tablero para obtener el estado actualizado
-          fetchBoard()
-        }
+        if (response.ok) fetchBoard()
       } catch (error) {
         console.error('Error al mover tarjeta:', error)
       }
@@ -311,47 +263,46 @@ export default function BoardDetailPage({
     )
   }
 
-  const allMembers = [
-    board.owner,
-    ...board.members.map(m => m.user)
-  ]
+  const allMembers = [board.owner, ...board.members.map(m => m.user)]
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+
         {/* Header */}
         <div className="mb-4 flex justify-between items-center">
-          <Link
-            href="/dashboard"
-            className="text-blue-600 hover:underline text-sm"
-          >
+          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
             ← Volver al Dashboard
           </Link>
-          <Link
-            href="/api/auth/signout"
-            className="text-sm text-red-600 hover:text-red-700"
-          >
+          <Link href="/api/auth/signout" className="text-sm text-red-600 hover:text-red-700">
             Salir
           </Link>
         </div>
 
         {/* Info del tablero */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
-          {board.description && (
-            <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
-          )}
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>Propietario: {board.owner.name || board.owner.email}</span>
-            <span>•</span>
-            <span>{board.members.length + 1} miembros</span>
-            <span>•</span>
-            <span>{board.columns.length} columnas</span>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
+            {board.description && (
+              <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
+            )}
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <span>Propietario: {board.owner.name || board.owner.email}</span>
+              <span>•</span>
+              <span>{board.members.length + 1} miembros</span>
+              <span>•</span>
+              <span>{board.columns.length} columnas</span>
+            </div>
           </div>
+
+          {/* ── BOTÓN INVITAR ── */}
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg
+                       hover:bg-indigo-700 transition-colors font-medium text-sm"
+          >
+            📨 Invitar usuario
+          </button>
         </div>
 
         {/* Columnas */}
@@ -366,16 +317,6 @@ export default function BoardDetailPage({
             />
           ))}
         </div>
-
-        {/* Progreso */}
-        <div className="mt-12 bg-green-100 dark:bg-green-900 p-6 rounded-lg">
-          <p className="text-green-800 dark:text-green-200 font-semibold">
-            ✅ Sprint 2 Completado (3/3)
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Core KANBAN funcionando con Drag & Drop
-          </p>
-        </div>
       </div>
 
       {/* Drag Overlay */}
@@ -384,9 +325,7 @@ export default function BoardDetailPage({
           <div className="w-80 bg-white dark:bg-gray-700 border-2 border-blue-500 rounded-lg p-4 shadow-xl opacity-90 rotate-3">
             <h3 className="font-medium mb-2">{activeCard.title}</h3>
             {activeCard.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                {activeCard.description}
-              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{activeCard.description}</p>
             )}
           </div>
         ) : null}
@@ -399,43 +338,37 @@ export default function BoardDetailPage({
             <h2 className="text-xl font-bold mb-4">
               {modalMode === 'create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}
             </h2>
-            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Título *
-                </label>
+                <label className="block text-sm font-medium mb-1">Título *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Título de la tarjeta"
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Descripción
-                </label>
+                <label className="block text-sm font-medium mb-1">Descripción</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="Describe la tarea..."
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Prioridad
-                </label>
+                <label className="block text-sm font-medium mb-1">Prioridad</label>
                 <select
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Sin prioridad</option>
                   <option value="baja">Baja</option>
@@ -443,18 +376,16 @@ export default function BoardDetailPage({
                   <option value="alta">Alta</option>
                 </select>
               </div>
-
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Asignar a
-                </label>
+                <label className="block text-sm font-medium mb-1">Asignar a</label>
                 <select
                   value={formData.assignedTo}
-                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Sin asignar</option>
-                  {allMembers.map((member) => (
+                  {allMembers.map(member => (
                     <option key={member.id} value={member.id}>
                       {member.name || member.email}
                     </option>
@@ -472,7 +403,8 @@ export default function BoardDetailPage({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                             hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancelar
                 </button>
@@ -487,6 +419,14 @@ export default function BoardDetailPage({
             </form>
           </div>
         </div>
+      )}
+
+      {/* ── MODAL INVITAR ── */}
+      {showInviteModal && (
+        <InviteModal
+          boardId={board.id}
+          onClose={() => setShowInviteModal(false)}
+        />
       )}
     </DndContext>
   )
@@ -508,20 +448,11 @@ function DroppableColumn({
   onEditCard: (card: Card, columnId: string) => void
   onDeleteCard: (cardId: string) => void
 }) {
-  const { setNodeRef } = useDroppable({
-    id: column.id,
-  })
+  const { setNodeRef } = useDroppable({ id: column.id })
 
   return (
-    <div
-      ref={setNodeRef}
-      className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md"
-    >
-      {/* Header de Columna */}
-      <div 
-        className="p-4 border-b-4" 
-        style={{ borderColor: column.color || '#gray' }}
-      >
+    <div ref={setNodeRef} className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+      <div className="p-4 border-b-4" style={{ borderColor: column.color || '#gray' }}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-lg">{column.name}</h2>
           {column.wipLimit && (
@@ -537,19 +468,12 @@ function DroppableColumn({
           + Agregar Tarjeta
         </button>
       </div>
-
-      {/* Tarjetas con Sortable */}
       <div className="p-4 space-y-3 min-h-[200px]">
-        <SortableContext
-          items={column.cards.map(c => c.id)}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={column.cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
           {column.cards.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-8">
-              Arrastra tarjetas aquí
-            </p>
+            <p className="text-center text-gray-400 text-sm py-8">Arrastra tarjetas aquí</p>
           ) : (
-            column.cards.map((card) => (
+            column.cards.map(card => (
               <DraggableCard
                 key={card.id}
                 card={card}
