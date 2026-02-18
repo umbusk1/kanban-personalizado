@@ -6,6 +6,7 @@ type Card = {
   title: string
   description: string | null
   priority: string | null
+  position: number           // <-- AGREGAR ESTA LÍNEA
   assignee: {
     id: string
     name: string | null
