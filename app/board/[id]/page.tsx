@@ -282,20 +282,19 @@ export default function BoardDetailPage({
         </div>
 
         {/* Info del tablero */}
-        <div className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
-            {board.description && (
-              <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
-            )}
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span>Propietario: {board.owner.name || board.owner.email}</span>
-              <span>•</span>
-              <span>{board.members.length + 1} miembros</span>
-              <span>•</span>
-              <span>{board.columns.length} columnas</span>
-            </div>
-          </div>
+        <div className="mb-8">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
+              {board.description && (
+                <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
+              )}
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <span>Propietario: {board.owner.name || board.owner.email}</span>
+                <span>•</span>
+                <span>{board.columns.length} columnas</span>
+              </div>
+            </div
 
           {/* Botón Invitar: solo visible para el dueño */}
           {session?.user?.id === board.owner.id && (
