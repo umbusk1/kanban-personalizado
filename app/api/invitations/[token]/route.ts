@@ -21,6 +21,14 @@ export async function POST(
       return NextResponse.json({ error: 'Invitación no válida' }, { status: 404 })
     }
 
+    // Verificar que el usuario logueado es el invitado
+    if (session.user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Esta invitación fue enviada a otro correo electrónico' },
+        { status: 403 }
+      )
+    }
+
     if (invitation.status === 'expired') {
       return NextResponse.json({ error: 'Esta invitación ha expirado' }, { status: 400 })
     }
