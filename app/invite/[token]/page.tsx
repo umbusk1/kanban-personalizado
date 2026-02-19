@@ -117,6 +117,14 @@ export default function InvitePage({ params }: { params: { token: string } }) {
                   . Haz clic para unirte al tablero.
                 </p>
 
+                {/* Advertencia si el email no coincide */}
+                {session.user?.email && (
+                  <div className="rounded-lg bg-yellow-500/20 border border-yellow-400/30 px-4 py-3 mb-4 text-sm text-yellow-200">
+                    ⚠️ Asegúrate de estar logueado con el correo al que llegó la invitación.
+                    Actualmente logueado como <strong>{session.user.email}</strong>.
+                  </div>
+                )}
+
                 {error && (
                   <div className="rounded-lg bg-red-500/20 border border-red-400/30 px-4 py-3 mb-6">
                     <p className="text-sm text-red-300">{error}</p>
