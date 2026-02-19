@@ -609,4 +609,49 @@ function DroppableColumn({
       </div>
     </div>
   )
+  // ── Componente Activity Log ──
+function ActivityBar({ boardId }: { boardId: string }) {
+  const [logs, setLogs] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const res = await fetch(`/api/boards/${boardId}/activity`)
+      if (res.ok) setLogs(await res.json())
+    }
+    fetchLogs()
+    const interval = setInterval(fetchLogs, 15000) // refresca cada 15s
+    return () => clearInterval(interval)
+  }, [boardId])
+
+  const timeAgo = (date: string) => {
+    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+    if (diff < 60) return `hace ${diff}s`
+    if (diff < 3600) return `hace ${Math.floor(diff / 60)}m`
+    return `hace ${Math.floor(diff / 3600)}h`
+  }
+
+  if (logs.length === 0) return null
+
+  return (
+    <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+        🕐 Actividad reciente
+      </h3>
+      <div className="space-y-2">
+        {logs.map(log => (
+          <div key={log.id} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <span className="font-medium">{log.user.name || log.user.email}</span>
+            <span className="text-gray-400">movió</span>
+            <span className="italic">"{log.cardTitle}"</span>
+            <span className="text-gray-400">de</span>
+            <span className="text-blue-500">{log.fromCol}</span>
+            <span className="text-gray-400">→</span>
+            <span className="text-green-500">{log.toCol}</span>
+            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 }
