@@ -373,6 +373,8 @@ export default function BoardDetailPage({
             />
           ))}
         </div>
+        {/* ── NUEVO: Activity Log ── */}
+        <ActivityBar boardId={board.id} />
       </div>
 
       {/* Drag Overlay */}
