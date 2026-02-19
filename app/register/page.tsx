@@ -141,7 +141,7 @@ export default function RegisterPage() {
             alt="kanbanbonsai"
             width={240}
             height={90}
-            className="h-20 w-auto"
+            className="h-28 w-auto"
           />
         </Link>
         <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
