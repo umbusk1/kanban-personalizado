@@ -22,11 +22,7 @@ type Card = {
   description: string | null
   priority: string | null
   position: number
-  assignee: {
-    id: string
-    name: string | null
-    email: string
-  } | null
+  assignee: { id: string; name: string | null; email: string } | null
 }
 
 type Column = {
@@ -41,19 +37,9 @@ type Board = {
   id: string
   name: string
   description: string | null
-  owner: {
-    id: string
-    name: string | null
-    email: string
-  }
+  owner: { id: string; name: string | null; email: string }
   columns: Column[]
-  members: Array<{
-    user: {
-      id: string
-      name: string | null
-      email: string
-    }
-  }>
+  members: Array<{ user: { id: string; name: string | null; email: string } }>
 }
 
 type CardFormData = {
@@ -65,11 +51,69 @@ type CardFormData = {
   assignedTo: string
 }
 
-export default function BoardDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+type LogEntry = {
+  id: string
+  cardTitle: string
+  fromCol: string | null
+  toCol: string | null
+  createdAt: string
+  user: { name: string | null; email: string }
+}
+
+// ── Activity Bar (definido antes del componente principal) ──
+function ActivityBar({ boardId }: { boardId: string }) {
+  const [logs, setLogs] = useState<LogEntry[]>([])
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const res = await fetch(`/api/boards/${boardId}/activity`)
+      if (res.ok) setLogs(await res.json())
+    }
+    fetchLogs()
+    const interval = setInterval(fetchLogs, 15000)
+    return () => clearInterval(interval)
+  }, [boardId])
+
+  const timeAgo = (date: string) => {
+    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+    if (diff < 60) return `hace ${diff}s`
+    if (diff < 3600) return `hace ${Math.floor(diff / 60)}m`
+    return `hace ${Math.floor(diff / 3600)}h`
+  }
+
+  if (logs.length === 0) return null
+
+  return (
+    <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+        🕐 Actividad reciente
+      </h3>
+      <div className="space-y-2">
+        {logs.map(log => (
+          <div key={log.id} className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <span className="font-medium">{log.user.name || log.user.email}</span>
+            <span className="text-gray-400">movió</span>
+            <span className="italic">"{log.cardTitle}"</span>
+            {log.fromCol && log.toCol && (
+              <>
+                <span className="text-gray-400">de</span>
+                <span className="text-blue-500">{log.fromCol}</span>
+                <span className="text-gray-400">→</span>
+                <span className="text-green-500">{log.toCol}</span>
+              </>
+            )}
+            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
+              {timeAgo(log.createdAt)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Componente principal ──
+export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { data: session } = useSession()
   const [board, setBoard] = useState<Board | null>(null)
@@ -78,35 +122,25 @@ export default function BoardDetailPage({
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [formData, setFormData] = useState<CardFormData>({
-    columnId: '',
-    title: '',
-    description: '',
-    priority: '',
-    assignedTo: '',
+    columnId: '', title: '', description: '', priority: '', assignedTo: '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [activeCard, setActiveCard] = useState<Card | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
 
   useEffect(() => { fetchBoard() }, [])
 
   const fetchBoard = async () => {
     try {
-      const response = await fetch(`/api/boards/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setBoard(data)
-      } else {
-        router.push('/dashboard')
-      }
-    } catch (error) {
-      console.error('Error:', error)
+      const res = await fetch(`/api/boards/${params.id}`)
+      if (res.ok) setBoard(await res.json())
+      else router.push('/dashboard')
+    } catch (e) {
+      console.error('Error:', e)
     } finally {
       setLoading(false)
     }
@@ -122,11 +156,8 @@ export default function BoardDetailPage({
   const handleEditCard = (card: Card, columnId: string) => {
     setModalMode('edit')
     setFormData({
-      id: card.id,
-      columnId,
-      title: card.title,
-      description: card.description || '',
-      priority: card.priority || '',
+      id: card.id, columnId, title: card.title,
+      description: card.description || '', priority: card.priority || '',
       assignedTo: card.assignee?.id || '',
     })
     setShowModal(true)
@@ -137,39 +168,25 @@ export default function BoardDetailPage({
     e.preventDefault()
     setError('')
     setSaving(true)
-
     try {
-      if (modalMode === 'create') {
-        const response = await fetch('/api/cards', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        })
-        if (!response.ok) {
-          const data = await response.json()
-          setError(data.error || 'Error al crear tarjeta')
-          setSaving(false)
-          return
-        }
-      } else {
-        const response = await fetch(`/api/cards/${formData.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        })
-        if (!response.ok) {
-          const data = await response.json()
-          setError(data.error || 'Error al actualizar tarjeta')
-          setSaving(false)
-          return
-        }
+      const url = modalMode === 'create' ? '/api/cards' : `/api/cards/${formData.id}`
+      const method = modalMode === 'create' ? 'POST' : 'PATCH'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Error al guardar tarjeta')
+        setSaving(false)
+        return
       }
-
       setShowModal(false)
-      setSaving(false)
       fetchBoard()
     } catch {
       setError('Error al guardar tarjeta')
+    } finally {
       setSaving(false)
     }
   }
@@ -177,39 +194,32 @@ export default function BoardDetailPage({
   const handleDelete = async (cardId: string) => {
     if (!confirm('¿Estás seguro de eliminar esta tarjeta?')) return
     try {
-      const response = await fetch(`/api/cards/${cardId}`, { method: 'DELETE' })
-      if (response.ok) fetchBoard()
-    } catch (error) {
-      console.error('Error al eliminar:', error)
-    }
+      const res = await fetch(`/api/cards/${cardId}`, { method: 'DELETE' })
+      if (res.ok) fetchBoard()
+    } catch (e) { console.error('Error al eliminar:', e) }
   }
 
   const handleKickMember = async (userId: string, userName: string) => {
     if (!confirm(`¿Expulsar a ${userName} del tablero?`)) return
-    const res = await fetch(`/api/boards/${board!.id}/members/${userId}`, {
-      method: 'DELETE',
-    })
+    const res = await fetch(`/api/boards/${board!.id}/members/${userId}`, { method: 'DELETE' })
     if (res.ok) fetchBoard()
   }
 
-  // ── NUEVO: Actualizar WIP limit de una columna ──
   const handleUpdateWipLimit = async (columnId: string, newLimit: number | null) => {
     try {
-      const response = await fetch(`/api/columns/${columnId}`, {
+      const res = await fetch(`/api/columns/${columnId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ wipLimit: newLimit }),
       })
-      if (response.ok) fetchBoard()
-    } catch (error) {
-      console.error('Error al actualizar WIP limit:', error)
-    }
+      if (res.ok) fetchBoard()
+    } catch (e) { console.error('Error al actualizar WIP:', e) }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
     const cardId = event.active.id as string
-    for (const column of board?.columns || []) {
-      const card = column.cards.find(c => c.id === cardId)
+    for (const col of board?.columns || []) {
+      const card = col.cards.find(c => c.id === cardId)
       if (card) { setActiveCard(card); break }
     }
   }
@@ -222,68 +232,46 @@ export default function BoardDetailPage({
     const cardId = active.id as string
     const overId = over.id as string
 
-    let sourceColumn: Column | undefined
-    let sourceCard: Card | undefined
-    for (const column of board.columns) {
-      const card = column.cards.find(c => c.id === cardId)
-      if (card) { sourceColumn = column; sourceCard = card; break }
+    let srcCol: Column | undefined
+    for (const col of board.columns) {
+      if (col.cards.find(c => c.id === cardId)) { srcCol = col; break }
     }
-    if (!sourceColumn || !sourceCard) return
+    if (!srcCol) return
 
-    let targetColumnId = overId
+    let targetColId = overId
     let isOverCard = false
-    for (const column of board.columns) {
-      if (column.cards.some(c => c.id === overId)) {
-        targetColumnId = column.id
-        isOverCard = true
-        break
-      }
+    for (const col of board.columns) {
+      if (col.cards.some(c => c.id === overId)) { targetColId = col.id; isOverCard = true; break }
     }
 
-    if (isOverCard && targetColumnId === sourceColumn.id) {
-      const oldIndex = sourceColumn.cards.findIndex(c => c.id === cardId)
-      const newIndex = sourceColumn.cards.findIndex(c => c.id === overId)
-      if (oldIndex !== newIndex) {
-        const newCards = arrayMove(sourceColumn.cards, oldIndex, newIndex)
+    if (isOverCard && targetColId === srcCol.id) {
+      const oldIdx = srcCol.cards.findIndex(c => c.id === cardId)
+      const newIdx = srcCol.cards.findIndex(c => c.id === overId)
+      if (oldIdx !== newIdx) {
         setBoard({
           ...board,
           columns: board.columns.map(col =>
-            col.id === sourceColumn!.id ? { ...col, cards: newCards } : col
+            col.id === srcCol!.id ? { ...col, cards: arrayMove(col.cards, oldIdx, newIdx) } : col
           ),
         })
       }
       return
     }
 
-    if (targetColumnId !== sourceColumn.id) {
+    if (targetColId !== srcCol.id) {
       try {
-        const response = await fetch(`/api/cards/${cardId}/move`, {
+        const res = await fetch(`/api/cards/${cardId}/move`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ columnId: targetColumnId, position: 1 }),
+          body: JSON.stringify({ columnId: targetColId, position: 1 }),
         })
-        if (response.ok) fetchBoard()
-      } catch (error) {
-        console.error('Error al mover tarjeta:', error)
-      }
+        if (res.ok) fetchBoard()
+      } catch (e) { console.error('Error al mover:', e) }
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Cargando...</p>
-      </div>
-    )
-  }
-
-  if (!board) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Tablero no encontrado</p>
-      </div>
-    )
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
+  if (!board) return <div className="min-h-screen flex items-center justify-center"><p>Tablero no encontrado</p></div>
 
   const isOwner = session?.user?.id === board.owner.id
   const allMembers = [board.owner, ...board.members.map(m => m.user)]
@@ -294,12 +282,8 @@ export default function BoardDetailPage({
 
         {/* Header */}
         <div className="mb-4 flex justify-between items-center">
-          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
-            ← Volver al Dashboard
-          </Link>
-          <Link href="/api/auth/signout" className="text-sm text-red-600 hover:text-red-700">
-            Salir
-          </Link>
+          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">← Volver al Dashboard</Link>
+          <Link href="/api/auth/signout" className="text-sm text-red-600 hover:text-red-700">Salir</Link>
         </div>
 
         {/* Info del tablero */}
@@ -307,52 +291,37 @@ export default function BoardDetailPage({
           <div className="flex justify-between items-start mb-4">
             <div>
               <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
-              {board.description && (
-                <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
-              )}
+              {board.description && <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>}
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <span>Propietario: {board.owner.name || board.owner.email}</span>
                 <span>•</span>
                 <span>{board.columns.length} columnas</span>
               </div>
             </div>
-
             {isOwner && (
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg
-                           hover:bg-indigo-700 transition-colors font-medium text-sm"
+                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
               >
                 📨 Invitar usuario
               </button>
             )}
           </div>
 
-          {/* Lista de miembros */}
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-gray-500 dark:text-gray-400">Miembros:</span>
-            <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700
-                             dark:text-blue-300 text-xs px-3 py-1 rounded-full">
+            <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full">
               👑 {board.owner.name || board.owner.email}
             </span>
             {board.members.map(member => (
-              <span
-                key={member.user.id}
-                className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700
-                           dark:text-gray-300 text-xs px-3 py-1 rounded-full"
-              >
+              <span key={member.user.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
                 🤝 {member.user.name || member.user.email}
                 {isOwner && (
                   <button
-                    onClick={() => handleKickMember(
-                      member.user.id,
-                      member.user.name || member.user.email
-                    )}
+                    onClick={() => handleKickMember(member.user.id, member.user.name || member.user.email)}
                     className="ml-1 text-red-400 hover:text-red-600 font-bold leading-none"
                     title="Expulsar del tablero"
-                  >
-                    ×
-                  </button>
+                  >×</button>
                 )}
               </span>
             ))}
@@ -361,10 +330,10 @@ export default function BoardDetailPage({
 
         {/* Columnas */}
         <div className="flex gap-6 overflow-x-auto pb-4">
-          {board.columns.map((column) => (
+          {board.columns.map(col => (
             <DroppableColumn
-              key={column.id}
-              column={column}
+              key={col.id}
+              column={col}
               isOwner={isOwner}
               onCreateCard={handleCreateCard}
               onEditCard={handleEditCard}
@@ -373,7 +342,8 @@ export default function BoardDetailPage({
             />
           ))}
         </div>
-        {/* ── NUEVO: Activity Log ── */}
+
+        {/* ── Activity Log ── */}
         <ActivityBar boardId={board.id} />
       </div>
 
@@ -382,30 +352,23 @@ export default function BoardDetailPage({
         {activeCard ? (
           <div className="w-80 bg-white dark:bg-gray-700 border-2 border-blue-500 rounded-lg p-4 shadow-xl opacity-90 rotate-3">
             <h3 className="font-medium mb-2">{activeCard.title}</h3>
-            {activeCard.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">{activeCard.description}</p>
-            )}
+            {activeCard.description && <p className="text-sm text-gray-600 dark:text-gray-400">{activeCard.description}</p>}
           </div>
         ) : null}
       </DragOverlay>
 
-      {/* Modal Crear/Editar Tarjeta */}
+      {/* Modal Crear/Editar */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">
-              {modalMode === 'create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}
-            </h2>
+            <h2 className="text-xl font-bold mb-4">{modalMode === 'create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Título *</label>
                 <input
-                  type="text"
-                  required
-                  value={formData.title}
+                  type="text" required value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Título de la tarjeta"
                 />
               </div>
@@ -414,10 +377,8 @@ export default function BoardDetailPage({
                 <textarea
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                  placeholder="Describe la tarea..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3} placeholder="Describe la tarea..."
                 />
               </div>
               <div>
@@ -425,8 +386,7 @@ export default function BoardDetailPage({
                 <select
                   value={formData.priority}
                   onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Sin prioridad</option>
                   <option value="baja">Baja</option>
@@ -439,38 +399,26 @@ export default function BoardDetailPage({
                 <select
                   value={formData.assignedTo}
                   onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Sin asignar</option>
-                  {allMembers.map(member => (
-                    <option key={member.id} value={member.id}>
-                      {member.name || member.email}
-                    </option>
+                  {allMembers.map(m => (
+                    <option key={m.id} value={m.id}>{m.name || m.email}</option>
                   ))}
                 </select>
               </div>
-
               {error && (
                 <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
                   <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
                 </div>
               )}
-
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                             hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
+                <button type="button" onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
+                <button type="submit" disabled={saving}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : modalMode === 'create' ? 'Crear' : 'Guardar'}
                 </button>
               </div>
@@ -481,27 +429,19 @@ export default function BoardDetailPage({
 
       {/* Modal Invitar */}
       {showInviteModal && (
-        <InviteModal
-          boardId={board.id}
-          onClose={() => setShowInviteModal(false)}
-        />
+        <InviteModal boardId={board.id} onClose={() => setShowInviteModal(false)} />
       )}
     </DndContext>
   )
 }
 
-// ── Componente de Columna Droppable ──
+// ── Columna Droppable ──
 import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DraggableCard } from "./DraggableCard"
 
 function DroppableColumn({
-  column,
-  isOwner,
-  onCreateCard,
-  onEditCard,
-  onDeleteCard,
-  onUpdateWipLimit,
+  column, isOwner, onCreateCard, onEditCard, onDeleteCard, onUpdateWipLimit,
 }: {
   column: Column
   isOwner: boolean
@@ -514,7 +454,6 @@ function DroppableColumn({
   const [editingWip, setEditingWip] = useState(false)
   const [wipInput, setWipInput] = useState(column.wipLimit?.toString() || '')
 
-  // ── Lógica de color del WIP ──
   const count = column.cards.length
   const limit = column.wipLimit
 
@@ -547,18 +486,13 @@ function DroppableColumn({
       <div className="p-4 border-b-4" style={{ borderColor: column.color || '#6b7280' }}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-lg">{column.name}</h2>
-
-          {/* ── Contador WIP con colores ── */}
           {editingWip ? (
             <div className="flex items-center gap-1">
               <input
-                type="number"
-                min="1"
-                value={wipInput}
+                type="number" min="1" value={wipInput}
                 onChange={e => setWipInput(e.target.value)}
                 className="w-16 text-sm px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 text-center"
-                placeholder="máx"
-                autoFocus
+                placeholder="máx" autoFocus
                 onKeyDown={e => {
                   if (e.key === 'Enter') handleWipSave()
                   if (e.key === 'Escape') setEditingWip(false)
@@ -578,17 +512,14 @@ function DroppableColumn({
           )}
         </div>
 
-        {/* Alerta si límite superado */}
         {limit && count > limit && (
           <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded mb-2">
             ⚠️ Límite WIP superado ({count - limit} tarjeta{count - limit > 1 ? 's' : ''} extra)
           </div>
         )}
 
-        <button
-          onClick={() => onCreateCard(column.id)}
-          className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
-        >
+        <button onClick={() => onCreateCard(column.id)}
+          className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium">
           + Agregar Tarjeta
         </button>
       </div>
@@ -598,62 +529,11 @@ function DroppableColumn({
             <p className="text-center text-gray-400 text-sm py-8">Arrastra tarjetas aquí</p>
           ) : (
             column.cards.map(card => (
-              <DraggableCard
-                key={card.id}
-                card={card}
-                columnId={column.id}
-                onEdit={onEditCard}
-                onDelete={onDeleteCard}
-              />
+              <DraggableCard key={card.id} card={card} columnId={column.id} onEdit={onEditCard} onDelete={onDeleteCard} />
             ))
           )}
         </SortableContext>
       </div>
     </div>
   )
-  // ── Componente Activity Log ──
-function ActivityBar({ boardId }: { boardId: string }) {
-  const [logs, setLogs] = useState<any[]>([])
-
-  useEffect(() => {
-    const fetchLogs = async () => {
-      const res = await fetch(`/api/boards/${boardId}/activity`)
-      if (res.ok) setLogs(await res.json())
-    }
-    fetchLogs()
-    const interval = setInterval(fetchLogs, 15000) // refresca cada 15s
-    return () => clearInterval(interval)
-  }, [boardId])
-
-  const timeAgo = (date: string) => {
-    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
-    if (diff < 60) return `hace ${diff}s`
-    if (diff < 3600) return `hace ${Math.floor(diff / 60)}m`
-    return `hace ${Math.floor(diff / 3600)}h`
-  }
-
-  if (logs.length === 0) return null
-
-  return (
-    <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-        🕐 Actividad reciente
-      </h3>
-      <div className="space-y-2">
-        {logs.map(log => (
-          <div key={log.id} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <span className="font-medium">{log.user.name || log.user.email}</span>
-            <span className="text-gray-400">movió</span>
-            <span className="italic">"{log.cardTitle}"</span>
-            <span className="text-gray-400">de</span>
-            <span className="text-blue-500">{log.fromCol}</span>
-            <span className="text-gray-400">→</span>
-            <span className="text-green-500">{log.toCol}</span>
-            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 }
