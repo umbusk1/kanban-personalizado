@@ -94,9 +94,7 @@ export default function BoardDetailPage({
     })
   )
 
-  useEffect(() => {
-    fetchBoard()
-  }, [])
+  useEffect(() => { fetchBoard() }, [])
 
   const fetchBoard = async () => {
     try {
@@ -186,6 +184,14 @@ export default function BoardDetailPage({
     }
   }
 
+  const handleKickMember = async (userId: string, userName: string) => {
+    if (!confirm(`¿Expulsar a ${userName} del tablero?`)) return
+    const res = await fetch(`/api/boards/${board!.id}/members/${userId}`, {
+      method: 'DELETE',
+    })
+    if (res.ok) fetchBoard()
+  }
+
   const handleDragStart = (event: DragStartEvent) => {
     const cardId = event.active.id as string
     for (const column of board?.columns || []) {
@@ -265,6 +271,7 @@ export default function BoardDetailPage({
     )
   }
 
+  const isOwner = session?.user?.id === board.owner.id
   const allMembers = [board.owner, ...board.members.map(m => m.user)]
 
   return (
@@ -294,18 +301,54 @@ export default function BoardDetailPage({
                 <span>•</span>
                 <span>{board.columns.length} columnas</span>
               </div>
-            </div
+            </div>
 
-          {/* Botón Invitar: solo visible para el dueño */}
-          {session?.user?.id === board.owner.id && (
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg
-                         hover:bg-indigo-700 transition-colors font-medium text-sm"
-            >
-              📨 Invitar usuario
-            </button>
-          )}
+            {/* Botón Invitar: solo para el dueño */}
+            {isOwner && (
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg
+                           hover:bg-indigo-700 transition-colors font-medium text-sm"
+              >
+                📨 Invitar usuario
+              </button>
+            )}
+          </div>
+
+          {/* Lista de miembros */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Miembros:</span>
+
+            {/* Dueño */}
+            <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700
+                             dark:text-blue-300 text-xs px-3 py-1 rounded-full">
+              👑 {board.owner.name || board.owner.email}
+            </span>
+
+            {/* Miembros invitados */}
+            {board.members.map(member => (
+              <span
+                key={member.user.id}
+                className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700
+                           dark:text-gray-300 text-xs px-3 py-1 rounded-full"
+              >
+                🤝 {member.user.name || member.user.email}
+                {/* Botón expulsar: solo para el dueño */}
+                {isOwner && (
+                  <button
+                    onClick={() => handleKickMember(
+                      member.user.id,
+                      member.user.name || member.user.email
+                    )}
+                    className="ml-1 text-red-400 hover:text-red-600 font-bold leading-none"
+                    title="Expulsar del tablero"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Columnas */}
