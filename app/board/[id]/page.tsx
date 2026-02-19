@@ -192,6 +192,20 @@ export default function BoardDetailPage({
     if (res.ok) fetchBoard()
   }
 
+  // ── NUEVO: Actualizar WIP limit de una columna ──
+  const handleUpdateWipLimit = async (columnId: string, newLimit: number | null) => {
+    try {
+      const response = await fetch(`/api/columns/${columnId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wipLimit: newLimit }),
+      })
+      if (response.ok) fetchBoard()
+    } catch (error) {
+      console.error('Error al actualizar WIP limit:', error)
+    }
+  }
+
   const handleDragStart = (event: DragStartEvent) => {
     const cardId = event.active.id as string
     for (const column of board?.columns || []) {
@@ -303,7 +317,6 @@ export default function BoardDetailPage({
               </div>
             </div>
 
-            {/* Botón Invitar: solo para el dueño */}
             {isOwner && (
               <button
                 onClick={() => setShowInviteModal(true)}
@@ -318,14 +331,10 @@ export default function BoardDetailPage({
           {/* Lista de miembros */}
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-gray-500 dark:text-gray-400">Miembros:</span>
-
-            {/* Dueño */}
             <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700
                              dark:text-blue-300 text-xs px-3 py-1 rounded-full">
               👑 {board.owner.name || board.owner.email}
             </span>
-
-            {/* Miembros invitados */}
             {board.members.map(member => (
               <span
                 key={member.user.id}
@@ -333,7 +342,6 @@ export default function BoardDetailPage({
                            dark:text-gray-300 text-xs px-3 py-1 rounded-full"
               >
                 🤝 {member.user.name || member.user.email}
-                {/* Botón expulsar: solo para el dueño */}
                 {isOwner && (
                   <button
                     onClick={() => handleKickMember(
@@ -357,9 +365,11 @@ export default function BoardDetailPage({
             <DroppableColumn
               key={column.id}
               column={column}
+              isOwner={isOwner}
               onCreateCard={handleCreateCard}
               onEditCard={handleEditCard}
               onDeleteCard={handleDelete}
+              onUpdateWipLimit={handleUpdateWipLimit}
             />
           ))}
         </div>
@@ -485,28 +495,94 @@ import { DraggableCard } from "./DraggableCard"
 
 function DroppableColumn({
   column,
+  isOwner,
   onCreateCard,
   onEditCard,
   onDeleteCard,
+  onUpdateWipLimit,
 }: {
   column: Column
+  isOwner: boolean
   onCreateCard: (columnId: string) => void
   onEditCard: (card: Card, columnId: string) => void
   onDeleteCard: (cardId: string) => void
+  onUpdateWipLimit: (columnId: string, newLimit: number | null) => void
 }) {
   const { setNodeRef } = useDroppable({ id: column.id })
+  const [editingWip, setEditingWip] = useState(false)
+  const [wipInput, setWipInput] = useState(column.wipLimit?.toString() || '')
+
+  // ── Lógica de color del WIP ──
+  const count = column.cards.length
+  const limit = column.wipLimit
+
+  const getWipStyle = () => {
+    if (!limit) return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+    const ratio = count / limit
+    if (ratio >= 1)   return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 font-bold animate-pulse'
+    if (ratio >= 0.8) return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 font-semibold'
+    return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+  }
+
+  const getWipIcon = () => {
+    if (!limit) return ''
+    const ratio = count / limit
+    if (ratio >= 1)   return ' 🔴'
+    if (ratio >= 0.8) return ' 🟡'
+    return ' 🟢'
+  }
+
+  const handleWipSave = () => {
+    const val = wipInput.trim()
+    const parsed = val === '' ? null : parseInt(val, 10)
+    if (val !== '' && (isNaN(parsed!) || parsed! < 1)) return
+    onUpdateWipLimit(column.id, parsed)
+    setEditingWip(false)
+  }
 
   return (
     <div ref={setNodeRef} className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-      <div className="p-4 border-b-4" style={{ borderColor: column.color || '#gray' }}>
+      <div className="p-4 border-b-4" style={{ borderColor: column.color || '#6b7280' }}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-lg">{column.name}</h2>
-          {column.wipLimit && (
-            <span className="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-              {column.cards.length}/{column.wipLimit}
+
+          {/* ── Contador WIP con colores ── */}
+          {editingWip ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min="1"
+                value={wipInput}
+                onChange={e => setWipInput(e.target.value)}
+                className="w-16 text-sm px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 text-center"
+                placeholder="máx"
+                autoFocus
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleWipSave()
+                  if (e.key === 'Escape') setEditingWip(false)
+                }}
+              />
+              <button onClick={handleWipSave} className="text-green-600 hover:text-green-700 font-bold text-sm">✓</button>
+              <button onClick={() => setEditingWip(false)} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+            </div>
+          ) : (
+            <span
+              className={`text-sm px-2 py-1 rounded cursor-pointer transition-all ${getWipStyle()} ${isOwner ? 'hover:ring-2 hover:ring-blue-400' : ''}`}
+              onClick={() => isOwner && setEditingWip(true)}
+              title={isOwner ? 'Clic para editar límite WIP' : limit ? `Límite: ${limit}` : ''}
+            >
+              {limit ? `${count}/${limit}${getWipIcon()}` : isOwner ? `${count} ✎` : count}
             </span>
           )}
         </div>
+
+        {/* Alerta si límite superado */}
+        {limit && count > limit && (
+          <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded mb-2">
+            ⚠️ Límite WIP superado ({count - limit} tarjeta{count - limit > 1 ? 's' : ''} extra)
+          </div>
+        )}
+
         <button
           onClick={() => onCreateCard(column.id)}
           className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
