@@ -139,9 +139,9 @@ export default function RegisterPage() {
           <Image
             src="/logo.png"
             alt="kanbanbonsai"
-            width={180}
-            height={68}
-            className="h-14 w-auto"
+            width={240}
+            height={90}
+            className="h-20 w-auto"
           />
         </Link>
         <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
