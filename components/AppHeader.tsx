@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
@@ -18,11 +19,14 @@ export default function AppHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2 group">
-          <span className="text-2xl">🎋</span>
-          <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
-            kanbanbonsai
-          </span>
+        <Link href="/dashboard" className="flex items-center group">
+          <Image
+            src="/logo.png"
+            alt="kanbanbonsai"
+            width={160}
+            height={60}
+            className="h-12 w-auto group-hover:opacity-80 transition-opacity"
+          />
         </Link>
 
         {/* Nav central */}
