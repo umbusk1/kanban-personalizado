@@ -30,7 +30,7 @@ export default function AppHeader() {
           <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white transition-colors">
             Mis Tableros
           </Link>
-          {session?.user?.isAdmin && (
+          {(session?.user as any)?.isAdmin && (
             <Link href="/admin" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
               🛡️ Admin
             </Link>
