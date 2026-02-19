@@ -20,44 +20,61 @@ type Board = {
 }
 
 type User = {
+  id: string
   email: string
   name: string | null
+  isAdmin: boolean
 }
 
-// ── Componente auxiliar definido ANTES de usarse ──
-function BoardCard({ board }: { board: Board }) {
+function BoardCard({
+  board,
+  onLeave,
+}: {
+  board: Board
+  onLeave?: (boardId: string) => void
+}) {
   return (
-    <Link
-      href={`/board/${board.id}`}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow block"
-    >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-semibold">{board.name}</h3>
-        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-          board.userRole === "owner"
-            ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-            : "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-        }`}>
-          {board.userRole === "owner" ? "👑 Dueño" : "🤝 Miembro"}
-        </span>
-      </div>
-      {board.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{board.description}</p>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+      <Link href={`/board/${board.id}`} className="block">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-semibold">{board.name}</h3>
+          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+            board.userRole === "owner"
+              ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+              : "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+          }`}>
+            {board.userRole === "owner" ? "👑 Dueño" : "🤝 Miembro"}
+          </span>
+        </div>
+        {board.description && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{board.description}</p>
+        )}
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span>{board._count.columns} columnas</span>
+          <span>{board._count.members + 1} miembros</span>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          {board.userRole === "owner"
+            ? "Tú eres el propietario"
+            : `Propietario: ${board.owner.name || board.owner.email}`}
+        </p>
+      </Link>
+
+      {/* Botón salir — solo para miembros */}
+      {board.userRole === "member" && onLeave && (
+        <button
+          onClick={() => onLeave(board.id)}
+          className="mt-4 w-full text-xs text-red-500 hover:text-red-600 border border-red-200
+                     dark:border-red-800 rounded-lg py-1.5 hover:bg-red-50 dark:hover:bg-red-900/20
+                     transition-colors"
+        >
+          Salir del tablero
+        </button>
       )}
-      <div className="flex items-center gap-4 text-xs text-gray-500">
-        <span>{board._count.columns} columnas</span>
-        <span>{board._count.members + 1} miembros</span>
-      </div>
-      <p className="text-xs text-gray-400 mt-2">
-        {board.userRole === "owner"
-          ? "Tú eres el propietario"
-          : `Propietario: ${board.owner.name || board.owner.email}`}
-      </p>
-    </Link>
+    </div>
   )
 }
 
-// ── Componente principal ──
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -84,6 +101,16 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleLeaveBoard = async (boardId: string) => {
+    if (!confirm("¿Seguro que quieres salir de este tablero?")) return
+
+    const res = await fetch(`/api/boards/${boardId}/members/${user?.id}`, {
+      method: 'DELETE',
+    })
+
+    if (res.ok) fetchData()
   }
 
   const handleCreateBoard = async (e: React.FormEvent) => {
@@ -141,6 +168,14 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">🎯 KANBAN Personalizado</h1>
             <div className="flex items-center gap-4">
+              {user?.isAdmin && (
+                <Link
+                  href="/admin"
+                  className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 font-medium"
+                >
+                  🛡️ Admin
+                </Link>
+              )}
               <span className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</span>
               <button onClick={handleSignOut} className="text-sm text-red-600 hover:text-red-700">
                 Salir
@@ -201,7 +236,7 @@ export default function DashboardPage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sharedBoards.map(board => (
-                <BoardCard key={board.id} board={board} />
+                <BoardCard key={board.id} board={board} onLeave={handleLeaveBoard} />
               ))}
             </div>
           </section>
