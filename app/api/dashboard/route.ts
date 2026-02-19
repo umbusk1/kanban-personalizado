@@ -19,20 +19,23 @@ export async function GET() {
       },
       include: {
         owner: true,
-        _count: {
-          select: { columns: true, members: true },
-        },
+        _count: { select: { columns: true, members: true } },
       },
       orderBy: { createdAt: "desc" },
     })
 
-    // Agregar rol del usuario en cada tablero
-    const boardsWithRole = boards.map((board) => ({
+    const boardsWithRole = boards.map(board => ({
       ...board,
       userRole: board.ownerId === session.user.id ? "owner" : "member",
     }))
 
-    return NextResponse.json({ user: session.user, boards: boardsWithRole })
+    // Incluir isAdmin en el usuario
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, email: true, name: true, isAdmin: true },
+    })
+
+    return NextResponse.json({ user, boards: boardsWithRole })
   } catch (error) {
     console.error("Error en dashboard:", error)
     return NextResponse.json({ error: "Error al obtener datos" }, { status: 500 })
