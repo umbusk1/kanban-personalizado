@@ -4,16 +4,13 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
+  DndContext, DragEndEvent, DragOverlay, DragStartEvent,
+  PointerSensor, useSensor, useSensors,
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 import InviteModal from "@/components/InviteModal"
+import AppHeader from "@/components/AppHeader"
+import AppFooter from "@/components/AppFooter"
 import { useSession } from "next-auth/react"
 
 type Card = {
@@ -60,7 +57,7 @@ type LogEntry = {
   user: { name: string | null; email: string }
 }
 
-// ── Activity Bar (definido antes del componente principal) ──
+// ── Activity Bar ──
 function ActivityBar({ boardId }: { boardId: string }) {
   const [logs, setLogs] = useState<LogEntry[]>([])
 
@@ -102,9 +99,7 @@ function ActivityBar({ boardId }: { boardId: string }) {
                 <span className="text-green-500">{log.toCol}</span>
               </>
             )}
-            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">
-              {timeAgo(log.createdAt)}
-            </span>
+            <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
           </div>
         ))}
       </div>
@@ -270,81 +265,93 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
-  if (!board) return <div className="min-h-screen flex items-center justify-center"><p>Tablero no encontrado</p></div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Cargando...</p>
+    </div>
+  )
+
+  if (!board) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Tablero no encontrado</p>
+    </div>
+  )
 
   const isOwner = session?.user?.id === board.owner.id
   const allMembers = [board.owner, ...board.members.map(m => m.user)]
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+        <AppHeader />
 
-        {/* Header */}
-        <div className="mb-4 flex justify-between items-center">
-          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">← Volver al Dashboard</Link>
-          <Link href="/api/auth/signout" className="text-sm text-red-600 hover:text-red-700">Salir</Link>
-        </div>
+        <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Info del tablero */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
-              {board.description && <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>}
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>Propietario: {board.owner.name || board.owner.email}</span>
-                <span>•</span>
-                <span>{board.columns.length} columnas</span>
+          {/* Info del tablero */}
+          <div className="mb-8">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
+                {board.description && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
+                )}
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span>Propietario: {board.owner.name || board.owner.email}</span>
+                  <span>•</span>
+                  <span>{board.columns.length} columnas</span>
+                </div>
               </div>
+              {isOwner && (
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
+                >
+                  📨 Invitar usuario
+                </button>
+              )}
             </div>
-            {isOwner && (
-              <button
-                onClick={() => setShowInviteModal(true)}
-                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
-              >
-                📨 Invitar usuario
-              </button>
-            )}
+
+            {/* Miembros */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Miembros:</span>
+              <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full">
+                👑 {board.owner.name || board.owner.email}
+              </span>
+              {board.members.map(member => (
+                <span key={member.user.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
+                  🤝 {member.user.name || member.user.email}
+                  {isOwner && (
+                    <button
+                      onClick={() => handleKickMember(member.user.id, member.user.name || member.user.email)}
+                      className="ml-1 text-red-400 hover:text-red-600 font-bold leading-none"
+                      title="Expulsar del tablero"
+                    >×</button>
+                  )}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Miembros:</span>
-            <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full">
-              👑 {board.owner.name || board.owner.email}
-            </span>
-            {board.members.map(member => (
-              <span key={member.user.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
-                🤝 {member.user.name || member.user.email}
-                {isOwner && (
-                  <button
-                    onClick={() => handleKickMember(member.user.id, member.user.name || member.user.email)}
-                    className="ml-1 text-red-400 hover:text-red-600 font-bold leading-none"
-                    title="Expulsar del tablero"
-                  >×</button>
-                )}
-              </span>
+          {/* Columnas */}
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {board.columns.map(col => (
+              <DroppableColumn
+                key={col.id}
+                column={col}
+                isOwner={isOwner}
+                onCreateCard={handleCreateCard}
+                onEditCard={handleEditCard}
+                onDeleteCard={handleDelete}
+                onUpdateWipLimit={handleUpdateWipLimit}
+              />
             ))}
           </div>
-        </div>
 
-        {/* Columnas */}
-        <div className="flex gap-6 overflow-x-auto pb-4">
-          {board.columns.map(col => (
-            <DroppableColumn
-              key={col.id}
-              column={col}
-              isOwner={isOwner}
-              onCreateCard={handleCreateCard}
-              onEditCard={handleEditCard}
-              onDeleteCard={handleDelete}
-              onUpdateWipLimit={handleUpdateWipLimit}
-            />
-          ))}
-        </div>
+          {/* Activity Log */}
+          <ActivityBar boardId={board.id} />
+        </main>
 
-        {/* ── Activity Log ── */}
-        <ActivityBar boardId={board.id} />
+        <AppFooter />
       </div>
 
       {/* Drag Overlay */}
@@ -352,7 +359,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         {activeCard ? (
           <div className="w-80 bg-white dark:bg-gray-700 border-2 border-blue-500 rounded-lg p-4 shadow-xl opacity-90 rotate-3">
             <h3 className="font-medium mb-2">{activeCard.title}</h3>
-            {activeCard.description && <p className="text-sm text-gray-600 dark:text-gray-400">{activeCard.description}</p>}
+            {activeCard.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">{activeCard.description}</p>
+            )}
           </div>
         ) : null}
       </DragOverlay>
@@ -361,7 +370,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">{modalMode === 'create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {modalMode === 'create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Título *</label>
@@ -498,8 +509,8 @@ function DroppableColumn({
                   if (e.key === 'Escape') setEditingWip(false)
                 }}
               />
-              <button onClick={handleWipSave} className="text-green-600 hover:text-green-700 font-bold text-sm">✓</button>
-              <button onClick={() => setEditingWip(false)} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+              <button onClick={handleWipSave} className="text-green-600 font-bold text-sm">✓</button>
+              <button onClick={() => setEditingWip(false)} className="text-gray-400 text-sm">✕</button>
             </div>
           ) : (
             <span
@@ -529,7 +540,8 @@ function DroppableColumn({
             <p className="text-center text-gray-400 text-sm py-8">Arrastra tarjetas aquí</p>
           ) : (
             column.cards.map(card => (
-              <DraggableCard key={card.id} card={card} columnId={column.id} onEdit={onEditCard} onDelete={onDeleteCard} />
+              <DraggableCard key={card.id} card={card} columnId={column.id}
+                onEdit={onEditCard} onDelete={onDeleteCard} />
             ))
           )}
         </SortableContext>
