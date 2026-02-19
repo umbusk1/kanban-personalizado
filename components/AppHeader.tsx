@@ -25,7 +25,7 @@ export default function AppHeader() {
             alt="kanbanbonsai"
             width={220}
             height={80}
-            className="h-16 w-auto group-hover:opacity-80 transition-opacity"
+            className="h-20 w-auto group-hover:opacity-80 transition-opacity"
           />
         </Link>
 
