@@ -13,11 +13,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verificar si el usuario ya existe
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
-
+    const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
       return NextResponse.json(
         { error: "Este email ya está registrado" },
@@ -25,29 +21,40 @@ export async function POST(request: Request) {
       )
     }
 
-    // Hashear password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Crear usuario
     const user = await prisma.user.create({
       data: {
         email,
         name: name || email.split("@")[0],
         passwordHash: hashedPassword,
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-      }
+      select: { id: true, email: true, name: true, createdAt: true },
     })
 
-    return NextResponse.json(
-      { 
-        message: "Usuario creado exitosamente",
-        user 
+    // ── NUEVO: Convertir invitaciones aceptadas en membresías reales ──
+    const pendingInvitations = await prisma.boardInvitation.findMany({
+      where: {
+        email,
+        status: "accepted",
+        expiresAt: { gt: new Date() },
       },
+    })
+
+    if (pendingInvitations.length > 0) {
+      await Promise.all(
+        pendingInvitations.map(inv =>
+          prisma.boardMember.upsert({
+            where: { boardId_userId: { boardId: inv.boardId, userId: user.id } },
+            create: { boardId: inv.boardId, userId: user.id, role: "member" },
+            update: {},
+          })
+        )
+      )
+    }
+
+    return NextResponse.json(
+      { message: "Usuario creado exitosamente", user },
       { status: 201 }
     )
   } catch (error) {
