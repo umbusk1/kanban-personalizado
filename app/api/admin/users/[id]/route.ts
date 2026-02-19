@@ -49,10 +49,9 @@ export async function DELETE(
 
   // Limpiar todas las relaciones antes de borrar al usuario
   await prisma.$transaction([
-    // 1. Desconectar tarjetas que creó (quitar referencia, no borrar las tarjetas)
-    prisma.card.updateMany({
+    // 1. Borrar tarjetas que creó el usuario
+    prisma.card.deleteMany({
       where: { createdBy: userId },
-      data: { createdBy: null },
     }),
     // 2. Borrar activity logs del usuario
     prisma.activityLog.deleteMany({
