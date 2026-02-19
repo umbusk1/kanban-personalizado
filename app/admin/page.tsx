@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import AppHeader from '@/components/AppHeader'
+import AppFooter from '@/components/AppFooter'
 
 type User = {
   id: string
@@ -42,19 +44,16 @@ export default function AdminPage() {
 
   const handleToggleAdmin = async (userId: string, currentValue: boolean) => {
     if (!confirm(`¿${currentValue ? 'Quitar' : 'Dar'} permisos de admin a este usuario?`)) return
-
     const res = await fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isAdmin: !currentValue }),
     })
-
     if (res.ok) fetchUsers()
   }
 
   const handleDelete = async (userId: string, email: string) => {
     if (!confirm(`¿Eliminar permanentemente la cuenta de ${email}? Esta acción no se puede deshacer.`)) return
-
     const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
     if (res.ok) fetchUsers()
   }
@@ -68,22 +67,25 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">🛡️ Panel de Administración</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <AppHeader />
+
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Título */}
+        <div className="mb-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            🛡️ Panel de Administración
+          </h1>
           <Link href="/dashboard" className="text-sm text-blue-600 hover:text-blue-500">
             ← Volver al Dashboard
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-6 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+        <div className="mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Usuarios registrados ({users.length})
-          </h2>
+          </p>
         </div>
 
         {error && (
@@ -152,7 +154,9 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
+
+      <AppFooter />
     </div>
   )
 }
