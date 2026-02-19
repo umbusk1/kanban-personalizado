@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 
 type Stats = { boards: number; cards: number; users: number }
 
@@ -173,13 +174,14 @@ export default function LandingPage() {
 
         {/* Header público */}
         <div className="relative z-10 flex justify-between items-center px-8 py-6">
-          <div className="flex items-center gap-3">
-            {/* Placeholder logo — reemplazar con <Image> cuando esté el PNG */}
-            <span className="text-3xl">🎋</span>
-            <span className="text-white font-bold text-2xl tracking-tight">
-              <span className="text-gray-300">kanban</span>
-              <span className="text-green-400">bonsai</span>
-            </span>
+          <div className="flex items-center">
+            <Image
+              src="/logo.png"
+              alt="kanbanbonsai"
+              width={180}
+              height={68}
+              className="h-14 w-auto"
+            />
           </div>
           <nav className="flex items-center gap-6 text-sm text-white/70">
             <a href="#historia" className="hover:text-white transition-colors">Historia</a>
