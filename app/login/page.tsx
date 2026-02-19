@@ -200,11 +200,11 @@ export default function LandingPage() {
             <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
               El flujo del
               <span className="text-green-400"> bonsai</span>,<br/>
-              la precisión del
+              con el orden del
               <span className="text-yellow-400"> kanban</span>
             </h1>
             <p className="text-white/70 text-lg leading-relaxed mb-8">
-              Una herramienta colaborativa construida con paciencia, iteración y propósito.
+              Una herramienta colaborativa construida con disciplina, iteración y propósito.
               Como cultivar un bonsai — cada tarea en su lugar, cada equipo en armonía.
             </p>
             <div className="flex gap-4">
