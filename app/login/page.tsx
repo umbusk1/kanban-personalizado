@@ -180,7 +180,7 @@ export default function LandingPage() {
               alt="kanbanbonsai"
               width={180}
               height={68}
-              className="h-14 w-auto"
+              className="h-28 w-auto"
             />
           </div>
           <nav className="flex items-center gap-6 text-sm text-white/70">
@@ -309,7 +309,7 @@ export default function LandingPage() {
             <a href="https://anthropic.com" target="_blank" rel="noopener noreferrer"
                className="text-blue-400 hover:text-blue-300 underline">Claude de Anthropic</a>
           </p>
-          <p className="text-xs text-white/20">© 2026 kanbanbonsai · Todos los derechos reservados</p>
+          <p className="text-xs text-white/20">© 2026 Umbusk, LLC · Todos los derechos reservados</p>
         </div>
       </footer>
 
