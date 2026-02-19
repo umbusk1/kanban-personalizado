@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { signIn } from "next-auth/react"
 
 function RegisterForm() {
@@ -134,12 +135,14 @@ export default function RegisterPage() {
 
       {/* Header público */}
       <div className="relative z-10 flex justify-between items-center px-8 py-6">
-        <Link href="/login" className="flex items-center gap-3">
-          <span className="text-3xl">🎋</span>
-          <span className="text-white font-bold text-2xl tracking-tight">
-            <span className="text-gray-300">kanban</span>
-            <span className="text-green-400">bonsai</span>
-          </span>
+        <Link href="/login" className="flex items-center">
+          <Image
+            src="/logo.png"
+            alt="kanbanbonsai"
+            width={180}
+            height={68}
+            className="h-14 w-auto"
+          />
         </Link>
         <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
           ← Volver al inicio
