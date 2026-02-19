@@ -23,9 +23,9 @@ export default function AppHeader() {
           <Image
             src="/logo.png"
             alt="kanbanbonsai"
-            width={160}
-            height={60}
-            className="h-12 w-auto group-hover:opacity-80 transition-opacity"
+            width={220}
+            height={80}
+            className="h-16 w-auto group-hover:opacity-80 transition-opacity"
           />
         </Link>
 
