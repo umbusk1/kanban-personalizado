@@ -63,17 +63,6 @@ export async function DELETE(
     }),
   ])
 
-  // Borrar invitaciones por email del usuario
-  const userRecord = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true },
-  })
-  if (userRecord?.email) {
-    await prisma.invitation.deleteMany({
-      where: { invitedEmail: userRecord.email },
-    })
-  }
-
   // Borrar tableros que el usuario creó (y sus columnas/tarjetas/logs)
   const ownedBoards = await prisma.board.findMany({
     where: { ownerId: userId },
