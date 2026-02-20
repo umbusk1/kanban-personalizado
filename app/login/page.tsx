@@ -198,7 +198,7 @@ export default function LandingPage() {
               🌿 Gestión de proyectos con calma y claridad
             </div>
             <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              El flujo del
+              El <i>flow</i> del
               <span className="text-green-400"> bonsai</span>,<br/>
               con el orden del
               <span className="text-yellow-400"> kanban</span>
