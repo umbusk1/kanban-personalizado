@@ -260,10 +260,10 @@ export default function LandingPage() {
 
           <div className="space-y-8 text-white/70 leading-relaxed">
             <div className="flex gap-6">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">1</div>
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">0</div>
               <div>
-                <h3 className="text-white font-semibold mb-2">La idea surgió de una necesidad real</h3>
-                <p>Los japoneses hacen gerencia de proyectos con un concepto muy sencillo: un pizarrón (o tablero) y hojitas pegables de post-it (o tarjetas). En el pizarrón trazan 2 rayas para dividirlo en 3 áreas verticales (o columnas). Las hojitas se van moviendo de la 1ra columna, a la segunda y finalmente a la 3ra. La 1ra columna es lo que se debe hacer; la 2da lo que se está haciendo; y la 3ra lo ya hecho. Todos los que trabajan en un proyecto pueden ver cómo va avanzando la ejecución y el gerente debe revisar asignaciones, tiempos, costos, calidad de ejecución, etc. Todo eso puede volverse muy complicado y si se hace digitalmente puede significar un esfuerzo importante en aprender a manejar el software o herramienta de KANBAN (así lo llaman los japoneses y significa pizarra, pizarrón, tablero). Pero... llegó KANBANBONSAI, una app en línea para poder usar ese método de una manera fácil en proyectos sencillos.</p>
+                <h3 className="text-white font-semibold mb-2">Todos en la misma "página" (pizarra)</h3>
+                <p>Los japoneses hacen gerencia de proyectos con un concepto muy sencillo: un pizarra (o tablero) y hojitas pegables de post-it (o tarjetas). En el pizarrón trazan 2 rayas para dividirlo en 3 áreas verticales (o columnas). Las hojitas se van moviendo de la 1ra columna, a la segunda y finalmente a la 3ra. La 1ra columna es lo que se debe hacer; la 2da lo que se está haciendo; y la 3ra lo ya hecho. Todos los que trabajan en un proyecto pueden ver cómo va avanzando la ejecución y el gerente debe revisar asignaciones, tiempos, costos, calidad de ejecución, etc. Todo eso puede volverse muy complicado y si se hace digitalmente puede significar un esfuerzo importante en aprender a manejar el software o herramienta de KANBAN (así lo llaman los japoneses y significa pizarra, pizarrón, tablero). Pero... llegó KANBANBONSAI, una app en línea para poder usar ese método de una manera fácil en proyectos sencillos.</p>
               </div>
             </div>
 
