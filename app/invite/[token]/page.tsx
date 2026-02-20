@@ -28,6 +28,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
         setError(data.error || 'Error al aceptar la invitación')
         return
       }
+      router.refresh()
       router.push(`/board/${data.boardId}`)
     } catch {
       setError('Error de conexión. Intenta de nuevo.')
