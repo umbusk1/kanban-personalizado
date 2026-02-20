@@ -184,7 +184,7 @@ export default function LandingPage() {
             />
           </div>
           <nav className="flex items-center gap-6 text-sm text-white/70">
-            <a href="#historia" className="hover:text-white transition-colors">Concepto/Historia</a>
+            <a href="#historia" className="hover:text-white transition-colors">Concepto / Historia</a>
             <a href="#stats" className="hover:text-white transition-colors">En números</a>
           </nav>
         </div>
