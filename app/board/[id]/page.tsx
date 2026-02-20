@@ -317,7 +317,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full">
                 👑 {board.owner.name || board.owner.email}
               </span>
-              {board.members.map(member => (
+              {board.members.filter(member => member.user.id !== board.owner.id).map(member => (
                 <span key={member.user.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
                   🤝 {member.user.name || member.user.email}
                   {isOwner && (
