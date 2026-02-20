@@ -252,10 +252,10 @@ export default function LandingPage() {
       <section id="historia" className="relative z-10 border-t border-white/10 py-20 px-8">
         <div className="max-w-3xl mx-auto">
           <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">
-            El origen
+            El concepto
           </p>
           <h2 className="text-3xl font-bold text-white text-center mb-12">
-            Construido con la herramienta que construye
+            Representar visualmente el avance de los proyectos
           </h2>
 
           <div className="space-y-8 text-white/70 leading-relaxed">
@@ -263,7 +263,22 @@ export default function LandingPage() {
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">1</div>
               <div>
                 <h3 className="text-white font-semibold mb-2">La idea surgió de una necesidad real</h3>
-                <p>Umbusk necesitaba gestionar proyectos de tecnología en Venezuela y República Dominicana con equipos distribuidos. Las herramientas existentes eran complejas, costosas, o simplemente demasiado genéricas.</p>
+                <p>Los japoneses hacen gerencia de proyectos con un concepto muy sencillo: un pizarrón (o tablero) y hojitas pegables de post-it (o tarjetas). En el pizarrón trazan 2 rayas para dividirlo en 3 áreas verticales (o columnas). Las hojitas se van moviendo de la 1ra columna, a la segunda y finalmente a la 3ra. La 1ra columna es lo que se debe hacer; la 2da lo que se está haciendo; y la 3ra lo ya hecho. Todos los que trabajan en un proyecto pueden ver cómo va avanzando la ejecución y el gerente debe revisar asignaciones, tiempos, costos, calidad de ejecución, etc. Todo eso puede volverse muy complicado y si se hace digitalmente puede significar un esfuerzo importante en aprender a manejar el software o herramienta de KANBAN (así lo llaman los japoneses y significa pizarra, pizarrón, tablero). Pero... llegó KANBANBONSAI, una app en línea para poder usar ese método de una manera fácil en proyectos sencillos.</p>
+              </div>
+            </div>
+
+          <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">
+            El origen
+          </p>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
+            Construido con la herramienta que construye
+          </h2>            
+            
+            <div className="flex gap-6">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">1</div>
+              <div>
+                <h3 className="text-white font-semibold mb-2">La idea surgió de una necesidad real</h3>
+                <p>Umbusk necesitaba gestionar proyectos de tecnología en Venezuela, República Dominicana y Panamá con equipos esparcidos geográficamente. Las herramientas existentes eran complejas, costosas, o simplemente demasiado genéricas.</p>
               </div>
             </div>
 
@@ -271,7 +286,7 @@ export default function LandingPage() {
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-800/60 border border-yellow-500/30 flex items-center justify-center text-yellow-400 font-bold text-sm">2</div>
               <div>
                 <h3 className="text-white font-semibold mb-2">La paradoja del tablero vacío</h3>
-                <p>Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y un poco filosófica: <em>usar KANBAN para construir KANBAN</em>. Cada funcionalidad fue una tarjeta. Cada semana, un sprint.</p>
+                <p>Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y hasta un poco filosófica: <em>usar el método KANBAN para construir KANBAN</em>. Cada funcionalidad fue una tarjeta. Cada sprint un avance hacia el resultado.</p>
               </div>
             </div>
 
@@ -287,7 +302,7 @@ export default function LandingPage() {
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">✓</div>
               <div>
                 <h3 className="text-white font-semibold mb-2">El resultado: kanbanbonsai</h3>
-                <p>Una app en producción, construida en semanas, que demuestra que la combinación de experiencia humana e inteligencia artificial puede crear herramientas reales — simples, útiles y con alma propia. Como un bonsai: pequeño, cuidado, y perfectamente formado.</p>
+                <p>Una app en producción, construida en poco tiempo, que demuestra que la combinación de experiencia humana e inteligencia artificial puede crear herramientas reales — simples, útiles y con alma propia. Como un bonsai: pequeño, cuidado, y perfectamente formado.</p>
               </div>
             </div>
           </div>
