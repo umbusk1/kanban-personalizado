@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -21,6 +21,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
       return
     }
     setLoading(true)
+    setError('')
     try {
       const res = await fetch(`/api/invitations/${params.token}`, { method: 'POST' })
       const data = await res.json()
@@ -35,6 +36,11 @@ export default function InvitePage({ params }: { params: { token: string } }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSwitchAccount = async () => {
+    await signOut({ redirect: false })
+    router.push(`/login?callbackUrl=/invite/${params.token}`)
   }
 
   /* ── Pantalla de carga ── */
@@ -108,9 +114,8 @@ export default function InvitePage({ params }: { params: { token: string } }) {
             </h1>
 
             {session ? (
-              /* ── Usuario con sesión activa ── */
               <>
-                <p className="text-white/60 text-sm mb-8 leading-relaxed">
+                <p className="text-white/60 text-sm mb-6 leading-relaxed">
                   Hola,{' '}
                   <strong className="text-white">
                     {session.user?.name || session.user?.email}
@@ -118,33 +123,41 @@ export default function InvitePage({ params }: { params: { token: string } }) {
                   . Haz clic para unirte al tablero.
                 </p>
 
-                {/* Advertencia si el email no coincide */}
-                {session.user?.email && (
-                  <div className="rounded-lg bg-yellow-500/20 border border-yellow-400/30 px-4 py-3 mb-4 text-sm text-yellow-200">
-                    ⚠️ Asegúrate de estar logueado con el correo al que llegó la invitación.
-                    Actualmente logueado como <strong>{session.user.email}</strong>.
-                  </div>
-                )}
+                {/* Advertencia de cuenta */}
+                <div className="rounded-lg bg-yellow-500/20 border border-yellow-400/30 px-4 py-3 mb-4 text-sm text-yellow-200">
+                  ⚠️ Asegúrate de estar logueado con el correo al que llegó la invitación.
+                  Actualmente logueado como <strong>{session.user?.email}</strong>.
+                </div>
 
+                {/* Error del API (ej: email no coincide) */}
                 {error && (
-                  <div className="rounded-lg bg-red-500/20 border border-red-400/30 px-4 py-3 mb-6">
-                    <p className="text-sm text-red-300">{error}</p>
+                  <div className="rounded-lg bg-red-500/20 border border-red-400/30 px-4 py-3 mb-4">
+                    <p className="text-sm text-red-300 mb-3">{error}</p>
+                    <button
+                      onClick={handleSwitchAccount}
+                      className="w-full py-2 px-4 rounded-lg font-semibold text-sm
+                                 bg-white/10 border border-white/20 text-white
+                                 hover:bg-white/20 transition-all duration-200"
+                    >
+                      🔄 Cambiar de cuenta
+                    </button>
                   </div>
                 )}
 
-                <button
-                  onClick={handleAccept}
-                  disabled={loading}
-                  className="w-full py-3 px-6 rounded-lg font-semibold text-sm
-                             bg-[#c9a96e] hover:bg-[#e0c080] text-[#0d1117]
-                             transition-all duration-200 shadow-lg
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Procesando…' : '✅ Aceptar invitación'}
-                </button>
+                {!error && (
+                  <button
+                    onClick={handleAccept}
+                    disabled={loading}
+                    className="w-full py-3 px-6 rounded-lg font-semibold text-sm
+                               bg-[#c9a96e] hover:bg-[#e0c080] text-[#0d1117]
+                               transition-all duration-200 shadow-lg
+                               disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Procesando…' : '✅ Aceptar invitación'}
+                  </button>
+                )}
               </>
             ) : (
-              /* ── Usuario sin sesión ── */
               <>
                 <p className="text-white/60 text-sm mb-8 leading-relaxed">
                   Para aceptar la invitación necesitas una cuenta.
@@ -179,7 +192,6 @@ export default function InvitePage({ params }: { params: { token: string } }) {
             )}
           </div>
 
-          {/* Firma discreta */}
           <p className="text-center text-white/25 text-xs mt-6 tracking-widest uppercase">
             KanbanBonsai · Umbusk LLC
           </p>
