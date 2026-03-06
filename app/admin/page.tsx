@@ -29,12 +29,14 @@ export default function AdminPage() {
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/admin/users')
-      if (res.status === 403) {
+      // Redirigir si no tiene acceso (401 o 403)
+      if (res.status === 401 || res.status === 403) {
         router.push('/dashboard')
         return
       }
       const data = await res.json()
-      setUsers(data)
+      // Asegurarse de que sea un array antes de guardar
+      setUsers(Array.isArray(data) ? data : [])
     } catch {
       setError('Error al cargar usuarios')
     } finally {
@@ -72,7 +74,6 @@ export default function AdminPage() {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Título */}
         <div className="mb-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             🛡️ Panel de Administración
