@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
@@ -17,7 +16,6 @@ export default function AppHeader() {
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center group">
           <Image
@@ -32,7 +30,7 @@ export default function AppHeader() {
         {/* Nav central */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
           <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white transition-colors">
-            Mis Tableros
+            Mis Sprints
           </Link>
           {(session?.user as any)?.isAdmin && (
             <Link href="/admin" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
