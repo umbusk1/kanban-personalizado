@@ -75,10 +75,14 @@ function formatDate(iso: string | null) {
   })
 }
 
+const MESES_LOG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+                   'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
 // ── Bitácora como columna lateral ──
 function ActivityColumn({ boardId }: { boardId: string }) {
-  const [logs, setLogs]         = useState<LogEntry[]>([])
-  const [openDays, setOpenDays] = useState<Set<string>>(new Set())
+  const [logs, setLogs]           = useState<LogEntry[]>([])
+  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
+  const [openDays, setOpenDays]     = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -86,8 +90,8 @@ function ActivityColumn({ boardId }: { boardId: string }) {
       if (res.ok) {
         const data = await res.json()
         setLogs(data)
-        // Todos los días cerrados por defecto
-        if (data.length > 0) setOpenDays(new Set())
+        setOpenMonths(new Set())
+        setOpenDays(new Set())
       }
     }
     fetchLogs()
@@ -95,7 +99,15 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     return () => clearInterval(interval)
   }, [boardId])
 
-  const getDayKey   = (date: string) => new Date(date).toDateString()
+  const getMonthKey = (date: string) => {
+    const d = new Date(date)
+    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`
+  }
+  const getMonthLabel = (date: string) => {
+    const d = new Date(date)
+    return `${MESES_LOG[d.getMonth()]} ${d.getFullYear()}`
+  }
+  const getDayKey = (date: string) => new Date(date).toDateString()
   const getDayLabel = (date: string) => {
     const d         = new Date(date)
     const today     = new Date()
@@ -103,7 +115,7 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     yesterday.setDate(today.getDate() - 1)
     if (d.toDateString() === today.toDateString())     return 'Hoy'
     if (d.toDateString() === yesterday.toDateString()) return 'Ayer'
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
   }
 
   const timeAgo = (date: string) => {
@@ -113,21 +125,23 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     return `hace ${Math.floor(diff / 3600)}h`
   }
 
+  const toggleMonth = (key: string) => {
+    setOpenMonths(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
   const toggleDay = (key: string) => {
-    setOpenDays(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
+    setOpenDays(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
   }
 
-  // Agrupar logs por día
-  const grouped = logs.reduce((acc, log) => {
-    const key = getDayKey(log.createdAt)
-    if (!acc.has(key)) acc.set(key, [])
-    acc.get(key)!.push(log)
-    return acc
-  }, new Map<string, LogEntry[]>())
+  // Agrupar: mes → día → logs
+  const byMonth = new Map<string, Map<string, LogEntry[]>>()
+  for (const log of logs) {
+    const mk = getMonthKey(log.createdAt)
+    const dk = getDayKey(log.createdAt)
+    if (!byMonth.has(mk)) byMonth.set(mk, new Map())
+    const days = byMonth.get(mk)!
+    if (!days.has(dk)) days.set(dk, [])
+    days.get(dk)!.push(log)
+  }
 
   return (
     <div className="flex-shrink-0 w-72 bg-[#2d3d35] rounded-lg shadow-md flex flex-col self-start">
@@ -138,35 +152,56 @@ function ActivityColumn({ boardId }: { boardId: string }) {
         {logs.length === 0 ? (
           <p className="text-center text-gray-400 text-sm py-8">Sin actividad aún</p>
         ) : (
-          Array.from(grouped.entries()).map(([key, dayLogs]) => {
-            const open = openDays.has(key)
+          Array.from(byMonth.entries()).map(([mk, days]) => {
+            const monthOpen = openMonths.has(mk)
+            const firstLog  = Array.from(days.values())[0][0]
             return (
-              <div key={key}>
-                <button onClick={() => toggleDay(key)}
+              <div key={mk}>
+                {/* Acordeón de mes */}
+                <button onClick={() => toggleMonth(mk)}
                   className="w-full flex items-center justify-between px-4 py-2.5
-                             text-xs font-semibold text-gray-300
+                             text-xs font-bold text-gray-200
                              hover:bg-[#364840] transition-colors">
-                  <span>{getDayLabel(dayLogs[0].createdAt)}</span>
-                  <span className="text-gray-500">{open ? '▾' : '▸'}</span>
+                  <span>{getMonthLabel(firstLog.createdAt)}</span>
+                  <span className="text-gray-500">{monthOpen ? '▾' : '▸'}</span>
                 </button>
-                {open && (
-                  <div className="bg-[#263530] px-4 py-2 space-y-3">
-                    {dayLogs.map(log => (
-                      <div key={log.id}
-                        className="text-xs text-gray-300 pb-2 border-b border-[#3d5045] last:border-0">
-                        <div className="flex justify-between mb-0.5">
-                          <span className="font-medium text-gray-200">{log.user.name || log.user.email}</span>
-                          <span className="text-gray-500 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
-                        </div>
-                        <div className="text-gray-400">
-                          movió <span className="italic text-gray-300">"{log.cardTitle}"</span>
-                          {log.fromCol && log.toCol && (
-                            <> de <span className="text-blue-400">{log.fromCol}</span>
-                            {' → '}<span className="text-green-400">{log.toCol}</span></>
+                {monthOpen && (
+                  <div className="divide-y divide-[#3d5045]">
+                    {Array.from(days.entries()).map(([dk, dayLogs]) => {
+                      const dayOpen = openDays.has(dk)
+                      return (
+                        <div key={dk}>
+                          {/* Acordeón de día */}
+                          <button onClick={() => toggleDay(dk)}
+                            className="w-full flex items-center justify-between pl-6 pr-4 py-2
+                                       text-xs font-semibold text-gray-400
+                                       hover:bg-[#364840] transition-colors">
+                            <span>{getDayLabel(dayLogs[0].createdAt)}</span>
+                            <span className="text-gray-600">{dayOpen ? '▾' : '▸'}</span>
+                          </button>
+                          {dayOpen && (
+                            <div className="bg-[#263530] pl-8 pr-4 py-2 space-y-3">
+                              {dayLogs.map(log => (
+                                <div key={log.id}
+                                  className="text-xs text-gray-300 pb-2 border-b border-[#3d5045] last:border-0">
+                                  <div className="flex justify-between mb-0.5">
+                                    <span className="font-medium text-gray-200">{log.user.name || log.user.email}</span>
+                                    <span className="text-gray-500 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
+                                  </div>
+                                  <div className="text-gray-400">
+                                    movió <span className="italic text-gray-300">"{log.cardTitle}"</span>
+                                    {log.fromCol && log.toCol && (
+                                      <> de <span className="text-blue-400">{log.fromCol}</span>
+                                      {' → '}<span className="text-green-400">{log.toCol}</span></>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -438,8 +473,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 )}
                 <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
                   <span>Propietario: {board.owner.name || board.owner.email}</span>
-                  <span>•</span>
-                  <span>{board.columns.length} columnas</span>
                   <span>•</span>
                   <span>{allCards.length} tarjetas</span>
                 </div>
