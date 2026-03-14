@@ -268,18 +268,19 @@ export default function DashboardPage() {
                             : "text-gray-700 dark:text-gray-300"
                         }`}
                       >
-                        <span className="block truncate">{board.name}</span>
+                        <span className="block truncate">
+                          {board.userRole === "member" && (
+                            <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                          )}
+                          {board.name}
+                        </span>
                         <span className="text-xs text-gray-400 font-normal">
                           {board.totalCards === 0
                             ? "Sin tarjetas"
                             : (() => {
                                 const pct = Math.round((board.col3Cards / board.totalCards) * 100)
-                                const bar = Math.round(pct / 10)
                                 return (
-                                  <span className="flex items-center gap-1">
-                                    <span className="font-medium text-indigo-500">{pct}%</span>
-                                    <span className="text-gray-300">{"█".repeat(bar)}{"░".repeat(10 - bar)}</span>
-                                  </span>
+                                  <span className="font-medium text-indigo-500">{pct}% listo</span>
                                 )
                               })()
                           }
