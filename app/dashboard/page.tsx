@@ -268,33 +268,36 @@ export default function DashboardPage() {
                 <ul className="divide-y divide-gray-50 dark:divide-gray-700">
                   {inProgressSprints.map(board => (
                     <li key={board.id}>
-                      <button
-                        onClick={() => handleSelect(board)}
-                        className={`w-full text-left px-4 py-3 text-sm transition-colors
-                          hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
-                          selected?.id === board.id
-                            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold border-l-4 border-indigo-500"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        <span className="block truncate">
-                          {board.userRole === "member" && (
-                            <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
-                          )}
-                          {board.name}
-                        </span>
-                        <span className="text-xs text-gray-400 font-normal">
-                          {board.totalCards === 0
-                            ? "Sin tarjetas"
-                            : (() => {
-                                const pct = Math.round((board.col3Cards / board.totalCards) * 100)
-                                return (
-                                  <span className="font-medium text-indigo-500">{pct}% listo</span>
-                                )
-                              })()
-                          }
-                        </span>
-                      </button>
+                      <div className={`flex items-center transition-colors
+                        hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                        selected?.id === board.id
+                          ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-500"
+                          : ""
+                      }`}>
+                        <button onClick={() => handleSelect(board)}
+                          className={`flex-1 text-left px-4 py-3 text-sm ${
+                            selected?.id === board.id
+                              ? "text-indigo-700 dark:text-indigo-300 font-semibold"
+                              : "text-gray-700 dark:text-gray-300"
+                          }`}>
+                          <span className="block truncate">
+                            {board.userRole === "member" && (
+                              <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                            )}
+                            {board.name}
+                          </span>
+                          <span className="text-xs text-gray-400 font-normal">
+                            {board.totalCards === 0
+                              ? "Sin tarjetas"
+                              : <span className="font-medium text-indigo-500">{Math.round((board.col3Cards / board.totalCards) * 100)}% listo</span>
+                            }
+                          </span>
+                        </button>
+                        <Link href={`/board/${board.id}`}
+                          className="mr-2 px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors font-medium">
+                          Abrir
+                        </Link>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -434,25 +437,33 @@ export default function DashboardPage() {
                         <ul className="bg-gray-50 dark:bg-gray-700/20">
                           {group.items.map(board => (
                             <li key={board.id}>
-                              <button
-                                onClick={() => handleSelect(board)}
-                                className={`w-full text-left px-5 py-2.5 text-sm transition-colors
-                                  hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
-                                  selected?.id === board.id
-                                    ? "text-indigo-600 dark:text-indigo-400 font-semibold border-l-4 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                                    : "text-gray-600 dark:text-gray-400"
-                                }`}
-                              >
-                                <span className="block truncate">
-                                  {board.userRole === "member" && (
-                                    <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
-                                  )}
-                                  {board.name}
-                                </span>
-                                <span className="text-xs text-gray-400 font-normal">
-                                  {board.inProgress ? "🔄 En proceso" : "✅ Completado"}
-                                </span>
-                              </button>
+                              <div className={`flex items-center transition-colors
+                                hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                                selected?.id === board.id
+                                  ? "border-l-4 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
+                                  : ""
+                              }`}>
+                                <button onClick={() => handleSelect(board)}
+                                  className={`flex-1 text-left px-5 py-2.5 text-sm ${
+                                    selected?.id === board.id
+                                      ? "text-indigo-600 dark:text-indigo-400 font-semibold"
+                                      : "text-gray-600 dark:text-gray-400"
+                                  }`}>
+                                  <span className="block truncate">
+                                    {board.userRole === "member" && (
+                                      <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                                    )}
+                                    {board.name}
+                                  </span>
+                                  <span className="text-xs text-gray-400 font-normal">
+                                    {board.inProgress ? "🔄 En proceso" : "✅ Completado"}
+                                  </span>
+                                </button>
+                                <Link href={`/board/${board.id}`}
+                                  className="mr-2 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-600 transition-colors font-medium">
+                                  Abrir
+                                </Link>
+                              </div>
                             </li>
                           ))}
                         </ul>
