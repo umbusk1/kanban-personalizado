@@ -24,16 +24,16 @@ type User = {
   name: string | null
 }
 
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+               'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
 // ── Agrupa sprints por mes: "Marzo 2026", "Febrero 2026", etc.
 function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
   const map = new Map<string, Board[]>()
   for (const b of boards) {
     const date  = new Date(b.createdAt)
             // Elimina "de" y capitaliza: "marzo de 2026" → "Marzo 2026"
-        // Construir mes y año manualmente para evitar "de" del locale
-        const mes   = date.toLocaleDateString('es-ES', { month: 'long' })
-        const anio  = date.getFullYear()
-        const label = `${mes.charAt(0).toUpperCase()}${mes.slice(1)} ${anio}`
+        const label = `${MESES[date.getMonth()]} ${date.getFullYear()}`
     const key   = `${date.getFullYear()}-${String(date.getMonth()).padStart(2,'0')}`
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(b)
