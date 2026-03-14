@@ -10,7 +10,6 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session?.user) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -18,7 +17,8 @@ export async function PATCH(
       )
     }
 
-    const { title, description, priority, assignedTo } = await request.json()
+    // ← ACTUALIZADO: recibimos los 3 campos nuevos además de los existentes
+    const { title, description, priority, assignedTo, dueDate, alertDate, resources } = await request.json()
 
     // Verificar que la tarjeta existe y el usuario tiene acceso
     const card = await prisma.card.findUnique({
@@ -43,7 +43,7 @@ export async function PATCH(
       )
     }
 
-    const hasAccess = 
+    const hasAccess =
       card.column.board.ownerId === session.user.id ||
       card.column.board.members.some(m => m.userId === session.user.id)
 
@@ -58,13 +58,18 @@ export async function PATCH(
     const updatedCard = await prisma.card.update({
       where: { id: params.id },
       data: {
-        title: title ?? card.title,
+        title:       title       ?? card.title,
         description: description !== undefined ? description : card.description,
-        priority: priority !== undefined ? priority : card.priority,
-        assignedTo: assignedTo !== undefined ? assignedTo : card.assignedTo,
+        priority:    priority    !== undefined ? priority    : card.priority,
+        assignedTo:  assignedTo  !== undefined ? assignedTo  : card.assignedTo,
+        // ← NUEVO: guardar los 3 campos nuevos
+        dueDate:     dueDate     !== undefined ? (dueDate   ? new Date(dueDate)   : null) : card.dueDate,
+        alertDate:   alertDate   !== undefined ? (alertDate ? new Date(alertDate) : null) : card.alertDate,
+        resources:   resources   !== undefined ? resources   : card.resources,
       },
       include: {
         assignee: true,
+        creator:  true,  // ← NUEVO: incluimos creator para mostrarlo en la UI
       },
     })
 
@@ -78,14 +83,13 @@ export async function PATCH(
   }
 }
 
-// DELETE - Eliminar tarjeta
+// DELETE - Eliminar tarjeta (sin cambios)
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session?.user) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -93,7 +97,6 @@ export async function DELETE(
       )
     }
 
-    // Verificar que la tarjeta existe y el usuario tiene acceso
     const card = await prisma.card.findUnique({
       where: { id: params.id },
       include: {
@@ -116,7 +119,7 @@ export async function DELETE(
       )
     }
 
-    const hasAccess = 
+    const hasAccess =
       card.column.board.ownerId === session.user.id ||
       card.column.board.members.some(m => m.userId === session.user.id)
 
@@ -127,7 +130,6 @@ export async function DELETE(
       )
     }
 
-    // Eliminar tarjeta
     await prisma.card.delete({
       where: { id: params.id },
     })
