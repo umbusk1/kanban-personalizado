@@ -75,19 +75,38 @@ function formatDate(iso: string | null) {
   })
 }
 
-// ── Actividad como columna lateral ──
+// ── Bitácora como columna lateral ──
 function ActivityColumn({ boardId }: { boardId: string }) {
-  const [logs, setLogs] = useState<LogEntry[]>([])
+  const [logs, setLogs]         = useState<LogEntry[]>([])
+  const [openDays, setOpenDays] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchLogs = async () => {
       const res = await fetch(`/api/boards/${boardId}/activity`)
-      if (res.ok) setLogs(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setLogs(data)
+        // Abrir "Hoy" por defecto si hay actividad
+        if (data.length > 0) {
+          setOpenDays(new Set([new Date().toDateString()]))
+        }
+      }
     }
     fetchLogs()
     const interval = setInterval(fetchLogs, 15000)
     return () => clearInterval(interval)
   }, [boardId])
+
+  const getDayKey   = (date: string) => new Date(date).toDateString()
+  const getDayLabel = (date: string) => {
+    const d         = new Date(date)
+    const today     = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    if (d.toDateString() === today.toDateString())     return 'Hoy'
+    if (d.toDateString() === yesterday.toDateString()) return 'Ayer'
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+  }
 
   const timeAgo = (date: string) => {
     const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
@@ -96,32 +115,66 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     return `hace ${Math.floor(diff / 3600)}h`
   }
 
+  const toggleDay = (key: string) => {
+    setOpenDays(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  // Agrupar logs por día
+  const grouped = logs.reduce((acc, log) => {
+    const key = getDayKey(log.createdAt)
+    if (!acc.has(key)) acc.set(key, [])
+    acc.get(key)!.push(log)
+    return acc
+  }, new Map<string, LogEntry[]>())
+
   return (
     <div className="flex-shrink-0 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col self-start">
       <div className="p-4 border-b-4 border-gray-300 dark:border-gray-600">
-        <h2 className="font-semibold text-lg">🕐 Actividad</h2>
-        <span className="text-xs text-gray-400">{logs.length} eventos recientes</span>
+        <h2 className="font-semibold text-lg">📋 Bitácora</h2>
+        <span className="text-xs text-gray-400">{logs.length} eventos registrados</span>
       </div>
-      <div className="p-4 space-y-3 overflow-y-auto max-h-[600px]">
+      <div className="overflow-y-auto max-h-[600px] divide-y divide-gray-100 dark:divide-gray-700">
         {logs.length === 0 ? (
           <p className="text-center text-gray-400 text-sm py-8">Sin actividad aún</p>
         ) : (
-          logs.map(log => (
-            <div key={log.id}
-              className="text-xs text-gray-600 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 pb-2">
-              <div className="flex justify-between mb-0.5">
-                <span className="font-medium">{log.user.name || log.user.email}</span>
-                <span className="text-gray-400 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
-              </div>
-              <div className="text-gray-500 dark:text-gray-400">
-                movió <span className="italic text-gray-700 dark:text-gray-200">"{log.cardTitle}"</span>
-                {log.fromCol && log.toCol && (
-                  <> de <span className="text-blue-500">{log.fromCol}</span>
-                  {' → '}<span className="text-green-500">{log.toCol}</span></>
+          Array.from(grouped.entries()).map(([key, dayLogs]) => {
+            const open = openDays.has(key)
+            return (
+              <div key={key}>
+                <button onClick={() => toggleDay(key)}
+                  className="w-full flex items-center justify-between px-4 py-2.5
+                             text-xs font-semibold text-gray-600 dark:text-gray-300
+                             hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <span>{getDayLabel(dayLogs[0].createdAt)}</span>
+                  <span className="text-gray-400">{open ? '▾' : '▸'}</span>
+                </button>
+                {open && (
+                  <div className="bg-gray-50 dark:bg-gray-700/20 px-4 py-2 space-y-3">
+                    {dayLogs.map(log => (
+                      <div key={log.id}
+                        className="text-xs text-gray-600 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        <div className="flex justify-between mb-0.5">
+                          <span className="font-medium">{log.user.name || log.user.email}</span>
+                          <span className="text-gray-400 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
+                        </div>
+                        <div className="text-gray-500 dark:text-gray-400">
+                          movió <span className="italic text-gray-700 dark:text-gray-200">"{log.cardTitle}"</span>
+                          {log.fromCol && log.toCol && (
+                            <> de <span className="text-blue-500">{log.fromCol}</span>
+                            {' → '}<span className="text-green-500">{log.toCol}</span></>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>
