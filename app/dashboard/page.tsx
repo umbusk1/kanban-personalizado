@@ -6,6 +6,9 @@ import Link from "next/link"
 import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+               'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
 type Board = {
   id: string
   name: string
@@ -15,8 +18,8 @@ type Board = {
   _count: { columns: number; members: number }
   inProgress: boolean
   totalCards: number
-  col3Cards:  number   // ← NUEVO
-  createdAt: string
+  col3Cards:  number
+  createdAt:  string
 }
 
 type User = {
@@ -24,40 +27,28 @@ type User = {
   name: string | null
 }
 
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
-               'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-
-// ── Agrupa sprints por mes: "Marzo 2026", "Febrero 2026", etc.
 function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
   const map = new Map<string, Board[]>()
   for (const b of boards) {
-    const date  = new Date(b.createdAt)
-            // Elimina "de" y capitaliza: "marzo de 2026" → "Marzo 2026"
-        const label = `${MESES[date.getMonth()]} ${date.getFullYear()}`
-    const key   = `${date.getFullYear()}-${String(date.getMonth()).padStart(2,'0')}`
+    const date = new Date(b.createdAt)
+    const key  = `${date.getFullYear()}-${String(date.getMonth()).padStart(2,'0')}`
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(b)
   }
-  // Ordenar meses de más reciente a más antiguo
   return Array.from(map.entries())
     .sort((a, b) => b[0].localeCompare(a[0]))
     .map(([, items]) => {
       const d = new Date(items[0].createdAt)
-      return {
-        label: `${MESES[d.getMonth()]} ${d.getFullYear()}`,
-        items,
-      }
+      return { label: `${MESES[d.getMonth()]} ${d.getFullYear()}`, items }
     })
 }
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [user, setUser]       = useState<User | null>(null)
-  const [boards, setBoards]   = useState<Board[]>([])
-  const [loading, setLoading] = useState(true)
+  const [user, setUser]         = useState<User | null>(null)
+  const [boards, setBoards]     = useState<Board[]>([])
+  const [loading, setLoading]   = useState(true)
   const [selected, setSelected] = useState<Board | null>(null)
-
-  // Acordeón histórico — todos los meses abiertos por defecto
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
 
   // Modal crear
@@ -68,10 +59,10 @@ export default function DashboardPage() {
   const [createError, setCreateError]       = useState("")
 
   // Edición inline
-  const [editing, setEditing]   = useState(false)
-  const [editName, setEditName] = useState("")
-  const [editDesc, setEditDesc] = useState("")
-  const [saving, setSaving]     = useState(false)
+  const [editing, setEditing]     = useState(false)
+  const [editName, setEditName]   = useState("")
+  const [editDesc, setEditDesc]   = useState("")
+  const [saving, setSaving]       = useState(false)
   const [editError, setEditError] = useState("")
 
   // Modal eliminar
@@ -87,14 +78,8 @@ export default function DashboardPage() {
         const data = await res.json()
         setUser(data.user)
         setBoards(data.boards)
-        // Seleccionar el más antiguo en proceso, o el primero si no hay ninguno
         const inP = data.boards.filter((b: Board) => b.inProgress)
-        const defaultSelected = inP.length > 0
-          ? inP[inP.length - 1]   // más antiguo = último en el array (desc)
-          : null
-        setSelected(defaultSelected)
-        // Histórico: todos los meses cerrados por defecto
-        setOpenMonths(new Set())
+        setSelected(inP.length > 0 ? inP[inP.length - 1] : null)
       }
     } catch (e) {
       console.error("Error fetching data:", e)
@@ -115,6 +100,11 @@ export default function DashboardPage() {
       next.has(key) ? next.delete(key) : next.add(key)
       return next
     })
+  }
+
+  const monthKey = (b: Board) => {
+    const d = new Date(b.createdAt)
+    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`
   }
 
   const handleCreateBoard = async (e: React.FormEvent) => {
@@ -188,7 +178,8 @@ export default function DashboardPage() {
       if (res.ok) {
         const remaining = boards.filter(b => b.id !== deleteTarget.id)
         setBoards(remaining)
-        setSelected(remaining[0] || null)
+        const inP = remaining.filter(b => b.inProgress)
+        setSelected(inP.length > 0 ? inP[inP.length - 1] : null)
         setDeleteTarget(null)
         setEditing(false)
       }
@@ -205,12 +196,6 @@ export default function DashboardPage() {
 
   const inProgressSprints = boards.filter(b => b.inProgress)
   const historico         = groupByMonth(boards)
-
-  // Clave de mes para el acordeón
-  const monthKey = (b: Board) => {
-    const d = new Date(b.createdAt)
-    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -233,10 +218,8 @@ export default function DashboardPage() {
               )}
             </p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
-          >
+          <button onClick={() => setShowModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
             + Nuevo Sprint
           </button>
         </div>
@@ -252,7 +235,7 @@ export default function DashboardPage() {
         ) : (
           <div className="flex gap-5 items-start">
 
-            {/* ── Columna izquierda: Sprints en proceso ── */}
+            {/* ── Columna izquierda: En proceso ── */}
             <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
@@ -268,36 +251,31 @@ export default function DashboardPage() {
                 <ul className="divide-y divide-gray-50 dark:divide-gray-700">
                   {inProgressSprints.map(board => (
                     <li key={board.id}>
-                      <div className={`flex items-center transition-colors
-                        hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
-                        selected?.id === board.id
-                          ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-500"
-                          : ""
-                      }`}>
-                        <button onClick={() => handleSelect(board)}
-                          className={`flex-1 text-left px-4 py-3 text-sm ${
-                            selected?.id === board.id
-                              ? "text-indigo-700 dark:text-indigo-300 font-semibold"
-                              : "text-gray-700 dark:text-gray-300"
-                          }`}>
-                          <span className="block truncate">
-                            {board.userRole === "member" && (
-                              <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
-                            )}
-                            {board.name}
-                          </span>
-                          <span className="text-xs text-gray-400 font-normal flex items-center gap-2">
-                            {board.totalCards === 0
-                              ? "Sin tarjetas"
-                              : <span className="font-medium text-indigo-500">{Math.round((board.col3Cards / board.totalCards) * 100)}% listo</span>
-                            }
-                            <Link href={`/board/${board.id}`}
-                              onClick={e => e.stopPropagation()}
-                              className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium">
-                              Abrir
-                            </Link>
-                          </span>
-                      </div>
+                      <button onClick={() => handleSelect(board)}
+                        className={`w-full text-left px-4 py-3 text-sm transition-colors
+                          hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                          selected?.id === board.id
+                            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold border-l-4 border-indigo-500"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}>
+                        <span className="block truncate">
+                          {board.userRole === "member" && (
+                            <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                          )}
+                          {board.name}
+                        </span>
+                        <span className="text-xs text-gray-400 font-normal flex items-center gap-2 mt-0.5">
+                          {board.totalCards === 0
+                            ? "Sin tarjetas"
+                            : <span className="font-medium text-indigo-500">{Math.round((board.col3Cards / board.totalCards) * 100)}% listo</span>
+                          }
+                          <Link href={`/board/${board.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium">
+                            Abrir
+                          </Link>
+                        </span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -308,9 +286,7 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               {selected ? (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500 block mb-2">
-                    Sprint
-                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500 block mb-2">Sprint</span>
 
                   {editing ? (
                     <div className="space-y-4">
@@ -350,21 +326,15 @@ export default function DashboardPage() {
                         {selected.userRole === "owner" && (
                           <div className="flex gap-2 ml-4">
                             <button onClick={handleStartEdit} title="Editar sprint"
-                              className="text-gray-400 hover:text-indigo-500 transition-colors p-1 rounded text-lg">
-                              ✏️
-                            </button>
+                              className="text-gray-400 hover:text-indigo-500 transition-colors p-1 rounded text-lg">✏️</button>
                             <button onClick={() => setDeleteTarget(selected)} title="Eliminar sprint"
-                              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg">
-                              🗑️
-                            </button>
+                              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg">🗑️</button>
                           </div>
                         )}
                       </div>
-
                       {selected.description && (
                         <p className="text-gray-600 dark:text-gray-400 mb-6">{selected.description}</p>
                       )}
-
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6">
                         <span>🃏 {selected.totalCards} tarjeta{selected.totalCards !== 1 ? 's' : ''}</span>
                         <span>👥 {selected._count.members + 1} miembro{selected._count.members + 1 !== 1 ? 's' : ''}</span>
@@ -383,7 +353,6 @@ export default function DashboardPage() {
                           {selected.userRole === "owner" ? "👑 Dueño" : `🤝 ${selected.owner.name || selected.owner.email}`}
                         </span>
                       </div>
-
                       <Link href={`/board/${selected.id}`}
                         className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700
                                    text-white px-6 py-3 rounded-lg font-medium transition-colors">
@@ -413,57 +382,45 @@ export default function DashboardPage() {
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">{boards.length} sprints</p>
               </div>
-
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {historico.map(group => {
-                  // Calcular la clave del mes desde el primer item del grupo
                   const key  = monthKey(group.items[0])
                   const open = openMonths.has(key)
                   return (
                     <div key={key}>
-                      {/* Encabezado del mes — acordeón */}
-                      <button
-                        onClick={() => toggleMonth(key)}
+                      <button onClick={() => toggleMonth(key)}
                         className="w-full flex items-center justify-between px-4 py-2.5
                                    text-xs font-semibold text-gray-600 dark:text-gray-300
-                                   hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors capitalize"
-                      >
+                                   hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors capitalize">
                         <span>{group.label}</span>
                         <span className="text-gray-400">{open ? '▾' : '▸'}</span>
                       </button>
-
-                      {/* Items del mes */}
                       {open && (
                         <ul className="bg-gray-50 dark:bg-gray-700/20">
                           {group.items.map(board => (
                             <li key={board.id}>
-                              <div className={`flex items-center transition-colors
-                                hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
-                                selected?.id === board.id
-                                  ? "border-l-4 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                                  : ""
-                              }`}>
-                                <button onClick={() => handleSelect(board)}
-                                  className={`flex-1 text-left px-5 py-2.5 text-sm ${
-                                    selected?.id === board.id
-                                      ? "text-indigo-600 dark:text-indigo-400 font-semibold"
-                                      : "text-gray-600 dark:text-gray-400"
-                                  }`}>
-                                  <span className="block truncate">
-                                    {board.userRole === "member" && (
-                                      <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
-                                    )}
-                                    {board.name}
-                                  </span>
-                                  <span className="text-xs text-gray-400 font-normal flex items-center gap-2">
-                                    {board.inProgress ? "🔄 En proceso" : "✅ Completado"}
-                                    <Link href={`/board/${board.id}`}
-                                      onClick={e => e.stopPropagation()}
-                                      className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium">
-                                      Abrir
-                                    </Link>
-                                  </span>
-                              </div>
+                              <button onClick={() => handleSelect(board)}
+                                className={`w-full text-left px-5 py-2.5 text-sm transition-colors
+                                  hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                                  selected?.id === board.id
+                                    ? "text-indigo-600 dark:text-indigo-400 font-semibold border-l-4 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
+                                    : "text-gray-600 dark:text-gray-400"
+                                }`}>
+                                <span className="block truncate">
+                                  {board.userRole === "member" && (
+                                    <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                                  )}
+                                  {board.name}
+                                </span>
+                                <span className="text-xs text-gray-400 font-normal flex items-center gap-2 mt-0.5">
+                                  {board.inProgress ? "🔄 En proceso" : "✅ Completado"}
+                                  <Link href={`/board/${board.id}`}
+                                    onClick={e => e.stopPropagation()}
+                                    className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium">
+                                    Abrir
+                                  </Link>
+                                </span>
+                              </button>
                             </li>
                           ))}
                         </ul>
