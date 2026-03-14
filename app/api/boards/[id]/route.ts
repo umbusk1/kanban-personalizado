@@ -21,7 +21,10 @@ export async function GET(
           include: {
             cards: {
               orderBy: { position: 'asc' },
-              include: { assignee: true },
+              include: {
+                assignee: true,
+                creator:  true, // ← NUEVO: quién creó la tarjeta
+              },
             },
           },
         },
@@ -31,7 +34,7 @@ export async function GET(
     })
 
     if (!board) {
-      return NextResponse.json({ error: "Tablero no encontrado" }, { status: 404 })
+      return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
 
     const hasAccess =
@@ -45,7 +48,7 @@ export async function GET(
     return NextResponse.json(board)
   } catch (error) {
     console.error("Error:", error)
-    return NextResponse.json({ error: "Error al obtener tablero" }, { status: 500 })
+    return NextResponse.json({ error: "Error al obtener sprint" }, { status: 500 })
   }
 }
 
@@ -60,17 +63,17 @@ export async function PATCH(
     }
 
     const board = await prisma.board.findUnique({ where: { id: params.id } })
-
     if (!board) {
-      return NextResponse.json({ error: "Tablero no encontrado" }, { status: 404 })
+      return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
 
     // Solo el dueño puede editar
     if (board.ownerId !== session.user.id) {
-      return NextResponse.json({ error: "Solo el dueño puede editar el tablero" }, { status: 403 })
+      return NextResponse.json({ error: "Solo el dueño puede editar el sprint" }, { status: 403 })
     }
 
-    const { name, description } = await request.json()
+    // ← ACTUALIZADO: recibimos insights además de name y description
+    const { name, description, insights } = await request.json()
 
     if (!name) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
@@ -78,13 +81,17 @@ export async function PATCH(
 
     const updated = await prisma.board.update({
       where: { id: params.id },
-      data: { name, description: description || null },
+      data: {
+        name,
+        description: description !== undefined ? description : board.description,
+        insights:    insights    !== undefined ? insights    : board.insights, // ← NUEVO
+      },
     })
 
     return NextResponse.json(updated)
   } catch (error) {
-    console.error("Error al editar tablero:", error)
-    return NextResponse.json({ error: "Error al editar tablero" }, { status: 500 })
+    console.error("Error al editar sprint:", error)
+    return NextResponse.json({ error: "Error al editar sprint" }, { status: 500 })
   }
 }
 
@@ -99,21 +106,19 @@ export async function DELETE(
     }
 
     const board = await prisma.board.findUnique({ where: { id: params.id } })
-
     if (!board) {
-      return NextResponse.json({ error: "Tablero no encontrado" }, { status: 404 })
+      return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
 
     // Solo el dueño puede eliminar
     if (board.ownerId !== session.user.id) {
-      return NextResponse.json({ error: "Solo el dueño puede eliminar el tablero" }, { status: 403 })
+      return NextResponse.json({ error: "Solo el dueño puede eliminar el sprint" }, { status: 403 })
     }
 
     await prisma.board.delete({ where: { id: params.id } })
-
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error al eliminar tablero:", error)
-    return NextResponse.json({ error: "Error al eliminar tablero" }, { status: 500 })
+    console.error("Error al eliminar sprint:", error)
+    return NextResponse.json({ error: "Error al eliminar sprint" }, { status: 500 })
   }
 }
