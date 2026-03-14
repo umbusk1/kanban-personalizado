@@ -286,17 +286,17 @@ export default function DashboardPage() {
                             )}
                             {board.name}
                           </span>
-                          <span className="text-xs text-gray-400 font-normal">
+                          <span className="text-xs text-gray-400 font-normal flex items-center gap-2">
                             {board.totalCards === 0
                               ? "Sin tarjetas"
                               : <span className="font-medium text-indigo-500">{Math.round((board.col3Cards / board.totalCards) * 100)}% listo</span>
                             }
+                            <Link href={`/board/${board.id}`}
+                              onClick={e => e.stopPropagation()}
+                              className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium">
+                              Abrir
+                            </Link>
                           </span>
-                        </button>
-                        <Link href={`/board/${board.id}`}
-                          className="mr-2 px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors font-medium">
-                          Abrir
-                        </Link>
                       </div>
                     </li>
                   ))}
@@ -455,14 +455,14 @@ export default function DashboardPage() {
                                     )}
                                     {board.name}
                                   </span>
-                                  <span className="text-xs text-gray-400 font-normal">
+                                  <span className="text-xs text-gray-400 font-normal flex items-center gap-2">
                                     {board.inProgress ? "🔄 En proceso" : "✅ Completado"}
+                                    <Link href={`/board/${board.id}`}
+                                      onClick={e => e.stopPropagation()}
+                                      className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors font-medium">
+                                      Abrir
+                                    </Link>
                                   </span>
-                                </button>
-                                <Link href={`/board/${board.id}`}
-                                  className="mr-2 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-600 transition-colors font-medium">
-                                  Abrir
-                                </Link>
                               </div>
                             </li>
                           ))}
