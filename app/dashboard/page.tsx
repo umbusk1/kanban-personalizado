@@ -15,6 +15,7 @@ type Board = {
   _count: { columns: number; members: number }
   inProgress: boolean
   totalCards: number
+  col3Cards:  number   // ← NUEVO
   createdAt: string
 }
 
@@ -28,7 +29,9 @@ function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
   const map = new Map<string, Board[]>()
   for (const b of boards) {
     const date  = new Date(b.createdAt)
-    const label = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+            // Elimina "de" y capitaliza: "marzo de 2026" → "Marzo 2026"
+        const raw   = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+        const label = raw.replace(' de ', ' ').replace(/^\w/, c => c.toUpperCase())
     const key   = `${date.getFullYear()}-${String(date.getMonth()).padStart(2,'0')}`
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(b)
@@ -81,12 +84,8 @@ export default function DashboardPage() {
         setUser(data.user)
         setBoards(data.boards)
         if (data.boards.length > 0) setSelected(data.boards[0])
-        // Abrir el mes más reciente por defecto
-        if (data.boards.length > 0) {
-          const first = new Date(data.boards[0].createdAt)
-          const key   = `${first.getFullYear()}-${String(first.getMonth()).padStart(2,'0')}`
-          setOpenMonths(new Set([key]))
-        }
+        // Histórico: todos los meses cerrados por defecto
+        setOpenMonths(new Set())
       }
     } catch (e) {
       console.error("Error fetching data:", e)
@@ -245,10 +244,10 @@ export default function DashboardPage() {
           <div className="flex gap-5 items-start">
 
             {/* ── Columna izquierda: Sprints en proceso ── */}
-            <aside className="flex-shrink-0 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
+            <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  🔄 Sprints en proceso
+                  🔄 En proceso
                 </p>
                 <p className="text-xs text-indigo-400 mt-0.5">{inProgressSprints.length} activos</p>
               </div>
@@ -271,7 +270,19 @@ export default function DashboardPage() {
                       >
                         <span className="block truncate">{board.name}</span>
                         <span className="text-xs text-gray-400 font-normal">
-                          {board.totalCards === 0 ? "Sin tarjetas" : `${board.totalCards} tarjeta${board.totalCards !== 1 ? 's' : ''}`}
+                          {board.totalCards === 0
+                            ? "Sin tarjetas"
+                            : (() => {
+                                const pct = Math.round((board.col3Cards / board.totalCards) * 100)
+                                const bar = Math.round(pct / 10)
+                                return (
+                                  <span className="flex items-center gap-1">
+                                    <span className="font-medium text-indigo-500">{pct}%</span>
+                                    <span className="text-gray-300">{"█".repeat(bar)}{"░".repeat(10 - bar)}</span>
+                                  </span>
+                                )
+                              })()
+                          }
                         </span>
                       </button>
                     </li>
@@ -377,7 +388,7 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Columna derecha: Histórico ── */}
-            <aside className="flex-shrink-0 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
+            <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/40">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   📚 Histórico
