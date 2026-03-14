@@ -30,8 +30,10 @@ function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
   for (const b of boards) {
     const date  = new Date(b.createdAt)
             // Elimina "de" y capitaliza: "marzo de 2026" → "Marzo 2026"
-        const raw   = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-        const label = raw.replace(' de ', ' ').replace(/^\w/, c => c.toUpperCase())
+        // Construir mes y año manualmente para evitar "de" del locale
+        const mes   = date.toLocaleDateString('es-ES', { month: 'long' })
+        const anio  = date.getFullYear()
+        const label = `${mes.charAt(0).toUpperCase()}${mes.slice(1)} ${anio}`
     const key   = `${date.getFullYear()}-${String(date.getMonth()).padStart(2,'0')}`
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(b)
@@ -429,7 +431,12 @@ export default function DashboardPage() {
                                     : "text-gray-600 dark:text-gray-400"
                                 }`}
                               >
-                                <span className="block truncate">{board.name}</span>
+                                <span className="block truncate">
+                                  {board.userRole === "member" && (
+                                    <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                                  )}
+                                  {board.name}
+                                </span>
                                 <span className="text-xs text-gray-400 font-normal">
                                   {board.inProgress ? "🔄 En proceso" : "✅ Completado"}
                                 </span>
