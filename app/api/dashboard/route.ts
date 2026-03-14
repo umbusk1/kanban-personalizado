@@ -44,13 +44,19 @@ export async function GET() {
         .filter(col => col.position <= 2)
         .reduce((sum, col) => sum + col._count.cards, 0)
 
+      // ← NUEVO: tarjetas en la 3ra columna (completadas)
+      const col3Cards = board.columns
+        .filter(col => col.position === 3)
+        .reduce((sum, col) => sum + col._count.cards, 0)
+
       const inProgress = totalCards === 0 || col1and2Cards > 0
 
       return {
         ...board,
         userRole: board.ownerId === session.user.id ? "owner" : "member",
-        inProgress,   // ← true = en proceso, false = completado
+        inProgress,
         totalCards,
+        col3Cards,    // ← NUEVO
       }
     })
 
