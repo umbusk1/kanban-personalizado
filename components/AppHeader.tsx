@@ -29,7 +29,7 @@ export default function AppHeader() {
 
         {/* Nav central */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
-          <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white transition-colors">
+          <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white transition-colors text-base font-bold uppercase tracking-wide">
             Mis Sprints
           </Link>
           {(session?.user as any)?.isAdmin && (
