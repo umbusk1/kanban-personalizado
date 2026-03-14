@@ -26,6 +26,7 @@ model Board {
   id           String            @id @default(cuid())
   name         String
   description  String?
+  insights     String?           // ← NUEVO: lecciones aprendidas del sprint
   ownerId      String
   createdAt    DateTime          @default(now())
   owner        User              @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
@@ -50,7 +51,7 @@ model Column {
 }
 
 model Card {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   columnId    String
   title       String
   description String?
@@ -58,8 +59,11 @@ model Card {
   createdBy   String
   position    Int
   priority    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  dueDate     DateTime? // ← NUEVO: fecha límite de ejecución
+  alertDate   DateTime? // ← NUEVO: fecha para enviar alerta al responsable
+  resources   String?   // ← NUEVO: URLs de archivos/recursos relacionados
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   column   Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
   creator  User   @relation("CardCreator", fields: [createdBy], references: [id])
   assignee User?  @relation("CardAssignee", fields: [assignedTo], references: [id])
@@ -89,15 +93,14 @@ model BoardInvitation {
   @@map("board_invitations")
 }
 
-// ── NUEVO: Registro de actividad ──
 model ActivityLog {
   id        String   @id @default(cuid())
   boardId   String
   userId    String
   action    String   // "moved", "created", "deleted", "updated"
   cardTitle String
-  fromCol   String?  // nombre de columna origen
-  toCol     String?  // nombre de columna destino
+  fromCol   String?
+  toCol     String?
   createdAt DateTime @default(now())
   board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
