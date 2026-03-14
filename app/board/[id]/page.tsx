@@ -86,10 +86,8 @@ function ActivityColumn({ boardId }: { boardId: string }) {
       if (res.ok) {
         const data = await res.json()
         setLogs(data)
-        // Abrir "Hoy" por defecto si hay actividad
-        if (data.length > 0) {
-          setOpenDays(new Set([new Date().toDateString()]))
-        }
+        // Todos los días cerrados por defecto
+        if (data.length > 0) setOpenDays(new Set())
       }
     }
     fetchLogs()
@@ -132,12 +130,11 @@ function ActivityColumn({ boardId }: { boardId: string }) {
   }, new Map<string, LogEntry[]>())
 
   return (
-    <div className="flex-shrink-0 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col self-start">
-      <div className="p-4 border-b-4 border-gray-300 dark:border-gray-600">
-        <h2 className="font-semibold text-lg">📋 Bitácora</h2>
-        <span className="text-xs text-gray-400">{logs.length} eventos registrados</span>
+    <div className="flex-shrink-0 w-72 bg-[#2d3d35] rounded-lg shadow-md flex flex-col self-start">
+      <div className="p-4 border-b-4 border-[#3d5045]">
+        <h2 className="font-semibold text-lg text-gray-100">📋 Bitácora</h2>
       </div>
-      <div className="overflow-y-auto max-h-[600px] divide-y divide-gray-100 dark:divide-gray-700">
+      <div className="overflow-y-auto max-h-[600px] divide-y divide-[#3d5045]">
         {logs.length === 0 ? (
           <p className="text-center text-gray-400 text-sm py-8">Sin actividad aún</p>
         ) : (
@@ -147,25 +144,25 @@ function ActivityColumn({ boardId }: { boardId: string }) {
               <div key={key}>
                 <button onClick={() => toggleDay(key)}
                   className="w-full flex items-center justify-between px-4 py-2.5
-                             text-xs font-semibold text-gray-600 dark:text-gray-300
-                             hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                             text-xs font-semibold text-gray-300
+                             hover:bg-[#364840] transition-colors">
                   <span>{getDayLabel(dayLogs[0].createdAt)}</span>
-                  <span className="text-gray-400">{open ? '▾' : '▸'}</span>
+                  <span className="text-gray-500">{open ? '▾' : '▸'}</span>
                 </button>
                 {open && (
-                  <div className="bg-gray-50 dark:bg-gray-700/20 px-4 py-2 space-y-3">
+                  <div className="bg-[#263530] px-4 py-2 space-y-3">
                     {dayLogs.map(log => (
                       <div key={log.id}
-                        className="text-xs text-gray-600 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        className="text-xs text-gray-300 pb-2 border-b border-[#3d5045] last:border-0">
                         <div className="flex justify-between mb-0.5">
-                          <span className="font-medium">{log.user.name || log.user.email}</span>
-                          <span className="text-gray-400 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
+                          <span className="font-medium text-gray-200">{log.user.name || log.user.email}</span>
+                          <span className="text-gray-500 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
                         </div>
-                        <div className="text-gray-500 dark:text-gray-400">
-                          movió <span className="italic text-gray-700 dark:text-gray-200">"{log.cardTitle}"</span>
+                        <div className="text-gray-400">
+                          movió <span className="italic text-gray-300">"{log.cardTitle}"</span>
                           {log.fromCol && log.toCol && (
-                            <> de <span className="text-blue-500">{log.fromCol}</span>
-                            {' → '}<span className="text-green-500">{log.toCol}</span></>
+                            <> de <span className="text-blue-400">{log.fromCol}</span>
+                            {' → '}<span className="text-green-400">{log.toCol}</span></>
                           )}
                         </div>
                       </div>
