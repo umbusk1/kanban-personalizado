@@ -41,11 +41,13 @@ function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
   // Ordenar meses de más reciente a más antiguo
   return Array.from(map.entries())
     .sort((a, b) => b[0].localeCompare(a[0]))
-    .map(([, items]) => ({
-      label: items[0] && new Date(items[0].createdAt)
-        .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
-      items,
-    }))
+    .map(([, items]) => {
+      const d = new Date(items[0].createdAt)
+      return {
+        label: `${MESES[d.getMonth()]} ${d.getFullYear()}`,
+        items,
+      }
+    })
 }
 
 export default function DashboardPage() {
