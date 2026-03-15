@@ -527,6 +527,27 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             <h2 className="text-xl font-bold mb-4">
               {modalMode === 'create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}
             </h2>
+            {/* ── 5D: barra de progreso en el modal si hay checkboxes ── */}
+            {(() => {
+              const lines = formData.description.split('\n')
+              const total = lines.filter(l => l.match(/^- \[[ x]\] /i)).length
+              const done  = lines.filter(l => l.match(/^- \[x\] /i)).length
+              if (total === 0) return null
+              const pct   = Math.round((done / total) * 100)
+              const color = pct === 100 ? 'bg-green-500' : pct >= 50 ? 'bg-blue-500' : 'bg-amber-400'
+              return (
+                <div className="mb-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg px-4 py-3">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                    <span>Progreso de tareas</span>
+                    <span className="font-semibold">{done}/{total} ({pct}%)</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-300 ${color}`}
+                      style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })()}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Título */}
               <div>
