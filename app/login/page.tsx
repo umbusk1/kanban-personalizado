@@ -222,7 +222,7 @@ export default function LandingPage() {
       {/* ── Header — fondo sólido, sin trama ── */}
       <header className="relative z-20 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-8 py-4 flex justify-between items-center">
-          <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-18 w-auto" priority />
+          <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-16 w-auto" priority />
           <nav className="flex items-center gap-6 text-sm text-white/60">
             <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#historia"        className="hover:text-white transition-colors">Historia</a>
@@ -386,7 +386,7 @@ export default function LandingPage() {
       {/* ── Footer — fondo sólido, sin trama ── */}
       <footer className="relative z-20 border-t border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-8 py-8 flex flex-col items-center gap-3 text-center">
-          <Image src="/logo.svg" alt="kanbanbonsai" width={200} height={60} className="h-14 w-auto opacity-50"/>
+          <Image src="/logo.svg" alt="kanbanbonsai" width={200} height={60} className="h-14 w-auto opacity-0"/>
           <p className="text-sm text-white/40">
             vibe-coded by{" "}
             <a href="https://umbusk.com" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Umbusk</a>
