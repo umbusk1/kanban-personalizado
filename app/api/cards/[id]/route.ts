@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { sendCardAssignedEmail, sendCardEditedEmail } from "@/lib/email"  // ← NUEVO
 
 // PATCH - Editar tarjeta
 export async function PATCH(
@@ -17,7 +18,6 @@ export async function PATCH(
       )
     }
 
-    // ← ACTUALIZADO: recibimos los 3 campos nuevos además de los existentes
     const { title, description, priority, assignedTo, dueDate, alertDate, resources } = await request.json()
 
     // Verificar que la tarjeta existe y el usuario tiene acceso
@@ -54,6 +54,11 @@ export async function PATCH(
       )
     }
 
+    // ← NUEVO: detectar si el asignado va a cambiar
+    const oldAssignedTo = card.assignedTo
+    const newAssignedTo = assignedTo !== undefined ? assignedTo : oldAssignedTo
+    const assigneeChanged = assignedTo !== undefined && assignedTo !== oldAssignedTo
+
     // Actualizar tarjeta
     const updatedCard = await prisma.card.update({
       where: { id: params.id },
@@ -62,18 +67,54 @@ export async function PATCH(
         description: description !== undefined ? description : card.description,
         priority:    priority    !== undefined ? priority    : card.priority,
         assignedTo:  assignedTo  !== undefined ? assignedTo  : card.assignedTo,
-        // ← NUEVO: guardar los 3 campos nuevos
         dueDate:     dueDate     !== undefined ? (dueDate   ? new Date(dueDate)   : null) : card.dueDate,
         alertDate:   alertDate   !== undefined ? (alertDate ? new Date(alertDate) : null) : card.alertDate,
         resources:   resources   !== undefined ? resources   : card.resources,
       },
       include: {
         assignee: true,
-        creator:  true,  // ← NUEVO: incluimos creator para mostrarlo en la UI
+        creator:  true,
       },
     })
 
+    // ← NUEVO: lógica de emails post-edición
+    const editorName = session.user.name || session.user.email || "Un compañero"
+    const boardName  = card.column.board.name
+
+    if (assigneeChanged && updatedCard.assignee) {
+      // Caso 1: el asignado cambió → notificar a la nueva persona (si no es quien editó)
+      if (updatedCard.assignee.id !== session.user.id) {
+        try {
+          await sendCardAssignedEmail({
+            to:             updatedCard.assignee.email,
+            assigneeName:   updatedCard.assignee.name  || updatedCard.assignee.email,
+            cardTitle:      updatedCard.title,
+            boardName,
+            assignedByName: editorName,
+          })
+        } catch (emailError) {
+          console.error("Error enviando email de nueva asignación:", emailError)
+        }
+      }
+    } else if (!assigneeChanged && updatedCard.assignee) {
+      // Caso 2: el asignado no cambió, pero alguien más editó la hoja → notificar al asignado
+      if (updatedCard.assignee.id !== session.user.id) {
+        try {
+          await sendCardEditedEmail({
+            to:           updatedCard.assignee.email,
+            assigneeName: updatedCard.assignee.name  || updatedCard.assignee.email,
+            cardTitle:    updatedCard.title,
+            boardName,
+            editedByName: editorName,
+          })
+        } catch (emailError) {
+          console.error("Error enviando email de edición:", emailError)
+        }
+      }
+    }
+
     return NextResponse.json(updatedCard)
+
   } catch (error) {
     console.error("Error al actualizar tarjeta:", error)
     return NextResponse.json(
@@ -135,6 +176,7 @@ export async function DELETE(
     })
 
     return NextResponse.json({ success: true })
+
   } catch (error) {
     console.error("Error al eliminar tarjeta:", error)
     return NextResponse.json(
