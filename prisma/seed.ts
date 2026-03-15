@@ -66,7 +66,7 @@ async function main() {
 
   console.log('✅ Columnas creadas')
 
-  // Crear tarjetas de prueba
+  // Crear hojas de prueba
   await prisma.card.create({
     data: {
       columnId: backlog.id,
@@ -82,7 +82,7 @@ async function main() {
     data: {
       columnId: backlog.id,
       title: 'Implementar drag & drop',
-      description: 'Permitir mover tarjetas entre columnas',
+      description: 'Permitir mover hojas entre columnas',
       createdBy: user.id,
       position: 2,
       priority: 'media',
@@ -111,7 +111,7 @@ async function main() {
     },
   })
 
-  console.log('✅ Tarjetas creadas')
+  console.log('✅ Hojas creadas')
   console.log(`
   🎉 Seed completado exitosamente!
   
@@ -119,7 +119,7 @@ async function main() {
   - Usuario: ${user.email}
   - Tablero: ${board.name}
   - Columnas: 3 (Backlog, En Progreso, Completado)
-  - Tarjetas: 4 tarjetas de ejemplo
+  - Hojas: 4 Hojas de ejemplo
   
   🔗 ID del tablero: ${board.id}
   `)
