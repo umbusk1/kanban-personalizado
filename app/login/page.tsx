@@ -220,20 +220,17 @@ const features: Feature[] = [
     },
   },
   {
-    icon: "📊", title: "Histórico", badge: "Dashboard triple", color: "indigo",
-    desc: "Vista panorámica en tres columnas: pasado, presente y futuro de tus Sprints. Todo el avance desde un solo lugar.",
+    icon: "📊", title: "Histórico", badge: "Cuarta columna", color: "indigo",
+    desc: "Una cuarta columna en el dashboard que muestra todos tus Sprints: los que ya terminaron y los que están activos ahora mismo.",
     modal: {
-      headline: "Histórico: la película completa de tu proyecto",
-      body: "El Histórico es un dashboard especial que organiza todos tus Sprints en tres columnas según su estado temporal: los que ya terminaron, los que están activos ahora mismo, y los que están planificados para el futuro.",
+      headline: "Histórico: el repositorio de tu proyecto",
+      body: "El Histórico es una cuarta columna en el dashboard que muestra todos tus Sprints: los que ya terminaron y los que están activos ahora mismo.",
       bullets: [
-        "Columna Pasado: Sprints archivados con su porcentaje de cumplimiento final",
-        "Columna Presente: Sprints activos con su progreso en tiempo real",
-        "Columna Futuro: Sprints planificados con fecha de inicio programada",
         "Acceso directo a cualquier Sprint desde el Histórico con un clic",
-        "Vista ideal para reuniones de gerencia o reportes ejecutivos",
-        "Permite comparar velocidad y cumplimiento entre Sprints anteriores",
+        "Vista completa para reuniones de gerencia o reportes ejecutivos",
+        "Permite encontrar Sprints actuales y anteriores",
       ],
-      footer: "Ver el pasado, el presente y el futuro juntos es lo que distingue la gestión estratégica de la operativa.",
+      footer: "Cada Sprint puede tener insights o lecciones aprendidas, que es lo que distingue la gestión estratégica de la operativa.",
     },
   },
   {
