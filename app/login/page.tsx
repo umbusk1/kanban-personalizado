@@ -222,7 +222,7 @@ export default function LandingPage() {
       {/* ── Header — fondo sólido, sin trama ── */}
       <header className="relative z-20 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-8 py-4 flex justify-between items-center">
-          <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-17 w-auto" priority />
+          <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-16 w-auto" priority />
           <nav className="flex items-center gap-6 text-sm text-white/60">
             <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#historia"        className="hover:text-white transition-colors">Historia</a>
