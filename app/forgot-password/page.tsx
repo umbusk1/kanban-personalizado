@@ -70,8 +70,8 @@ export default function ForgotPasswordPage() {
       {/* ── Header público con logo ── */}
       <header className="relative z-10 flex justify-center pt-8 pb-4">
         <Link href="/">
-          <Image
-            src="/logo.png"
+          <Image className="h-[50px] w-auto"
+            src="/logo.svg"
             width={240}
             height={90}
             alt="KanbanBonsai"
