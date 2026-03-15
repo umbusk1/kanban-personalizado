@@ -266,7 +266,7 @@ export default function DashboardPage() {
                         </span>
                         <span className="text-xs text-gray-400 font-normal flex items-center gap-2 mt-0.5">
                           {board.totalCards === 0
-                            ? "Sin tarjetas"
+                            ? "Sin hojas"
                             : <span className="font-medium text-indigo-500">{Math.round((board.col3Cards / board.totalCards) * 100)}% listo</span>
                           }
                           <Link href={`/board/${board.id}`}
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                         <p className="text-gray-600 dark:text-gray-400 mb-6">{selected.description}</p>
                       )}
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6">
-                        <span>🃏 {selected.totalCards} tarjeta{selected.totalCards !== 1 ? 's' : ''}</span>
+                        <span>🃏 {selected.totalCards} hoja{selected.totalCards !== 1 ? 's' : ''}</span>
                         <span>👥 {selected._count.members + 1} miembro{selected._count.members + 1 !== 1 ? 's' : ''}</span>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           selected.inProgress
