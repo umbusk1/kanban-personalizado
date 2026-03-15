@@ -26,7 +26,8 @@ model Board {
   id           String            @id @default(cuid())
   name         String
   description  String?
-  insights     String?           // ← NUEVO: lecciones aprendidas del sprint
+  insights     String?
+  dependsOnId  String?           // ← 5E: prelación entre sprints
   ownerId      String
   createdAt    DateTime          @default(now())
   owner        User              @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
@@ -34,6 +35,8 @@ model Board {
   members      BoardMember[]
   invitations  BoardInvitation[]
   activityLogs ActivityLog[]
+  dependsOn    Board?            @relation("BoardPrecedence", fields: [dependsOnId], references: [id])
+  dependents   Board[]           @relation("BoardPrecedence")
   @@map("boards")
 }
 
@@ -59,14 +62,17 @@ model Card {
   createdBy   String
   position    Int
   priority    String?
-  dueDate     DateTime? // ← NUEVO: fecha límite de ejecución
-  alertDate   DateTime? // ← NUEVO: fecha para enviar alerta al responsable
-  resources   String?   // ← NUEVO: URLs de archivos/recursos relacionados
+  dueDate     DateTime?
+  alertDate   DateTime?
+  resources   String?
+  blockedById String?   // ← 5E: prelación entre tarjetas
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  column   Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  creator  User   @relation("CardCreator", fields: [createdBy], references: [id])
-  assignee User?  @relation("CardAssignee", fields: [assignedTo], references: [id])
+  column    Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  creator   User   @relation("CardCreator",  fields: [createdBy],  references: [id])
+  assignee  User?  @relation("CardAssignee", fields: [assignedTo], references: [id])
+  blockedBy Card?  @relation("CardPrecedence", fields: [blockedById], references: [id])
+  blocks    Card[] @relation("CardPrecedence")
   @@map("cards")
 }
 
@@ -97,7 +103,7 @@ model ActivityLog {
   id        String   @id @default(cuid())
   boardId   String
   userId    String
-  action    String   // "moved", "created", "deleted", "updated"
+  action    String
   cardTitle String
   fromCol   String?
   toCol     String?
