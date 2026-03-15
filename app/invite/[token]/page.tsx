@@ -105,7 +105,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
 
-          {/* Tarjeta glassmorphism */}
+          {/* Hoja glassmorphism */}
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl px-8 py-10 text-center">
 
             <div className="text-5xl mb-4">📋</div>
