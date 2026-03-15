@@ -138,7 +138,7 @@ export default function RegisterPage() {
       <header className="relative z-20 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-lg mx-auto px-8 py-4 flex justify-between items-center">
           <Link href="/login">
-            <Image src="/logo.svg" alt="kanbanbonsai" width={200} height={60} className="h-12 w-auto" priority/>
+            <Image src="/logo.svg" alt="kanbanbonsai" width={200} height={60} className="h-14 w-auto" priority/>
           </Link>
           <Link href="/login" className="text-sm text-white/50 hover:text-white transition-colors">
             ← Volver al inicio
