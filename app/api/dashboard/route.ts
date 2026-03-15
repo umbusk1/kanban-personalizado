@@ -23,7 +23,7 @@ export async function GET() {
         owner: true,
         _count: { select: { columns: true, members: true } },
         // ← NUEVO: incluimos columnas ordenadas por posición,
-        //   con conteo de tarjetas en cada una
+        //   con conteo de hojas en cada una
         columns: {
           orderBy: { position: 'asc' },
           select: {
@@ -38,13 +38,13 @@ export async function GET() {
 
     const boardsWithRole = boards.map(board => {
       // ← NUEVO: clasificar si el sprint está "en proceso"
-      // En proceso = sin tarjetas, O tiene tarjetas en columna 1 ó 2
+      // En proceso = sin hojas, O tiene hojas en columna 1 ó 2
       const totalCards = board.columns.reduce((sum, col) => sum + col._count.cards, 0)
       const col1and2Cards = board.columns
         .filter(col => col.position <= 2)
         .reduce((sum, col) => sum + col._count.cards, 0)
 
-      // ← NUEVO: tarjetas en la 3ra columna (completadas)
+      // ← NUEVO: Hojas en la 3ra columna (completadas)
       const col3Cards = board.columns
         .filter(col => col.position === 3)
         .reduce((sum, col) => sum + col._count.cards, 0)
