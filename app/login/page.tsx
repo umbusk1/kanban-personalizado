@@ -8,19 +8,17 @@ import Image from "next/image"
 
 type Stats = { boards: number; cards: number; users: number }
 
-// ── Trama japonesa — 4 kanji del logo + hojas grandes ──
+// ── Trama japonesa ──
 function JapanesePattern() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
       <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="jpPattern" x="0" y="0" width="520" height="520" patternUnits="userSpaceOnUse">
-            {/* ── Kanji grandes: 盆 栽 看 板 ── */}
             <text x="-20"  y="170" fontSize="180" fill="#4ade80" opacity="0.045" fontFamily="serif" transform="rotate(-8,-20,170)">盆</text>
             <text x="210"  y="120" fontSize="160" fill="#22c55e" opacity="0.038" fontFamily="serif" transform="rotate(5,210,120)">栽</text>
             <text x="30"   y="420" fontSize="170" fill="#4ade80" opacity="0.042" fontFamily="serif" transform="rotate(-4,30,420)">看</text>
             <text x="290"  y="490" fontSize="175" fill="#16a34a" opacity="0.040" fontFamily="serif" transform="rotate(7,290,490)">板</text>
-            {/* ── Hoja grande 1 ── */}
             <g transform="translate(160,230) rotate(25)" opacity="0.07">
               <ellipse cx="0" cy="0" rx="14" ry="38" fill="#4ade80"/>
               <line x1="0" y1="-38" x2="0" y2="38" stroke="#22c55e" strokeWidth="1.5"/>
@@ -29,14 +27,12 @@ function JapanesePattern() {
               <line x1="0" y1="8"   x2="-12" y2="-4"  stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="8"   x2="12"  y2="-4"  stroke="#22c55e" strokeWidth="0.8"/>
             </g>
-            {/* ── Hoja grande 2 ── */}
             <g transform="translate(430,180) rotate(-18)" opacity="0.065">
               <ellipse cx="0" cy="0" rx="12" ry="32" fill="#86efac"/>
               <line x1="0" y1="-32" x2="0" y2="32" stroke="#4ade80" strokeWidth="1.2"/>
               <line x1="0" y1="-6"  x2="-9"  y2="-18" stroke="#4ade80" strokeWidth="0.7"/>
               <line x1="0" y1="-6"  x2="9"   y2="-18" stroke="#4ade80" strokeWidth="0.7"/>
             </g>
-            {/* ── Hoja grande 3 ── */}
             <g transform="translate(80,350) rotate(42)" opacity="0.06">
               <ellipse cx="0" cy="0" rx="16" ry="44" fill="#22c55e"/>
               <line x1="0" y1="-44" x2="0" y2="44" stroke="#16a34a" strokeWidth="1.8"/>
@@ -45,22 +41,18 @@ function JapanesePattern() {
               <line x1="0" y1="10"  x2="-13" y2="-2"  stroke="#16a34a" strokeWidth="1"/>
               <line x1="0" y1="10"  x2="13"  y2="-2"  stroke="#16a34a" strokeWidth="1"/>
             </g>
-            {/* ── Hoja grande 4 ── */}
             <g transform="translate(390,380) rotate(-33)" opacity="0.055">
               <ellipse cx="0" cy="0" rx="11" ry="30" fill="#4ade80"/>
               <line x1="0" y1="-30" x2="0" y2="30" stroke="#22c55e" strokeWidth="1.2"/>
             </g>
-            {/* ── Brote grande 1 ── */}
             <g transform="translate(270,290)" opacity="0.065">
               <path d="M0,0 Q-12,-20 0,-44 Q12,-20 0,0" fill="#4ade80"/>
               <line x1="0" y1="0" x2="0" y2="22" stroke="#22c55e" strokeWidth="1.5"/>
             </g>
-            {/* ── Brote grande 2 ── */}
             <g transform="translate(460,430)" opacity="0.055">
               <path d="M0,0 Q-9,-16 0,-34 Q9,-16 0,0" fill="#86efac"/>
               <line x1="0" y1="0" x2="0" y2="16" stroke="#4ade80" strokeWidth="1.2"/>
             </g>
-            {/* ── Hoja pequeña dispersa ── */}
             <g transform="translate(340,80) rotate(15)" opacity="0.06">
               <ellipse cx="0" cy="0" rx="7" ry="18" fill="#4ade80"/>
               <line x1="0" y1="-18" x2="0" y2="18" stroke="#22c55e" strokeWidth="0.8"/>
@@ -83,66 +75,41 @@ function LoginForm() {
   const registered = searchParams.get("registered")
   const reset = searchParams.get("reset")
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
-
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault(); setError(""); setLoading(true)
     try {
       const result = await signIn("credentials", { email, password, redirect: false })
       if (result?.error) { setError("Email o contraseña incorrectos"); setLoading(false); return }
-      router.push(callbackUrl)
-      router.refresh()
-    } catch {
-      setError("Error al iniciar sesión")
-      setLoading(false)
-    }
+      router.push(callbackUrl); router.refresh()
+    } catch { setError("Error al iniciar sesión"); setLoading(false) }
   }
 
   return (
     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 w-full shadow-2xl">
       <h2 className="text-white text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
-      {registered && (
-        <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3">
-          <p className="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p>
-        </div>
-      )}
-      {reset && (
-        <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3">
-          <p className="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p>
-        </div>
-      )}
+      {registered && <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p className="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p></div>}
+      {reset      && <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p className="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p></div>}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-          placeholder="Email"
+        <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email"
           className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"/>
-        <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-          placeholder="Contraseña"
+        <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Contraseña"
           className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"/>
         <div className="flex justify-end">
-          <Link href="/forgot-password" className="text-xs text-white/60 hover:text-white transition-colors">
-            ¿Olvidaste tu contraseña?
-          </Link>
+          <Link href="/forgot-password" className="text-xs text-white/60 hover:text-white transition-colors">¿Olvidaste tu contraseña?</Link>
         </div>
-        {error && (
-          <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3">
-            <p className="text-red-200 text-sm">{error}</p>
-          </div>
-        )}
+        {error && <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3"><p className="text-red-200 text-sm">{error}</p></div>}
         <button type="submit" disabled={loading}
           className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors text-sm">
           {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-white/60">
-        ¿No tienes cuenta?{" "}
-        <Link href="/register" className="text-green-300 hover:text-green-200 font-medium">Regístrate aquí</Link>
-      </p>
+      <p className="mt-6 text-center text-sm text-white/60">¿No tienes cuenta?{" "}
+        <Link href="/register" className="text-green-300 hover:text-green-200 font-medium">Regístrate aquí</Link></p>
       <p className="mt-3 text-center text-xs text-white/30">Demo: demo@kanban.com / demo123</p>
     </div>
   )
@@ -167,31 +134,189 @@ function StatCounter({ value, label }: { value: number; label: string }) {
   )
 }
 
-const features = [
-  { icon:"🌿", title:"Sprints",     badge:"Tableros visuales",       color:"green",
-    desc:"Organiza tu proyecto en tableros con columnas personalizables. Mueve el trabajo de Pendiente → En progreso → Listo con un clic." },
-  { icon:"🍃", title:"Hojas",       badge:"Tareas inteligentes",      color:"emerald",
-    desc:"Cada tarea es una Hoja: asigna fechas de inicio y fin, recursos del equipo, prioridad y descripción detallada." },
-  { icon:"📋", title:"Bitácora",    badge:"Registro de actividad",    color:"blue",
-    desc:"Historial completo de todo lo que ocurre en el Sprint. Quién hizo qué, cuándo y cómo — sin perder ningún detalle." },
-  { icon:"📊", title:"Histórico",   badge:"Dashboard triple",         color:"indigo",
-    desc:"Vista panorámica en tres columnas: pasado, presente y futuro de tus Sprints. Todo el avance desde un solo lugar." },
-  { icon:"👥", title:"Equipos",     badge:"Colaboración real",        color:"yellow",
-    desc:"Invita colaboradores por email, asigna roles y trabaja en tiempo real con equipos distribuidos geográficamente." },
-  { icon:"⚡", title:"Simplicidad", badge:"Sin curva de aprendizaje", color:"orange",
-    desc:"Diseñada para equipos que valoran la claridad. Cero configuración, cero complejidad. Funciona desde el primer día." },
-]
+// ── Tipos ──
+type ColorKey = "green" | "emerald" | "teal" | "blue" | "indigo" | "yellow"
 
-type ColorKey = "green"|"emerald"|"blue"|"indigo"|"yellow"|"orange"
-const colorMap: Record<ColorKey,{bg:string;border:string;text:string;badge:string}> = {
-  green:   {bg:"bg-green-900/20",   border:"border-green-500/20",   text:"text-green-300",   badge:"bg-green-800/40 border-green-500/30 text-green-300"},
-  emerald: {bg:"bg-emerald-900/20", border:"border-emerald-500/20", text:"text-emerald-300", badge:"bg-emerald-800/40 border-emerald-500/30 text-emerald-300"},
-  blue:    {bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-800/40 border-blue-500/30 text-blue-300"},
-  indigo:  {bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-800/40 border-indigo-500/30 text-indigo-300"},
-  yellow:  {bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-800/40 border-yellow-500/30 text-yellow-300"},
-  orange:  {bg:"bg-orange-900/20",  border:"border-orange-500/20",  text:"text-orange-300",  badge:"bg-orange-800/40 border-orange-500/30 text-orange-300"},
+interface Feature {
+  icon: string
+  title: string
+  badge: string
+  color: ColorKey
+  desc: string
+  modal: {
+    headline: string
+    body: string
+    bullets: string[]
+    footer: string
+  }
 }
 
+// ── Funcionalidades con contenido de modal ──
+const features: Feature[] = [
+  {
+    icon: "🌿", title: "Sprints", badge: "Tableros visuales", color: "green",
+    desc: "Organiza tu proyecto en tableros con columnas personalizables. Mueve el trabajo de Pendiente → En progreso → Listo con un clic.",
+    modal: {
+      headline: "El Sprint: tu tablero de mando",
+      body: "Un Sprint es un tablero visual dividido en tres columnas que representan el estado de cada tarea: Por Hacer, En Progreso y Completado. De un vistazo, tú y tu equipo saben exactamente en qué punto está cada parte del proyecto.",
+      bullets: [
+        "Crea tantos Sprints como proyectos o fases necesites",
+        "Renombra las columnas según tu flujo de trabajo",
+        "Asigna un lapso de tiempo (fecha de inicio y fin) a cada Sprint",
+        "Visualiza el porcentaje de avance general del Sprint en tiempo real",
+        "Archiva Sprints terminados sin perder su historial",
+      ],
+      footer: "La metáfora del bonsai: el Sprint es el árbol completo. Las Hojas son sus ramas y brotes.",
+    },
+  },
+  {
+    icon: "🍃", title: "Hojas", badge: "Tareas inteligentes", color: "emerald",
+    desc: "Cada tarea es una Hoja: asigna fechas de inicio y fin, recursos del equipo, prioridad y descripción detallada.",
+    modal: {
+      headline: "La Hoja: donde vive el detalle",
+      body: "Cada tarea en KanbanBonsai es una Hoja. Va mucho más allá de un simple post-it: contiene toda la información necesaria para ejecutar y hacer seguimiento de ese trabajo específico.",
+      bullets: [
+        "Título, descripción y notas de avance editables",
+        "Fecha de inicio y fecha límite con indicador visual de vencimiento",
+        "Asignación a uno o varios miembros del equipo",
+        "Nivel de prioridad: Alta, Media o Baja",
+        "Barra de progreso con subtareas contabilizadas",
+        "Registro automático en la Bitácora de cada cambio realizado",
+      ],
+      footer: "Una Hoja bien completada elimina las reuniones de seguimiento innecesarias.",
+    },
+  },
+  {
+    icon: "🔗", title: "Precedencia", badge: "Dependencias inteligentes", color: "teal",
+    desc: "Define qué Hojas o Sprints deben completarse antes de iniciar otros. El sistema te alerta si intentas avanzar fuera de orden.",
+    modal: {
+      headline: "Precedencia: el orden importa",
+      body: "En proyectos reales, no todo puede hacerse al mismo tiempo ni en cualquier orden. La Precedencia te permite establecer dependencias entre Hojas y entre Sprints, reflejando la lógica real de tu proyecto.",
+      bullets: [
+        "Marca una Hoja como bloqueada por otra Hoja que debe completarse primero",
+        "Establece que un Sprint no puede iniciarse hasta que otro esté cerrado",
+        "Visualiza las dependencias con indicadores de bloqueo en cada Hoja afectada",
+        "Recibe alertas si intentas mover una Hoja bloqueada a 'En Progreso'",
+        "Ideal para proyectos de construcción, tecnología, eventos o cualquier proceso secuencial",
+      ],
+      footer: "Como en un bonsai: no puedes dar forma a las ramas superiores antes de que el tronco esté firme.",
+    },
+  },
+  {
+    icon: "📋", title: "Bitácora", badge: "Registro de actividad", color: "blue",
+    desc: "Historial completo de todo lo que ocurre en el Sprint. Quién hizo qué, cuándo y cómo — sin perder ningún detalle.",
+    modal: {
+      headline: "La Bitácora: memoria perfecta del equipo",
+      body: "La Bitácora es el registro cronológico e inmutable de todas las acciones realizadas en un Sprint. No hay que preguntar '¿quién cambió esto?' — la Bitácora lo sabe.",
+      bullets: [
+        "Registro automático de cada movimiento de Hoja entre columnas",
+        "Historial de ediciones: qué campo cambió, valor anterior y nuevo valor",
+        "Registro de asignaciones, cambios de prioridad y fechas modificadas",
+        "Marca de tiempo y autoría de cada acción",
+        "Filtrable por fecha, usuario o tipo de acción",
+        "Exportable para reportes de avance o auditorías del proyecto",
+      ],
+      footer: "La transparencia es la base de la confianza en equipos distribuidos.",
+    },
+  },
+  {
+    icon: "📊", title: "Histórico", badge: "Dashboard triple", color: "indigo",
+    desc: "Vista panorámica en tres columnas: pasado, presente y futuro de tus Sprints. Todo el avance desde un solo lugar.",
+    modal: {
+      headline: "Histórico: la película completa de tu proyecto",
+      body: "El Histórico es un dashboard especial que organiza todos tus Sprints en tres columnas según su estado temporal: los que ya terminaron, los que están activos ahora mismo, y los que están planificados para el futuro.",
+      bullets: [
+        "Columna Pasado: Sprints archivados con su porcentaje de cumplimiento final",
+        "Columna Presente: Sprints activos con su progreso en tiempo real",
+        "Columna Futuro: Sprints planificados con fecha de inicio programada",
+        "Acceso directo a cualquier Sprint desde el Histórico con un clic",
+        "Vista ideal para reuniones de gerencia o reportes ejecutivos",
+        "Permite comparar velocidad y cumplimiento entre Sprints anteriores",
+      ],
+      footer: "Ver el pasado, el presente y el futuro juntos es lo que distingue la gestión estratégica de la operativa.",
+    },
+  },
+  {
+    icon: "👥", title: "Equipos", badge: "Colaboración real", color: "yellow",
+    desc: "Invita colaboradores por email, asigna roles y trabaja en tiempo real con equipos distribuidos geográficamente.",
+    modal: {
+      headline: "Equipos: gestión sin fronteras",
+      body: "KanbanBonsai nació para equipos distribuidos geográficamente. Desde el primer día, la colaboración es una función central — no un añadido.",
+      bullets: [
+        "Invita a cualquier persona por email con un enlace seguro de un solo uso",
+        "Dos roles: Propietario (control total) y Colaborador (edición de Hojas)",
+        "Cada miembro ve en tiempo real los cambios de sus compañeros",
+        "Asigna Hojas específicas a miembros específicos del equipo",
+        "Notificaciones por email cuando te asignan o editan una Hoja",
+        "Gestiona múltiples equipos en diferentes Sprints simultáneamente",
+      ],
+      footer: "Equipos en Venezuela, República Dominicana y Panamá trabajando en el mismo tablero — así nació KanbanBonsai.",
+    },
+  },
+]
+
+const colorMap: Record<ColorKey, { bg: string; border: string; text: string; badge: string; modalAccent: string }> = {
+  green:   { bg:"bg-green-900/20",   border:"border-green-500/20",   text:"text-green-300",   badge:"bg-green-800/40 border-green-500/30 text-green-300",   modalAccent:"border-green-500/40" },
+  emerald: { bg:"bg-emerald-900/20", border:"border-emerald-500/20", text:"text-emerald-300", badge:"bg-emerald-800/40 border-emerald-500/30 text-emerald-300", modalAccent:"border-emerald-500/40" },
+  teal:    { bg:"bg-teal-900/20",    border:"border-teal-500/20",    text:"text-teal-300",    badge:"bg-teal-800/40 border-teal-500/30 text-teal-300",    modalAccent:"border-teal-500/40" },
+  blue:    { bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-800/40 border-blue-500/30 text-blue-300",    modalAccent:"border-blue-500/40" },
+  indigo:  { bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-800/40 border-indigo-500/30 text-indigo-300",  modalAccent:"border-indigo-500/40" },
+  yellow:  { bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-800/40 border-yellow-500/30 text-yellow-300",  modalAccent:"border-yellow-500/40" },
+}
+
+// ── Modal de funcionalidad ──
+function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => void }) {
+  const c = colorMap[feature.color]
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+      onClick={onClose}
+    >
+      <div
+        className={`relative bg-[#0e1f17] border ${c.modalAccent} rounded-2xl p-8 max-w-lg w-full shadow-2xl`}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Cerrar */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white/40 hover:text-white text-xl leading-none transition-colors"
+        >✕</button>
+
+        {/* Cabecera */}
+        <div className="flex items-center gap-3 mb-5">
+          <span className="text-4xl">{feature.icon}</span>
+          <div>
+            <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-1`}>
+              {feature.badge}
+            </div>
+            <h3 className={`text-xl font-bold ${c.text}`}>{feature.modal.headline}</h3>
+          </div>
+        </div>
+
+        {/* Cuerpo */}
+        <p className="text-white/70 text-sm leading-relaxed mb-5">{feature.modal.body}</p>
+
+        {/* Bullets */}
+        <ul className="space-y-2 mb-6">
+          {feature.modal.bullets.map((b, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-white/65">
+              <span className={`mt-0.5 flex-shrink-0 ${c.text}`}>🍃</span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+
+        {/* Footer de modal */}
+        <div className={`border-t ${c.modalAccent} pt-4`}>
+          <p className={`text-xs italic ${c.text} opacity-80`}>{feature.modal.footer}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Historia ──
 const historySteps = [
   { num:"0", color:"green",  title:"El método: una pizarra, tres columnas",
     text:"Los japoneses hacen gerencia de proyectos con un concepto muy sencillo: una pizarra y hojitas de post-it. Tres columnas: lo que se debe hacer, lo que se está haciendo y lo ya hecho. Todos ven el avance. Eso es Kanban. KanbanBonsai lo hace digital, simple y accesible." },
@@ -205,21 +330,35 @@ const historySteps = [
     text:"Una app en producción que demuestra que la experiencia humana + inteligencia artificial pueden crear herramientas reales, simples y con alma propia. Como un bonsai: pequeño, cuidado y perfectamente formado." },
 ]
 
-// ── Color sólido del header/footer (igual que fondo de la app) ──
 const APP_BG = "#0a1a10"
 
+// ── Página principal ──
 export default function LandingPage() {
   const [stats, setStats] = useState<Stats | null>(null)
+  const [activeFeature, setActiveFeature] = useState<Feature | null>(null)
+
   useEffect(() => {
     fetch("/api/stats").then(r => r.json()).then(setStats).catch(() => {})
   }, [])
+
+  // Bloquear scroll del body cuando el modal está abierto
+  useEffect(() => {
+    if (activeFeature) document.body.style.overflow = "hidden"
+    else document.body.style.overflow = ""
+    return () => { document.body.style.overflow = "" }
+  }, [activeFeature])
 
   return (
     <div className="min-h-screen flex flex-col" style={{
       background: "linear-gradient(135deg, #0a1a10 0%, #0e1f17 30%, #101820 60%, #0a1a10 100%)"
     }}>
 
-      {/* ── Header — fondo sólido, sin trama ── */}
+      {/* Modal */}
+      {activeFeature && (
+        <FeatureModal feature={activeFeature} onClose={() => setActiveFeature(null)} />
+      )}
+
+      {/* ── Header ── */}
       <header className="relative z-20 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-8 py-4 flex justify-between items-center">
           <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-[80px] w-auto" priority />
@@ -231,7 +370,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* ── Zona con trama — hero + secciones de contenido ── */}
+      {/* ── Zona con trama ── */}
       <div className="relative flex-1 flex flex-col">
         <JapanesePattern />
 
@@ -277,23 +416,36 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Funcionalidades */}
+        {/* ── Funcionalidades ── */}
         <section id="funcionalidades" className="relative z-10 border-t border-white/10 py-24 px-8">
           <div className="max-w-5xl mx-auto">
             <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">Funcionalidades v2.0</p>
             <h2 className="text-3xl font-bold text-white text-center mb-4">Todo lo que necesitas, nada que no</h2>
-            <p className="text-white/45 text-center mb-14 max-w-lg mx-auto text-sm">
+            <p className="text-white/45 text-center mb-3 max-w-lg mx-auto text-sm">
               Cada funcionalidad fue una Hoja en nuestro propio Sprint de desarrollo.
+            </p>
+            <p className="text-white/30 text-center mb-14 text-xs">
+              Haz clic en cualquier caja para ver los detalles →
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {features.map(f => {
-                const c = colorMap[f.color as ColorKey]
+                const c = colorMap[f.color]
                 return (
-                  <div key={f.title} className={`${c.bg} border ${c.border} rounded-xl p-6 transition-all hover:scale-[1.02]`}>
+                  <div
+                    key={f.title}
+                    onClick={() => setActiveFeature(f)}
+                    className={`${c.bg} border ${c.border} rounded-xl p-6 cursor-pointer
+                      transition-all hover:scale-[1.03] hover:border-opacity-60 hover:brightness-110 group`}
+                  >
                     <div className="text-3xl mb-4">{f.icon}</div>
-                    <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-3`}>{f.badge}</div>
+                    <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-3`}>
+                      {f.badge}
+                    </div>
                     <h3 className={`text-lg font-bold ${c.text} mb-2`}>{f.title}</h3>
                     <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
+                    <p className={`mt-4 text-xs ${c.text} opacity-0 group-hover:opacity-70 transition-opacity`}>
+                      Ver más →
+                    </p>
                   </div>
                 )
               })}
@@ -383,7 +535,7 @@ export default function LandingPage() {
         </section>
       </div>
 
-      {/* ── Footer — fondo sólido, sin trama ── */}
+      {/* ── Footer ── */}
       <footer className="relative z-20 border-t border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-8 py-8 flex flex-col items-center gap-3 text-center">
           <Image src="/logo.svg" alt="kanbanbonsai" width={200} height={60} className="h-14 w-auto opacity-100"/>
