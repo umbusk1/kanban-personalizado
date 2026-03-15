@@ -356,7 +356,7 @@ export default function LandingPage() {
       )}
 
       {/* ── Header ── */}
-      <header className="relative z-20 border-b border-white/10" style={{ background: APP_BG }}>
+      <header className="sticky top-0 z-30 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-8 py-4 flex justify-between items-center">
           <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-[80px] w-auto" priority />
           <nav className="flex items-center gap-6 text-sm text-white/60">
