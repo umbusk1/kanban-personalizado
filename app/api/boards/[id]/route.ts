@@ -23,13 +23,19 @@ export async function GET(
               orderBy: { position: 'asc' },
               include: {
                 assignee: true,
-                creator:  true, // ← NUEVO: quién creó la tarjeta
+                creator:  true,
+                // ← 5E: prelación entre tarjetas
+                blockedBy: {
+                  select: { id: true, title: true, columnId: true },
+                },
               },
             },
           },
         },
-        owner: true,
+        owner:   true,
         members: { include: { user: true } },
+        // ← 5E: prelación entre sprints
+        dependsOn: { select: { id: true, name: true } },
       },
     })
 
@@ -67,13 +73,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
 
-    // Solo el dueño puede editar
     if (board.ownerId !== session.user.id) {
       return NextResponse.json({ error: "Solo el dueño puede editar el sprint" }, { status: 403 })
     }
 
-    // ← ACTUALIZADO: recibimos insights además de name y description
-    const { name, description, insights } = await request.json()
+    // ← 5E: recibimos dependsOnId además de los existentes
+    const { name, description, insights, dependsOnId } = await request.json()
 
     if (!name) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
@@ -83,8 +88,9 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         name,
-        description: description !== undefined ? description : board.description,
-        insights:    insights    !== undefined ? insights    : board.insights, // ← NUEVO
+        description: description !== undefined ? description    : board.description,
+        insights:    insights    !== undefined ? insights       : board.insights,
+        dependsOnId: dependsOnId !== undefined ? (dependsOnId || null) : board.dependsOnId, // ← 5E
       },
     })
 
@@ -110,7 +116,6 @@ export async function DELETE(
       return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
 
-    // Solo el dueño puede eliminar
     if (board.ownerId !== session.user.id) {
       return NextResponse.json({ error: "Solo el dueño puede eliminar el sprint" }, { status: 403 })
     }
