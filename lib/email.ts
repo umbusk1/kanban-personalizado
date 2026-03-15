@@ -106,6 +106,60 @@ export async function sendCardAssignedEmail(params: CardAssignedParams) {
   })
 }
 
+// ─── Email: te quitaron una hoja ─────────────────────────────────────────────
+interface CardUnassignedParams {
+  to:              string
+  prevAssigneeName: string
+  cardTitle:       string
+  boardName:       string
+  reassignedByName: string
+  newAssigneeName:  string
+}
+
+export async function sendCardUnassignedEmail(params: CardUnassignedParams) {
+  const { to, prevAssigneeName, cardTitle, boardName, reassignedByName, newAssigneeName } = params
+  await resend.emails.send({
+    from:    FROM,
+    to,
+    subject: `🔄 Te reasignaron una hoja en "${boardName}"`,
+    html: emailWrapper(`
+      <p style="font-size: 1em; color: #374151;">Hola <strong>${prevAssigneeName}</strong>,</p>
+      <p style="color: #374151;">
+        <strong>${reassignedByName}</strong> reasignó la siguiente hoja
+        del Sprint <em style="color: #16a34a;">${boardName}</em>,
+        que tenías asignada, a <strong>${newAssigneeName}</strong>:
+      </p>
+      <div style="
+        background: #faf5ff;
+        border-left: 4px solid #7c3aed;
+        padding: 14px 18px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-size: 1.05em;
+        color: #111827;
+      ">
+        🔄 <strong>${cardTitle}</strong>
+      </div>
+      <p style="color: #6b7280; font-size: 0.9em;">
+        Si crees que esto fue un error, contacta a <strong>${reassignedByName}</strong>
+        o al propietario del Sprint.
+      </p>
+      <div style="text-align: center; margin: 24px 0 8px;">
+        <a href="https://kanban.umbusk.com" style="
+          display: inline-block;
+          background: #16a34a;
+          color: white;
+          font-weight: 600;
+          padding: 12px 28px;
+          border-radius: 8px;
+          text-decoration: none;
+          font-size: 0.95em;
+        ">Ver el Sprint →</a>
+      </div>
+    `),
+  })
+}
+
 // ─── Email: editaron tu hoja ──────────────────────────────────────────────────
 interface CardEditedParams {
   to:           string
