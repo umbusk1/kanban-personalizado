@@ -18,7 +18,7 @@ export async function PATCH(
       )
     }
 
-    const { title, description, priority, assignedTo, dueDate, alertDate, resources } = await request.json()
+    const { title, description, priority, assignedTo, dueDate, alertDate, resources, blockedById } = await request.json()  // ← 5E: blockedById
 
     // Verificar que la tarjeta existe y el usuario tiene acceso
     const card = await prisma.card.findUnique({
@@ -70,10 +70,12 @@ export async function PATCH(
         dueDate:     dueDate     !== undefined ? (dueDate   ? new Date(dueDate)   : null) : card.dueDate,
         alertDate:   alertDate   !== undefined ? (alertDate ? new Date(alertDate) : null) : card.alertDate,
         resources:   resources   !== undefined ? resources   : card.resources,
+        blockedById: blockedById !== undefined ? (blockedById || null) : card.blockedById,  // ← 5E
       },
       include: {
         assignee: true,
         creator:  true,
+        blockedBy: { select: { id: true, title: true, columnId: true } },  // ← 5E
       },
     })
 
