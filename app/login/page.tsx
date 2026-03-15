@@ -4,9 +4,91 @@ import { useState, useEffect, Suspense } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 
 type Stats = { boards: number; cards: number; users: number }
+
+// ── Nuevo logo SVG inline ──
+function BonsaiLogo({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 240 72" className={className} xmlns="http://www.w3.org/2000/svg" aria-label="KanbanBonsai">
+      {/* Tronco */}
+      <rect x="22" y="44" width="4" height="16" rx="2" fill="#9ca3af"/>
+      {/* Ramas */}
+      <path d="M24 44 Q14 33 8 22" stroke="#9ca3af" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M24 44 Q34 31 40 20" stroke="#9ca3af" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M24 44 Q24 34 24 24" stroke="#9ca3af" strokeWidth="2" fill="none" strokeLinecap="round"/>
+      {/* Follaje */}
+      <circle cx="24" cy="21" r="11" fill="#16a34a" opacity="0.9"/>
+      <circle cx="9"  cy="19" r="9"  fill="#15803d" opacity="0.95"/>
+      <circle cx="39" cy="17" r="10" fill="#16a34a" opacity="0.85"/>
+      <circle cx="16" cy="12" r="8"  fill="#22c55e" opacity="0.8"/>
+      <circle cx="32" cy="10" r="8"  fill="#4ade80" opacity="0.75"/>
+      <circle cx="24" cy="8"  r="6"  fill="#86efac" opacity="0.6"/>
+      {/* Maceta */}
+      <path d="M16 62 L32 62 L35 55 L13 55 Z" fill="#374151"/>
+      <rect x="13" y="61" width="22" height="3" rx="1.5" fill="#4b5563"/>
+      {/* Texto */}
+      <text x="52" y="40" fontFamily="Georgia, serif" fontSize="20" fontWeight="700" fill="#d1d5db" letterSpacing="0.3">kanban</text>
+      <text x="52" y="62" fontFamily="Georgia, serif" fontSize="20" fontWeight="700" fill="#4ade80" letterSpacing="0.3">bonsai</text>
+      {/* Kanji decorativos */}
+      <text x="200" y="44" fontFamily="serif" fontSize="14" fill="#4ade80" opacity="0.35">盆</text>
+      <text x="200" y="62" fontFamily="serif" fontSize="14" fill="#9ca3af" opacity="0.25">栽</text>
+    </svg>
+  )
+}
+
+// ── Trama japonesa de fondo ──
+function JapanesePattern() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="jpPattern" x="0" y="0" width="130" height="130" patternUnits="userSpaceOnUse">
+            {/* Kanji */}
+            <text x="8"   y="28"  fontSize="18" fill="#22c55e" opacity="0.06" fontFamily="serif" transform="rotate(-8,8,28)">看</text>
+            <text x="58"  y="18"  fontSize="13" fill="#4ade80" opacity="0.05" fontFamily="serif">板</text>
+            <text x="95"  y="50"  fontSize="16" fill="#22c55e" opacity="0.07" fontFamily="serif" transform="rotate(12,95,50)">盆</text>
+            <text x="12"  y="78"  fontSize="12" fill="#86efac" opacity="0.05" fontFamily="serif">栽</text>
+            <text x="68"  y="95"  fontSize="20" fill="#22c55e" opacity="0.06" fontFamily="serif" transform="rotate(-5,68,95)">葉</text>
+            <text x="105" y="108" fontSize="13" fill="#4ade80" opacity="0.05" fontFamily="serif">木</text>
+            <text x="32"  y="118" fontSize="15" fill="#22c55e" opacity="0.06" fontFamily="serif" transform="rotate(6,32,118)">芽</text>
+            <text x="82"  y="125" fontSize="11" fill="#86efac" opacity="0.04" fontFamily="serif">枝</text>
+            {/* Hoja 1 */}
+            <g transform="translate(40,55) rotate(30)" opacity="0.09">
+              <ellipse cx="0" cy="0" rx="3" ry="6.5" fill="#4ade80"/>
+              <line x1="0" y1="-6.5" x2="0" y2="6.5" stroke="#22c55e" strokeWidth="0.5"/>
+            </g>
+            {/* Hoja 2 */}
+            <g transform="translate(78,70) rotate(-22)" opacity="0.07">
+              <ellipse cx="0" cy="0" rx="2.5" ry="5.5" fill="#86efac"/>
+              <line x1="0" y1="-5.5" x2="0" y2="5.5" stroke="#4ade80" strokeWidth="0.4"/>
+            </g>
+            {/* Hoja 3 */}
+            <g transform="translate(18,100) rotate(48)" opacity="0.08">
+              <ellipse cx="0" cy="0" rx="2" ry="4.5" fill="#4ade80"/>
+            </g>
+            {/* Hoja 4 */}
+            <g transform="translate(112,32) rotate(-38)" opacity="0.07">
+              <ellipse cx="0" cy="0" rx="3" ry="6" fill="#22c55e"/>
+              <line x1="0" y1="-6" x2="0" y2="6" stroke="#4ade80" strokeWidth="0.5"/>
+            </g>
+            {/* Brote */}
+            <g transform="translate(52,100)" opacity="0.08">
+              <path d="M0,0 Q-3,-5 0,-11 Q3,-5 0,0" fill="#4ade80"/>
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#22c55e" strokeWidth="0.7"/>
+            </g>
+            {/* Brote 2 */}
+            <g transform="translate(115,85)" opacity="0.07">
+              <path d="M0,0 Q-2.5,-4 0,-9 Q2.5,-4 0,0" fill="#86efac"/>
+              <line x1="0" y1="0" x2="0" y2="5" stroke="#4ade80" strokeWidth="0.6"/>
+            </g>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#jpPattern)"/>
+      </svg>
+    </div>
+  )
+}
 
 // ── Formulario de login ──
 function LoginForm() {
@@ -39,7 +121,6 @@ function LoginForm() {
   return (
     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 w-full max-w-sm shadow-2xl">
       <h2 className="text-white text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
-
       {registered && (
         <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3">
           <p className="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p>
@@ -50,17 +131,14 @@ function LoginForm() {
           <p className="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p>
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          type="email" required value={email}
-          onChange={e => setEmail(e.target.value)}
+          type="email" required value={email} onChange={e => setEmail(e.target.value)}
           placeholder="Email"
           className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
         />
         <input
-          type="password" required value={password}
-          onChange={e => setPassword(e.target.value)}
+          type="password" required value={password} onChange={e => setPassword(e.target.value)}
           placeholder="Contraseña"
           className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
         />
@@ -74,28 +152,21 @@ function LoginForm() {
             <p className="text-red-200 text-sm">{error}</p>
           </div>
         )}
-        <button
-          type="submit" disabled={loading}
-          className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors text-sm"
-        >
+        <button type="submit" disabled={loading}
+          className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors text-sm">
           {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
-
       <p className="mt-6 text-center text-sm text-white/60">
         ¿No tienes cuenta?{" "}
-        <Link href="/register" className="text-green-300 hover:text-green-200 font-medium">
-          Regístrate aquí
-        </Link>
+        <Link href="/register" className="text-green-300 hover:text-green-200 font-medium">Regístrate aquí</Link>
       </p>
-      <p className="mt-3 text-center text-xs text-white/30">
-        Demo: demo@kanban.com / demo123
-      </p>
+      <p className="mt-3 text-center text-xs text-white/30">Demo: demo@kanban.com / demo123</p>
     </div>
   )
 }
 
-// ── Componente de estadísticas animadas ──
+// ── Contador animado ──
 function StatCounter({ value, label }: { value: number; label: string }) {
   const [display, setDisplay] = useState(0)
   useEffect(() => {
@@ -116,6 +187,58 @@ function StatCounter({ value, label }: { value: number; label: string }) {
   )
 }
 
+// ── Datos de funcionalidades ──
+const features = [
+  {
+    icon: "🌿", title: "Sprints", badge: "Tableros visuales", color: "green",
+    desc: "Organiza tu proyecto en tableros con columnas personalizables. Mueve el trabajo de Pendiente → En progreso → Listo con un clic.",
+  },
+  {
+    icon: "🍃", title: "Hojas", badge: "Tarjetas inteligentes", color: "emerald",
+    desc: "Cada tarea es una Hoja: asigna fechas de inicio y fin, recursos del equipo, prioridad y descripción detallada.",
+  },
+  {
+    icon: "📋", title: "Bitácora", badge: "Registro de actividad", color: "blue",
+    desc: "Historial completo de todo lo que ocurre en el tablero. Quién hizo qué, cuándo y cómo — sin perder ningún detalle.",
+  },
+  {
+    icon: "📊", title: "Histórico", badge: "Dashboard triple", color: "indigo",
+    desc: "Vista panorámica en tres columnas: pasado, presente y futuro de tus Sprints. Todo el avance desde un solo lugar.",
+  },
+  {
+    icon: "👥", title: "Equipos", badge: "Colaboración real", color: "yellow",
+    desc: "Invita colaboradores por email, asigna roles y trabaja en tiempo real con equipos distribuidos geográficamente.",
+  },
+  {
+    icon: "⚡", title: "Simplicidad", badge: "Sin curva de aprendizaje", color: "orange",
+    desc: "Diseñada para equipos que valoran la claridad. Cero configuración, cero complejidad. Funciona desde el primer día.",
+  },
+]
+
+type ColorKey = "green" | "emerald" | "blue" | "indigo" | "yellow" | "orange"
+const colorMap: Record<ColorKey, { bg: string; border: string; text: string; badge: string }> = {
+  green:   { bg: "bg-green-900/20",   border: "border-green-500/20",   text: "text-green-300",   badge: "bg-green-800/40 border-green-500/30 text-green-300" },
+  emerald: { bg: "bg-emerald-900/20", border: "border-emerald-500/20", text: "text-emerald-300", badge: "bg-emerald-800/40 border-emerald-500/30 text-emerald-300" },
+  blue:    { bg: "bg-blue-900/20",    border: "border-blue-500/20",    text: "text-blue-300",    badge: "bg-blue-800/40 border-blue-500/30 text-blue-300" },
+  indigo:  { bg: "bg-indigo-900/20",  border: "border-indigo-500/20",  text: "text-indigo-300",  badge: "bg-indigo-800/40 border-indigo-500/30 text-indigo-300" },
+  yellow:  { bg: "bg-yellow-900/20",  border: "border-yellow-500/20",  text: "text-yellow-300",  badge: "bg-yellow-800/40 border-yellow-500/30 text-yellow-300" },
+  orange:  { bg: "bg-orange-900/20",  border: "border-orange-500/20",  text: "text-orange-300",  badge: "bg-orange-800/40 border-orange-500/30 text-orange-300" },
+}
+
+// ── Historia: pasos ──
+const historySteps = [
+  { num: "0", color: "green",  title: "El método: una pizarra, tres columnas",
+    text: "Los japoneses hacen gerencia de proyectos con un concepto muy sencillo: una pizarra y hojitas de post-it. Tres columnas: lo que se debe hacer, lo que se está haciendo y lo ya hecho. Todos ven el avance. Eso es Kanban. KanbanBonsai lo hace digital, simple y accesible." },
+  { num: "1", color: "yellow", title: "Nació de una necesidad real",
+    text: "Umbusk necesitaba gestionar proyectos en Venezuela, República Dominicana y Panamá con equipos distribuidos. Las herramientas existentes eran complejas, costosas o demasiado genéricas para proyectos ágiles." },
+  { num: "2", color: "blue",   title: "La paradoja del tablero vacío",
+    text: "Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y hasta filosófica: usar KANBAN para construir KANBAN. Cada funcionalidad fue una Hoja. Cada entrega, un Sprint." },
+  { num: "3", color: "indigo", title: "Vibe-coded junto a Claude de Anthropic",
+    text: "Una colaboración inusual: un consultor con 45 años de experiencia sin escribir una línea de código, y una IA generando cada componente, explicando cada decisión, corrigiendo cada error. Sprint tras sprint, pestaña tras pestaña." },
+  { num: "✓", color: "green",  title: "El resultado: kanbanbonsai v2.0",
+    text: "Una app en producción que demuestra que la experiencia humana + inteligencia artificial pueden crear herramientas reales, simples y con alma propia. Como un bonsai: pequeño, cuidado y perfectamente formado." },
+]
+
 // ── Página principal ──
 export default function LandingPage() {
   const [stats, setStats] = useState<Stats | null>(null)
@@ -125,114 +248,127 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col" style={{
-      background: "linear-gradient(135deg, #0f2027 0%, #1a3a2a 40%, #203a43 70%, #0f2027 100%)"
+    <div className="min-h-screen flex flex-col relative" style={{
+      background: "linear-gradient(135deg, #0a1a10 0%, #0e1f17 30%, #101820 60%, #0a1a10 100%)"
     }}>
 
-      {/* ── Hero con fondo japonés SVG ── */}
-      <div className="relative flex-1 flex flex-col">
+      <JapanesePattern />
 
-        {/* Montañas y luna SVG de fondo */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          <svg viewBox="0 0 1440 600" preserveAspectRatio="xMidYMid slice" className="w-full h-full opacity-30">
-            {/* Luna */}
-            <circle cx="1100" cy="120" r="70" fill="#fffde7" opacity="0.6"/>
-            <circle cx="1100" cy="120" r="72" fill="none" stroke="#fff9c4" strokeWidth="2" opacity="0.3"/>
-            {/* Reflejo en agua */}
-            <ellipse cx="1100" cy="580" rx="30" ry="60" fill="#fffde7" opacity="0.15"/>
-            {/* Montaña fondo */}
-            <polygon points="0,500 300,150 600,500" fill="#1b4332" opacity="0.8"/>
-            <polygon points="200,500 550,100 900,500" fill="#1a3d2b" opacity="0.9"/>
-            <polygon points="500,500 900,200 1200,500" fill="#163829" opacity="0.85"/>
-            <polygon points="800,500 1150,180 1440,500" fill="#1b4332" opacity="0.8"/>
-            {/* Nieve en cimas */}
-            <polygon points="550,100 535,160 565,160" fill="white" opacity="0.4"/>
-            <polygon points="900,200 885,255 915,255" fill="white" opacity="0.35"/>
-            {/* Lago */}
-            <ellipse cx="720" cy="520" rx="500" ry="60" fill="#0d2137" opacity="0.7"/>
-            {/* Cerezo izquierdo */}
-            <rect x="100" y="380" width="8" height="120" fill="#5d4037" opacity="0.8"/>
-            <ellipse cx="104" cy="360" rx="55" ry="45" fill="#f48fb1" opacity="0.5"/>
-            <ellipse cx="80" cy="375" rx="35" ry="28" fill="#f48fb1" opacity="0.4"/>
-            <ellipse cx="130" cy="370" rx="38" ry="30" fill="#f8bbd0" opacity="0.4"/>
-            {/* Cerezo derecho */}
-            <rect x="1310" y="360" width="8" height="140" fill="#5d4037" opacity="0.8"/>
-            <ellipse cx="1314" cy="340" rx="60" ry="48" fill="#f48fb1" opacity="0.5"/>
-            <ellipse cx="1285" cy="355" rx="38" ry="30" fill="#f8bbd0" opacity="0.4"/>
-            {/* Pagoda */}
-            <rect x="680" y="400" width="80" height="80" fill="#1a2a1a" opacity="0.7"/>
-            <polygon points="660,400 720,360 780,400" fill="#2d4a2d" opacity="0.8"/>
-            <polygon points="668,370 720,335 772,370" fill="#2d4a2d" opacity="0.7"/>
-            <polygon points="676,343 720,315 764,343" fill="#2d4a2d" opacity="0.6"/>
-            <rect x="706" y="440" width="28" height="40" fill="#0d1a0d" opacity="0.8"/>
-            {/* Estrellas */}
-            {[50,150,250,400,600,750,950,1050,1200,1350,180,320,500,700,900,1150].map((x,i) => (
-              <circle key={i} cx={x} cy={20 + (i * 17) % 80} r="1.5" fill="white" opacity={0.3 + (i % 3) * 0.2}/>
-            ))}
-          </svg>
+      {/* ── Header ── */}
+      <header className="relative z-10 flex justify-between items-center px-8 py-5 border-b border-white/5">
+        <BonsaiLogo className="h-16 w-auto" />
+        <nav className="flex items-center gap-6 text-sm text-white/60">
+          <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
+          <a href="#historia"        className="hover:text-white transition-colors">Historia</a>
+          <a href="#stats"           className="hover:text-white transition-colors">En números</a>
+        </nav>
+      </header>
+
+      {/* ── Hero ── */}
+      <section className="relative z-10 flex flex-col lg:flex-row items-center justify-between px-8 lg:px-20 py-16 gap-12">
+
+        {/* Copy */}
+        <div className="flex-1 max-w-xl">
+          <div className="inline-flex items-center gap-2 bg-green-900/40 border border-green-500/30 rounded-full px-4 py-1.5 text-green-300 text-xs font-medium mb-8">
+            <span>🌱</span>
+            <span>v2.0 — Sprints · Hojas · Bitácora · Histórico</span>
+          </div>
+          <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-5">
+            La herramienta de gestión para equipos que valoran la
+            <span className="text-green-400"> simplicidad</span>
+          </h1>
+          <p className="text-white/60 text-lg leading-relaxed mb-10">
+            Organiza proyectos en{" "}
+            <strong className="text-green-300">Sprints</strong>, gestiona tareas como{" "}
+            <strong className="text-green-300">Hojas</strong> con fechas y recursos, consulta la{" "}
+            <strong className="text-white/80">Bitácora</strong> y sigue el avance completo en el{" "}
+            <strong className="text-white/80">Histórico</strong>.
+            Todo con la calma y precisión de un bonsai.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/register"
+              className="bg-green-600 hover:bg-green-500 text-white font-semibold px-7 py-3.5 rounded-lg transition-colors text-sm shadow-lg shadow-green-900/30">
+              Comenzar gratis →
+            </Link>
+            <a href="#funcionalidades"
+              className="border border-white/20 hover:border-green-500/40 text-white/70 hover:text-white font-medium px-7 py-3.5 rounded-lg transition-colors text-sm">
+              Ver funcionalidades
+            </a>
+          </div>
+          <p className="mt-7 text-xs text-white/25 italic">
+            vibe-coded por Umbusk y Claude de Anthropic 🤖
+          </p>
         </div>
 
-        {/* Header público */}
-        <div className="relative z-10 flex justify-between items-center px-8 py-6">
-          <div className="flex items-center">
-            <Image
-              src="/logo.png"
-              alt="kanbanbonsai"
-              width={180}
-              height={68}
-              className="h-28 w-auto"
-            />
-          </div>
-          <nav className="flex items-center gap-6 text-sm text-white/70">
-            <a href="#historia" className="hover:text-white transition-colors">Concepto / Historia</a>
-            <a href="#stats" className="hover:text-white transition-colors">En números</a>
-          </nav>
+        {/* Login */}
+        <div className="w-full max-w-sm">
+          <Suspense fallback={<div className="text-white/50 text-sm text-center">Cargando...</div>}>
+            <LoginForm />
+          </Suspense>
         </div>
+      </section>
 
-        {/* Hero principal */}
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between px-8 lg:px-20 py-12 gap-12 flex-1">
-
-          {/* Lado izquierdo: copy */}
-          <div className="flex-1 max-w-lg">
-            <div className="inline-block bg-green-800/40 border border-green-500/30 rounded-full px-4 py-1 text-green-300 text-xs font-medium mb-6">
-              🌿 Gestión de proyectos con calma y claridad
-            </div>
-            <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              El <i>flow</i> del
-              <span className="text-green-400"> bonsai</span>,<br/>
-              con el orden del
-              <span className="text-yellow-400"> kanban</span>
-            </h1>
-            <p className="text-white/70 text-lg leading-relaxed mb-8">
-              Una herramienta colaborativa construida con disciplina, iteración y propósito.
-              Como cultivar un bonsai — cada tarea en su lugar, cada equipo en armonía.
-            </p>
-            <div className="flex gap-4">
-              <Link
-                href="/register"
-                className="bg-green-600 hover:bg-green-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors text-sm"
-              >
-                Comenzar gratis
-              </Link>
-              <a
-                href="#historia"
-                className="border border-white/20 hover:border-white/40 text-white/80 hover:text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm"
-              >
-                Nuestra historia →
-              </a>
-            </div>
-          </div>
-
-          {/* Lado derecho: login */}
-          <div className="w-full max-w-sm">
-            <Suspense fallback={<div className="text-white/50 text-sm text-center">Cargando...</div>}>
-              <LoginForm />
-            </Suspense>
+      {/* ── Funcionalidades ── */}
+      <section id="funcionalidades" className="relative z-10 border-t border-white/10 py-24 px-8">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">
+            Funcionalidades v2.0
+          </p>
+          <h2 className="text-3xl lg:text-4xl font-bold text-white text-center mb-4">
+            Todo lo que necesitas, nada que no
+          </h2>
+          <p className="text-white/45 text-center mb-14 max-w-lg mx-auto text-sm">
+            Cada funcionalidad fue una Hoja en nuestro propio Sprint de desarrollo. Construido con el método que enseña.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((f) => {
+              const c = colorMap[f.color as ColorKey]
+              return (
+                <div key={f.title} className={`${c.bg} border ${c.border} rounded-xl p-6 transition-all hover:scale-[1.02]`}>
+                  <div className="text-3xl mb-4">{f.icon}</div>
+                  <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-3`}>
+                    {f.badge}
+                  </div>
+                  <h3 className={`text-lg font-bold ${c.text} mb-2`}>{f.title}</h3>
+                  <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
+                </div>
+              )
+            })}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Estadísticas reales ── */}
+      {/* ── Metáfora Bonsai → Sprints → Hojas ── */}
+      <section className="relative z-10 border-t border-white/10 py-20 px-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-white/30 text-xs uppercase tracking-widest mb-8">La metáfora</p>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            {[
+              { emoji: "🌳", label: "Bonsai",  sub: "La plataforma" },
+              { arrow: true },
+              { emoji: "📋", label: "Sprints", sub: "Los tableros" },
+              { arrow: true },
+              { emoji: "🍃", label: "Hojas",   sub: "Las tareas" },
+            ].map((item, i) =>
+              "arrow" in item ? (
+                <span key={i} className="text-white/20 text-2xl font-light">→</span>
+              ) : (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-7 py-5 text-center min-w-[110px]">
+                  <div className="text-3xl mb-1">{item.emoji}</div>
+                  <div className="text-white font-semibold text-sm">{item.label}</div>
+                  <div className="text-white/40 text-xs mt-0.5">{item.sub}</div>
+                </div>
+              )
+            )}
+          </div>
+          <p className="mt-8 text-white/40 text-sm max-w-md mx-auto leading-relaxed">
+            Como cultivar un bonsai — cada tarea en su lugar, cada equipo en armonía,
+            cada Sprint avanzando con disciplina hacia el resultado.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Estadísticas ── */}
       {stats && (
         <section id="stats" className="relative z-10 border-t border-white/10 py-16 px-8">
           <div className="max-w-3xl mx-auto">
@@ -241,8 +377,8 @@ export default function LandingPage() {
             </p>
             <div className="grid grid-cols-3 gap-8">
               <StatCounter value={stats.users}  label="Usuarios activos" />
-              <StatCounter value={stats.boards} label="Tableros creados" />
-              <StatCounter value={stats.cards}  label="Tarjetas gestionadas" />
+              <StatCounter value={stats.boards} label="Sprints creados" />
+              <StatCounter value={stats.cards}  label="Hojas gestionadas" />
             </div>
           </div>
         </section>
@@ -251,71 +387,55 @@ export default function LandingPage() {
       {/* ── Historia ── */}
       <section id="historia" className="relative z-10 border-t border-white/10 py-20 px-8">
         <div className="max-w-3xl mx-auto">
-          <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">
-            El concepto
-          </p>
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            Representar visualmente el avance de los proyectos
-          </h2>
-
-          <div className="space-y-8 text-white/70 leading-relaxed">
-            <div className="flex gap-6">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">0</div>
-              <div>
-                <h3 className="text-white font-semibold mb-2">Todos en la misma "página" (pizarra)</h3>
-                <p>Los japoneses hacen gerencia de proyectos con un concepto muy sencillo: una pizarra (o tablero) y hojitas pegables de post-it (o tarjetas). En el pizarrón trazan 2 rayas para dividirlo en 3 áreas verticales (o columnas). Las hojitas se van moviendo de la 1ra columna, a la segunda y finalmente a la 3ra. La 1ra columna es lo que se debe hacer; la 2da lo que se está haciendo; y la 3ra lo ya hecho. Todos los que trabajan en un proyecto pueden ver cómo va avanzando la ejecución y el gerente debe revisar asignaciones, tiempos, costos, calidad de ejecución, etc. Todo eso puede volverse muy complicado y si se hace digitalmente puede significar un esfuerzo importante en aprender a manejar el software o herramienta de kanban (así lo llaman los japoneses y significa pizarra, pizarrón, tablero). Pero... llegó <strong>kanbanbonsai,</strong> una app en línea para poder usar ese método de una manera fácil en proyectos sencillos.</p>
-              </div>
-            </div>
-
-          <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">
-            El origen
-          </p>
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">El origen</p>
+          <h2 className="text-3xl font-bold text-white text-center mb-4">
             Construido con la herramienta que construye
-          </h2>            
-            
-            <div className="flex gap-6">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">1</div>
-              <div>
-                <h3 className="text-white font-semibold mb-2">La idea surgió de una necesidad real</h3>
-                <p>Umbusk necesitaba gestionar proyectos de tecnología en Venezuela, República Dominicana y Panamá con equipos esparcidos geográficamente. Las herramientas existentes eran complejas, costosas, o simplemente demasiado genéricas.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-6">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-800/60 border border-yellow-500/30 flex items-center justify-center text-yellow-400 font-bold text-sm">2</div>
-              <div>
-                <h3 className="text-white font-semibold mb-2">La paradoja del tablero vacío</h3>
-                <p>Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y hasta un poco filosófica: <em>usar el método KANBAN para construir KANBAN</em>. Cada funcionalidad fue una tarjeta. Cada sprint un avance hacia el resultado.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-6">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-800/60 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-sm">3</div>
-              <div>
-                <h3 className="text-white font-semibold mb-2">Vibe-coded junto a Claude de Anthropic</h3>
-                <p>El desarrollo fue una colaboración inusual: un consultor con 45 años de experiencia sin escribir una línea de código, y una IA generando cada componente, explicando cada decisión, corrigiendo cada error. Sprint tras sprint, pestaña tras pestaña.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-6">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-800/60 border border-green-500/30 flex items-center justify-center text-green-400 font-bold text-sm">✓</div>
-              <div>
-                <h3 className="text-white font-semibold mb-2">El resultado: kanbanbonsai</h3>
-                <p>Una app en producción, construida en poco tiempo, que demuestra que la combinación de experiencia humana e inteligencia artificial puede crear herramientas reales — simples, útiles y con alma propia. Como un bonsai: pequeño, cuidado, y perfectamente formado.</p>
-              </div>
-            </div>
+          </h2>
+          <p className="text-white/40 text-center text-sm mb-14 max-w-md mx-auto">
+            La paradoja de gestionar con KANBAN el desarrollo de KANBAN.
+          </p>
+          <div className="space-y-8 text-white/65 leading-relaxed">
+            {historySteps.map((s) => {
+              const badge =
+                s.color === "green"  ? "bg-green-800/60 border-green-500/30 text-green-400"
+                : s.color === "yellow" ? "bg-yellow-800/60 border-yellow-500/30 text-yellow-400"
+                : s.color === "blue"   ? "bg-blue-800/60 border-blue-500/30 text-blue-400"
+                :                        "bg-indigo-800/60 border-indigo-500/30 text-indigo-400"
+              return (
+                <div key={s.num} className="flex gap-6">
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full border ${badge} flex items-center justify-center font-bold text-sm`}>
+                    {s.num}
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">{s.title}</h3>
+                    <p>{s.text}</p>
+                  </div>
+                </div>
+              )
+            })}
           </div>
+        </div>
+      </section>
+
+      {/* ── CTA final ── */}
+      <section className="relative z-10 border-t border-white/10 py-24 px-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="text-5xl mb-6">🌳</div>
+          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+            ¿Listo para cultivar tu primer Sprint?
+          </h2>
+          <p className="text-white/50 mb-10 text-lg">Gratis. Sin tarjeta de crédito. Sin complicaciones.</p>
+          <Link href="/register"
+            className="inline-block bg-green-600 hover:bg-green-500 text-white font-semibold px-12 py-4 rounded-xl transition-colors text-base shadow-xl shadow-green-900/30">
+            Comenzar gratis →
+          </Link>
         </div>
       </section>
 
       {/* ── Footer ── */}
       <footer className="relative z-10 border-t border-white/10 py-10 px-8">
-        <div className="max-w-3xl mx-auto flex flex-col items-center gap-3 text-center">
-          <span className="text-white/80 font-bold text-lg tracking-tight">
-            <span className="text-gray-400">kanban</span>
-            <span className="text-green-400">bonsai</span>
-          </span>
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-4 text-center">
+          <BonsaiLogo className="h-12 w-auto opacity-60" />
           <p className="text-sm text-white/40">
             vibe-coded by{" "}
             <a href="https://umbusk.com" target="_blank" rel="noopener noreferrer"
