@@ -17,9 +17,9 @@ export default function AppHeader() {
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center group">
+        <Link href="/dashboard" className="h-[60px] w-auto">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="kanbanbonsai"
             width={220}
             height={80}
