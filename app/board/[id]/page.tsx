@@ -453,7 +453,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           )}
 
           {/* Columnas Kanban + Actividad */}
-          <div className="flex gap-6 overflow-x-auto pb-4 items-start">
+          <div className="flex gap-6 overflow-x-auto pb-4 items-start justify-center">
             {board.columns.map(col => (
               <DroppableColumn
                 key={col.id}
