@@ -372,7 +372,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-        <AppHeader />
+        <div className="sticky top-0 z-30">
+          <AppHeader />
+        </div>
 
         <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
