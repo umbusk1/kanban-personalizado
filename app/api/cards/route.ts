@@ -2,11 +2,11 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { sendCardAssignedEmail } from "@/lib/email"  // ← NUEVO
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
-
     if (!session?.user) {
       return NextResponse.json(
         { error: "No autorizado" },
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const hasAccess = 
+    const hasAccess =
       column.board.ownerId === session.user.id ||
       column.board.members.some(m => m.userId === session.user.id)
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     // Obtener la siguiente posición
     const maxPosition = await prisma.card.findFirst({
       where: { columnId },
-      orderBy: { position: 'desc' },
+      orderBy: { position: "desc" },
       select: { position: true },
     })
 
@@ -68,17 +68,34 @@ export async function POST(request: Request) {
         columnId,
         title,
         description: description || null,
-        priority: priority || null,
-        assignedTo: assignedTo || null,
-        createdBy: session.user.id,
-        position: newPosition,
+        priority:    priority    || null,
+        assignedTo:  assignedTo  || null,
+        createdBy:   session.user.id,
+        position:    newPosition,
       },
       include: {
         assignee: true,
       },
     })
 
+    // ← NUEVO: email al asignado si es distinto al creador
+    if (card.assignee && card.assignee.id !== session.user.id) {
+      try {
+        await sendCardAssignedEmail({
+          to:             card.assignee.email,
+          assigneeName:   card.assignee.name  || card.assignee.email,
+          cardTitle:      card.title,
+          boardName:      column.board.name,
+          assignedByName: session.user.name   || session.user.email || "Un compañero",
+        })
+      } catch (emailError) {
+        // El email falló, pero la hoja ya se creó → solo registramos el error
+        console.error("Error enviando email de asignación:", emailError)
+      }
+    }
+
     return NextResponse.json(card, { status: 201 })
+
   } catch (error) {
     console.error("Error al crear tarjeta:", error)
     return NextResponse.json(
