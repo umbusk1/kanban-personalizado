@@ -570,18 +570,30 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                       onClick={() => {
                         const ta = descRef.current
                         if (!ta) return
-                        const start  = ta.selectionStart ?? formData.description.length
-                        const end    = ta.selectionEnd   ?? start
-                        const before = formData.description.substring(0, start)
-                        const after  = formData.description.substring(end)
-                        const prefix = (before.length > 0 && !before.endsWith('\n')) ? '\n' : ''
-                        const insert = `${prefix}- [ ] `
-                        const newDesc = before + insert + after
-                        setFormData({ ...formData, description: newDesc })
-                        setTimeout(() => {
-                          ta.focus()
-                          ta.setSelectionRange(start + insert.length, start + insert.length)
-                        }, 0)
+                        const pos   = ta.selectionStart ?? formData.description.length
+                        const lines = formData.description.split('\n')
+                        let charCount = 0, lineIdx = 0
+                        for (let i = 0; i < lines.length; i++) {
+                          charCount += lines[i].length + 1
+                          if (charCount > pos) { lineIdx = i; break }
+                        }
+                        // Si la línea actual es un "hecho", convertirla a "por hacer"
+                        if (lines[lineIdx].match(/^- \[x\] /i)) {
+                          lines[lineIdx] = lines[lineIdx].replace(/^- \[x\] /i, '- [ ] ')
+                          setFormData({ ...formData, description: lines.join('\n') })
+                          setTimeout(() => { ta.focus(); ta.setSelectionRange(pos, pos) }, 0)
+                        } else {
+                          // Si no, insertar nueva tarea por hacer
+                          const before = formData.description.substring(0, pos)
+                          const after  = formData.description.substring(pos)
+                          const prefix = (before.length > 0 && !before.endsWith('\n')) ? '\n' : ''
+                          const insert = `${prefix}- [ ] `
+                          setFormData({ ...formData, description: before + insert + after })
+                          setTimeout(() => {
+                            ta.focus()
+                            ta.setSelectionRange(pos + insert.length, pos + insert.length)
+                          }, 0)
+                        }
                       }}
                       className="text-xs text-gray-600 hover:text-gray-800 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-2 py-1 rounded font-medium"
                     >
