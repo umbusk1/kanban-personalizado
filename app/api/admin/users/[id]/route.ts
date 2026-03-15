@@ -49,7 +49,7 @@ export async function DELETE(
 
   // Limpiar todas las relaciones antes de borrar al usuario
   await prisma.$transaction([
-    // 1. Borrar tarjetas que creó el usuario
+    // 1. Borrar hojas que creó el usuario
     prisma.card.deleteMany({
       where: { createdBy: userId },
     }),
@@ -63,7 +63,7 @@ export async function DELETE(
     }),
   ])
 
-  // Borrar tableros que el usuario creó (y sus columnas/tarjetas/logs)
+  // Borrar tableros que el usuario creó (y sus columnas/hojas/logs)
   const ownedBoards = await prisma.board.findMany({
     where: { ownerId: userId },
     select: { id: true },
