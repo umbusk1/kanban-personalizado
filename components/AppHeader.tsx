@@ -15,25 +15,28 @@ export default function AppHeader() {
 
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+
         {/* Logo */}
-        <Link href="/dashboard" className="h-[50px] w-auto">
+        <Link href="/dashboard" className="flex items-center">
           <Image
             src="/logo.svg"
             alt="kanbanbonsai"
             width={220}
             height={80}
-            className="h-20 w-auto group-hover:opacity-80 transition-opacity"
+            className="h-14 w-auto transition-opacity hover:opacity-80"
           />
         </Link>
 
         {/* Nav central */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
-          <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white transition-colors text-base font-bold uppercase tracking-wide">
+          <Link href="/dashboard"
+            className="hover:text-gray-900 dark:hover:text-white transition-colors text-base font-bold uppercase tracking-wide">
             Mis Sprints
           </Link>
           {(session?.user as any)?.isAdmin && (
-            <Link href="/admin" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <Link href="/admin"
+              className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
               🛡️ Admin
             </Link>
           )}
@@ -51,6 +54,7 @@ export default function AppHeader() {
             Salir
           </button>
         </div>
+
       </div>
     </header>
   )
