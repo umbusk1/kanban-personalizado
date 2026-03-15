@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   DndContext, DragEndEvent, DragOverlay, DragStartEvent,
@@ -229,6 +229,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState('')
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const descRef = useRef<HTMLTextAreaElement>(null)  // ← 5D: ref para insertar en cursor
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -559,8 +560,38 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               </div>
               {/* Descripción */}
               <div>
-                <label className="block text-sm font-medium mb-1">Descripción</label>
-                <textarea value={formData.description}
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Descripción</label>
+                  {/* ← 5D: botón insertar checkbox en posición del cursor */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ta    = descRef.current
+                      if (!ta) return
+                      const start = ta.selectionStart ?? formData.description.length
+                      const end   = ta.selectionEnd   ?? start
+                      const before = formData.description.substring(0, start)
+                      const after  = formData.description.substring(end)
+                      // Si no estamos al inicio de línea, añadimos salto de línea antes
+                      const prefix = (before.length > 0 && !before.endsWith('\n')) ? '\n' : ''
+                      const insert = `${prefix}- [ ] `
+                      const newDesc = before + insert + after
+                      setFormData({ ...formData, description: newDesc })
+                      // Reposicionar cursor después del markdown insertado
+                      setTimeout(() => {
+                        ta.focus()
+                        const pos = start + insert.length
+                        ta.setSelectionRange(pos, pos)
+                      }, 0)
+                    }}
+                    className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded font-medium"
+                  >
+                    ☑️ + tarea
+                  </button>
+                </div>
+                <textarea
+                  ref={descRef}
+                  value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3} placeholder="Describe la tarea..." />
