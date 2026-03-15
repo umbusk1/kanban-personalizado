@@ -562,32 +562,70 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium">Descripción</label>
-                  {/* ← 5D: botón insertar checkbox en posición del cursor */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const ta    = descRef.current
-                      if (!ta) return
-                      const start = ta.selectionStart ?? formData.description.length
-                      const end   = ta.selectionEnd   ?? start
-                      const before = formData.description.substring(0, start)
-                      const after  = formData.description.substring(end)
-                      // Si no estamos al inicio de línea, añadimos salto de línea antes
-                      const prefix = (before.length > 0 && !before.endsWith('\n')) ? '\n' : ''
-                      const insert = `${prefix}- [ ] `
-                      const newDesc = before + insert + after
-                      setFormData({ ...formData, description: newDesc })
-                      // Reposicionar cursor después del markdown insertado
-                      setTimeout(() => {
-                        ta.focus()
-                        const pos = start + insert.length
-                        ta.setSelectionRange(pos, pos)
-                      }, 0)
-                    }}
-                    className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded font-medium"
-                  >
-                    ☑️ + tarea
-                  </button>
+                  {/* ← 5D v2: dos botones de tarea */}
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      title="Insertar tarea por hacer"
+                      onClick={() => {
+                        const ta = descRef.current
+                        if (!ta) return
+                        const start  = ta.selectionStart ?? formData.description.length
+                        const end    = ta.selectionEnd   ?? start
+                        const before = formData.description.substring(0, start)
+                        const after  = formData.description.substring(end)
+                        const prefix = (before.length > 0 && !before.endsWith('\n')) ? '\n' : ''
+                        const insert = `${prefix}- [ ] `
+                        const newDesc = before + insert + after
+                        setFormData({ ...formData, description: newDesc })
+                        setTimeout(() => {
+                          ta.focus()
+                          ta.setSelectionRange(start + insert.length, start + insert.length)
+                        }, 0)
+                      }}
+                      className="text-xs text-gray-600 hover:text-gray-800 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-2 py-1 rounded font-medium"
+                    >
+                      ☐ Por hacer
+                    </button>
+                    <button
+                      type="button"
+                      title="Marcar tarea como hecha (o insertar tarea hecha)"
+                      onClick={() => {
+                        const ta = descRef.current
+                        if (!ta) return
+                        const pos   = ta.selectionStart ?? formData.description.length
+                        const lines = formData.description.split('\n')
+                        // Detectar en qué línea está el cursor
+                        let charCount = 0
+                        let lineIdx   = 0
+                        for (let i = 0; i < lines.length; i++) {
+                          charCount += lines[i].length + 1 // +1 por el \n
+                          if (charCount > pos) { lineIdx = i; break }
+                        }
+                        // Si la línea actual es un "por hacer", convertirla
+                        if (lines[lineIdx].match(/^- \[ \] /)) {
+                          lines[lineIdx] = lines[lineIdx].replace('- [ ] ', '- [x] ')
+                          setFormData({ ...formData, description: lines.join('\n') })
+                          setTimeout(() => { ta.focus(); ta.setSelectionRange(pos, pos) }, 0)
+                        } else {
+                          // Si no, insertar nueva tarea hecha
+                          const before = formData.description.substring(0, pos)
+                          const after  = formData.description.substring(pos)
+                          const prefix = (before.length > 0 && !before.endsWith('\n')) ? '\n' : ''
+                          const insert = `${prefix}- [x] `
+                          const newDesc = before + insert + after
+                          setFormData({ ...formData, description: newDesc })
+                          setTimeout(() => {
+                            ta.focus()
+                            ta.setSelectionRange(pos + insert.length, pos + insert.length)
+                          }, 0)
+                        }
+                      }}
+                      className="text-xs text-green-700 hover:text-green-800 dark:text-green-400 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-2 py-1 rounded font-medium"
+                    >
+                      ✅ Hecho
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   ref={descRef}
