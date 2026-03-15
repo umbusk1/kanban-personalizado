@@ -24,7 +24,7 @@ export async function GET(
               include: {
                 assignee: true,
                 creator:  true,
-                // ← 5E: prelación entre tarjetas
+                // ← 5E: prelación entre hojas
                 blockedBy: {
                   select: { id: true, title: true, columnId: true },
                 },
