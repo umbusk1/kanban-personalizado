@@ -2,7 +2,7 @@ import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = "KanbanBonsai <notificaciones@umbusk.com>"
+const FROM = "KanbanBonsai <notificaciones@compita.umbusk.com>"
 
 // ─── Email: te asignaron una hoja ────────────────────────────────────────────
 interface CardAssignedParams {
