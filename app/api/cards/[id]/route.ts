@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendCardAssignedEmail, sendCardEditedEmail } from "@/lib/email"  // ← NUEVO
 
-// PATCH - Editar tarjeta
+// PATCH - Editar hoja
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -20,7 +20,7 @@ export async function PATCH(
 
     const { title, description, priority, assignedTo, dueDate, alertDate, resources, blockedById } = await request.json()  // ← 5E: blockedById
 
-    // Verificar que la tarjeta existe y el usuario tiene acceso
+    // Verificar que la hoja existe y el usuario tiene acceso
     const card = await prisma.card.findUnique({
       where: { id: params.id },
       include: {
@@ -38,7 +38,7 @@ export async function PATCH(
 
     if (!card) {
       return NextResponse.json(
-        { error: "Tarjeta no encontrada" },
+        { error: "Hoja no encontrada" },
         { status: 404 }
       )
     }
@@ -59,7 +59,7 @@ export async function PATCH(
     const newAssignedTo = assignedTo !== undefined ? assignedTo : oldAssignedTo
     const assigneeChanged = assignedTo !== undefined && assignedTo !== oldAssignedTo
 
-    // Actualizar tarjeta
+    // Actualizar hoja
     const updatedCard = await prisma.card.update({
       where: { id: params.id },
       data: {
@@ -118,15 +118,15 @@ export async function PATCH(
     return NextResponse.json(updatedCard)
 
   } catch (error) {
-    console.error("Error al actualizar tarjeta:", error)
+    console.error("Error al actualizar hoja:", error)
     return NextResponse.json(
-      { error: "Error al actualizar tarjeta" },
+      { error: "Error al actualizar hoja" },
       { status: 500 }
     )
   }
 }
 
-// DELETE - Eliminar tarjeta (sin cambios)
+// DELETE - Eliminar hoja (sin cambios)
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -157,7 +157,7 @@ export async function DELETE(
 
     if (!card) {
       return NextResponse.json(
-        { error: "Tarjeta no encontrada" },
+        { error: "Hoja no encontrada" },
         { status: 404 }
       )
     }
@@ -180,9 +180,9 @@ export async function DELETE(
     return NextResponse.json({ success: true })
 
   } catch (error) {
-    console.error("Error al eliminar tarjeta:", error)
+    console.error("Error al eliminar hoja:", error)
     return NextResponse.json(
-      { error: "Error al eliminar tarjeta" },
+      { error: "Error al eliminar hoja" },
       { status: 500 }
     )
   }
