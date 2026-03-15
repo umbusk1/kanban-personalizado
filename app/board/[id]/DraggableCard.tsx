@@ -117,9 +117,14 @@ export function DraggableCard({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: card.id })
 
-  const [currentPriority, setCurrentPriority]   = useState(card.priority ?? '')
-  const [currentDesc, setCurrentDesc]           = useState(card.description ?? '')  // ← 5D
-  const [saving, setSaving]                     = useState(false)
+  const [currentPriority, setCurrentPriority] = useState(card.priority ?? '')
+  const [currentDesc, setCurrentDesc]         = useState(card.description ?? '')
+  const [saving, setSaving]                   = useState(false)
+
+  // ← 5D fix: sincronizar descripción local cuando el padre recarga la tarjeta
+  useEffect(() => {
+    setCurrentDesc(card.description ?? '')
+  }, [card.description])
 
   const style = {
     transform: CSS.Transform.toString(transform),
