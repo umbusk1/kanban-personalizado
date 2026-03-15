@@ -13,7 +13,7 @@ const EMAIL_HEADER = `
     text-align: center;
   ">
     <img
-      src="https://kanban.umbusk.com/logo.png"
+      src="https://kanban.umbusk.com/logo.svg"
       alt="KanbanBonsai"
       width="200"
       style="height: auto; max-width: 200px;"
