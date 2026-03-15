@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     const newPosition = maxPosition ? maxPosition.position + 1 : 1
 
-    // Crear la tarjeta
+    // Crear la hoja
     const card = await prisma.card.create({
       data: {
         columnId,
@@ -97,9 +97,9 @@ export async function POST(request: Request) {
     return NextResponse.json(card, { status: 201 })
 
   } catch (error) {
-    console.error("Error al crear tarjeta:", error)
+    console.error("Error al crear hoja:", error)
     return NextResponse.json(
-      { error: "Error al crear tarjeta" },
+      { error: "Error al crear hoja" },
       { status: 500 }
     )
   }
