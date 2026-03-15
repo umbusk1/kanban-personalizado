@@ -66,7 +66,7 @@ export async function PATCH(
         title:       title       ?? card.title,
         description: description !== undefined ? description : card.description,
         priority:    priority    !== undefined ? priority    : card.priority,
-        assignedTo:  assignedTo  !== undefined ? assignedTo  : card.assignedTo,
+        assignedTo:  assignedTo  !== undefined ? (assignedTo || null) : card.assignedTo,  // ← FIX 5C: "" → null
         dueDate:     dueDate     !== undefined ? (dueDate   ? new Date(dueDate)   : null) : card.dueDate,
         alertDate:   alertDate   !== undefined ? (alertDate ? new Date(alertDate) : null) : card.alertDate,
         resources:   resources   !== undefined ? resources   : card.resources,
