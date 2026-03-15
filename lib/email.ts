@@ -12,12 +12,15 @@ const EMAIL_HEADER = `
     border-bottom: 2px solid #16a34a;
     text-align: center;
   ">
-    <img
-      src="https://kanban.umbusk.com/logo.svg"
-      alt="KanbanBonsai"
-      width="200"
-      style="height: auto; max-width: 200px;"
-    />
+    <div style="display: inline-block; text-align: left; line-height: 1.15;">
+      <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; letter-spacing: 1px;">
+        <span style="color: #8b6b2a;">盆栽</span>
+      </div>
+      <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; letter-spacing: 1px;">
+        <span style="color: #2d5090;">看板</span>
+        <span style="font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 300; color: #8c96aa; letter-spacing: -0.5px; margin-left: 8px;">kanban</span><span style="font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 300; color: #6aaa28; letter-spacing: -0.5px;">bonsai</span>
+      </div>
+    </div>
   </div>
 `
 
