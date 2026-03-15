@@ -119,7 +119,7 @@ export function DraggableCard({
   const hasCheckboxes   = total > 0
 
   // ── 5E: estados de prelación ──
-  const isDependent      = selectingPredFor === card.id        // esta tarjeta busca prelación
+  const isDependent      = selectingPredFor === card.id        // esta hoja busca prelación
   const isTargetable     = selectingPredFor !== null && !isDependent  // puede ser seleccionada como prelación
   const hasPred          = !!card.blockedById
 
@@ -173,7 +173,7 @@ export function DraggableCard({
         ${cardRingClass}
       `}
     >
-      {/* ── 5E: overlay clicable cuando otra tarjeta busca prelación ── */}
+      {/* ── 5E: overlay clicable cuando otra hoja busca prelación ── */}
       {isTargetable && (
         <button
           className="absolute inset-0 z-10 bg-blue-500/10 border-2 border-blue-400 border-dashed rounded-lg
