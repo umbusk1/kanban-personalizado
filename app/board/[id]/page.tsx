@@ -21,11 +21,11 @@ type Card = {
   position:    number
   createdAt:   string
   updatedAt:   string
-  dueDate:     string | null  // ← NUEVO
-  alertDate:   string | null  // ← NUEVO
-  resources:   string | null  // ← NUEVO
+  dueDate:     string | null
+  alertDate:   string | null
+  resources:   string | null
   assignee: { id: string; name: string | null; email: string } | null
-  creator:  { id: string; name: string | null; email: string } | null // ← NUEVO
+  creator:  { id: string; name: string | null; email: string } | null
 }
 
 type Column = {
@@ -40,7 +40,7 @@ type Board = {
   id: string
   name: string
   description: string | null
-  insights:    string | null  // ← NUEVO
+  insights:    string | null
   owner: { id: string; name: string | null; email: string }
   columns: Column[]
   members: Array<{ user: { id: string; name: string | null; email: string } }>
@@ -53,9 +53,9 @@ type CardFormData = {
   description: string
   priority:    string
   assignedTo:  string
-  dueDate:     string  // ← NUEVO
-  alertDate:   string  // ← NUEVO
-  resources:   string  // ← NUEVO
+  dueDate:     string
+  alertDate:   string
+  resources:   string
 }
 
 type LogEntry = {
@@ -80,9 +80,9 @@ const MESES_LOG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
 
 // ── Bitácora como columna lateral ──
 function ActivityColumn({ boardId }: { boardId: string }) {
-  const [logs, setLogs]           = useState<LogEntry[]>([])
-  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
-  const [openDays, setOpenDays]     = useState<Set<string>>(new Set())
+  const [logs, setLogs]               = useState<LogEntry[]>([])
+  const [openMonths, setOpenMonths]   = useState<Set<string>>(new Set())
+  const [openDays, setOpenDays]       = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -99,7 +99,7 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     return () => clearInterval(interval)
   }, [boardId])
 
-  const getMonthKey = (date: string) => {
+  const getMonthKey   = (date: string) => {
     const d = new Date(date)
     return `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`
   }
@@ -107,7 +107,7 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     const d = new Date(date)
     return `${MESES_LOG[d.getMonth()]} ${d.getFullYear()}`
   }
-  const getDayKey = (date: string) => new Date(date).toDateString()
+  const getDayKey   = (date: string) => new Date(date).toDateString()
   const getDayLabel = (date: string) => {
     const d         = new Date(date)
     const today     = new Date()
@@ -132,7 +132,6 @@ function ActivityColumn({ boardId }: { boardId: string }) {
     setOpenDays(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
   }
 
-  // Agrupar: mes → día → logs
   const byMonth = new Map<string, Map<string, LogEntry[]>>()
   for (const log of logs) {
     const mk = getMonthKey(log.createdAt)
@@ -157,7 +156,6 @@ function ActivityColumn({ boardId }: { boardId: string }) {
             const firstLog  = Array.from(days.values())[0][0]
             return (
               <div key={mk}>
-                {/* Acordeón de mes */}
                 <button onClick={() => toggleMonth(mk)}
                   className="w-full flex items-center justify-between px-4 py-2.5
                              text-xs font-bold text-gray-200
@@ -171,7 +169,6 @@ function ActivityColumn({ boardId }: { boardId: string }) {
                       const dayOpen = openDays.has(dk)
                       return (
                         <div key={dk}>
-                          {/* Acordeón de día */}
                           <button onClick={() => toggleDay(dk)}
                             className="w-full flex items-center justify-between pl-6 pr-4 py-2
                                        text-xs font-semibold text-gray-400
@@ -218,19 +215,19 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const router = useRouter()
   const { data: session } = useSession()
 
-  const [board, setBoard]                   = useState<Board | null>(null)
-  const [loading, setLoading]               = useState(true)
-  const [showModal, setShowModal]           = useState(false)
+  const [board, setBoard]                     = useState<Board | null>(null)
+  const [loading, setLoading]                 = useState(true)
+  const [showModal, setShowModal]             = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [showSprintModal, setShowSprintModal] = useState(false)  // ← NUEVO
-  const [modalMode, setModalMode]           = useState<'create' | 'edit'>('create')
-  const [formData, setFormData]             = useState<CardFormData>({
+  const [showSprintModal, setShowSprintModal] = useState(false)
+  const [modalMode, setModalMode]             = useState<'create' | 'edit'>('create')
+  const [formData, setFormData]               = useState<CardFormData>({
     columnId: '', title: '', description: '', priority: '', assignedTo: '',
     dueDate: '', alertDate: '', resources: '',
   })
-  const [sprintForm, setSprintForm] = useState({ name: '', description: '', insights: '' }) // ← NUEVO
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState('')
+  const [sprintForm, setSprintForm] = useState({ name: '', description: '', insights: '' })
+  const [saving, setSaving]         = useState(false)
+  const [error, setError]           = useState('')
   const [activeCard, setActiveCard] = useState<Card | null>(null)
 
   const sensors = useSensors(
@@ -267,7 +264,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       description: card.description  || '',
       priority:    card.priority     || '',
       assignedTo:  card.assignee?.id || '',
-      // Las fechas vienen como ISO completo — recortamos a YYYY-MM-DD para el input
       dueDate:   card.dueDate   ? card.dueDate.substring(0, 10)   : '',
       alertDate: card.alertDate ? card.alertDate.substring(0, 10) : '',
       resources: card.resources || '',
@@ -288,9 +284,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          dueDate:   formData.dueDate   || null,
-          alertDate: formData.alertDate || null,
-          resources: formData.resources || null,
+          assignedTo: formData.assignedTo || null,  // ← FIX: cadena vacía → null
+          dueDate:    formData.dueDate    || null,
+          alertDate:  formData.alertDate  || null,
+          resources:  formData.resources  || null,
         }),
       })
       if (!res.ok) {
@@ -322,18 +319,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     if (res.ok) fetchBoard()
   }
 
-  const handleUpdateWipLimit = async (columnId: string, newLimit: number | null) => {
-    try {
-      const res = await fetch(`/api/columns/${columnId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wipLimit: newLimit }),
-      })
-      if (res.ok) fetchBoard()
-    } catch (e) { console.error('Error al actualizar WIP:', e) }
-  }
-
-  // ← NUEVO: abrir modal de edición del sprint
   const handleEditSprint = () => {
     if (!board) return
     setSprintForm({
@@ -344,7 +329,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     setShowSprintModal(true)
   }
 
-  // ← NUEVO: guardar cambios del sprint
   const handleSaveSprint = async () => {
     if (!board || !sprintForm.name) return
     setSaving(true)
@@ -423,7 +407,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const isOwner    = session?.user?.id === board.owner.id
   const allMembers = [board.owner, ...board.members.map(m => m.user)]
 
-  // ← NUEVO: Lapso calculado desde las tarjetas
   const allCards  = board.columns.flatMap(c => c.cards)
   const cardTimes = allCards.map(c => new Date(c.createdAt).getTime())
   const dueTimes  = allCards.filter(c => c.dueDate).map(c => new Date(c.dueDate!).getTime())
@@ -443,7 +426,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           <div className="mb-8">
             <div className="flex justify-between items-start mb-4">
               <div>
-                {/* Etiqueta Sprint + botón editar */}
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500">
                     Sprint
@@ -458,13 +440,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 {board.description && (
                   <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>
                 )}
-                {/* ← NUEVO: Lapso */}
                 {(lapsoStart || lapsoEnd) && (
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                     📅 Lapso: <strong>{lapsoStart || '—'}</strong> → <strong>{lapsoEnd || 'sin fecha límite'}</strong>
                   </p>
                 )}
-                {/* ← NUEVO: Insights */}
                 {board.insights && (
                   <div className="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-4 py-3 max-w-2xl">
                     <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">💡 Insights</p>
@@ -487,7 +467,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               )}
             </div>
 
-            {/* ← Renombrado: Equipo (antes: Miembros) */}
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs text-gray-500 dark:text-gray-400">Equipo:</span>
               <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full">
@@ -510,7 +489,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           </div>
 
           {/* ── Columnas Kanban + Actividad ── */}
-          <div className="flex gap-6 overflow-x-auto pb-4 items-start">
+          {/* ← 5C: justify-center para centrar el kanban */}
+          <div className="flex gap-6 overflow-x-auto pb-4 items-start justify-center">
             {board.columns.map(col => (
               <DroppableColumn
                 key={col.id}
@@ -519,10 +499,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 onCreateCard={handleCreateCard}
                 onEditCard={handleEditCard}
                 onDeleteCard={handleDelete}
-                onUpdateWipLimit={handleUpdateWipLimit}
               />
             ))}
-            {/* ← NUEVO: Actividad como 4ta columna */}
             <ActivityColumn boardId={board.id} />
           </div>
         </main>
@@ -589,23 +567,30 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     <option key={m.id} value={m.id}>{m.name || m.email}</option>
                   ))}
                 </select>
+                {/* ← 5C: aviso si no hay asignado */}
+                {!formData.assignedTo && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg mt-2">
+                    ⚠️ Esta hoja no tiene persona asignada. Completa las definiciones antes de guardar.
+                  </p>
+                )}
               </div>
-              {/* ← NUEVO: Fechas en dos columnas */}
+              {/* Fechas en dos columnas */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">📅 Fecha límite</label>
+                  {/* ← 5C: color-scheme para que el ícono de calendario sea visible */}
                   <input type="date" value={formData.dueDate}
                     onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [color-scheme:light] dark:[color-scheme:dark]" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">🔔 Alerta</label>
                   <input type="date" value={formData.alertDate}
                     onChange={e => setFormData({ ...formData, alertDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [color-scheme:light] dark:[color-scheme:dark]" />
                 </div>
               </div>
-              {/* ← NUEVO: Recursos */}
+              {/* Recursos */}
               <div>
                 <label className="block text-sm font-medium mb-1">🔗 Recursos (URLs)</label>
                 <textarea value={formData.resources}
@@ -636,7 +621,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         </div>
       )}
 
-      {/* ── NUEVO: Modal Editar Sprint ── */}
+      {/* ── Modal Editar Sprint ── */}
       {showSprintModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
@@ -685,87 +670,29 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   )
 }
 
-// ── Columna Droppable (sin cambios funcionales) ──
+// ── Columna Droppable ──
+// ← 5C: eliminado indicador WIP del encabezado
 import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DraggableCard } from "./DraggableCard"
 
 function DroppableColumn({
-  column, isOwner, onCreateCard, onEditCard, onDeleteCard, onUpdateWipLimit,
+  column, isOwner, onCreateCard, onEditCard, onDeleteCard,
 }: {
   column: Column
   isOwner: boolean
   onCreateCard: (columnId: string) => void
   onEditCard: (card: Card, columnId: string) => void
   onDeleteCard: (cardId: string) => void
-  onUpdateWipLimit: (columnId: string, newLimit: number | null) => void
 }) {
   const { setNodeRef } = useDroppable({ id: column.id })
-  const [editingWip, setEditingWip] = useState(false)
-  const [wipInput, setWipInput]     = useState(column.wipLimit?.toString() || '')
-
-  const count = column.cards.length
-  const limit = column.wipLimit
-
-  const getWipStyle = () => {
-    if (!limit) return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-    const ratio = count / limit
-    if (ratio >= 1)   return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 font-bold animate-pulse'
-    if (ratio >= 0.8) return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 font-semibold'
-    return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
-  }
-
-  const getWipIcon = () => {
-    if (!limit) return ''
-    const ratio = count / limit
-    if (ratio >= 1)   return ' 🔴'
-    if (ratio >= 0.8) return ' 🟡'
-    return ' 🟢'
-  }
-
-  const handleWipSave = () => {
-    const val    = wipInput.trim()
-    const parsed = val === '' ? null : parseInt(val, 10)
-    if (val !== '' && (isNaN(parsed!) || parsed! < 1)) return
-    onUpdateWipLimit(column.id, parsed)
-    setEditingWip(false)
-  }
 
   return (
     <div ref={setNodeRef} className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md">
       <div className="p-4 border-b-4" style={{ borderColor: column.color || '#6b7280' }}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-lg">{column.name}</h2>
-          {editingWip ? (
-            <div className="flex items-center gap-1">
-              <input type="number" min="1" value={wipInput}
-                onChange={e => setWipInput(e.target.value)}
-                className="w-16 text-sm px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 text-center"
-                placeholder="máx" autoFocus
-                onKeyDown={e => {
-                  if (e.key === 'Enter')  handleWipSave()
-                  if (e.key === 'Escape') setEditingWip(false)
-                }} />
-              <button onClick={handleWipSave} className="text-green-600 font-bold text-sm">✓</button>
-              <button onClick={() => setEditingWip(false)} className="text-gray-400 text-sm">✕</button>
-            </div>
-          ) : (
-            <span
-              className={`text-sm px-2 py-1 rounded cursor-pointer transition-all ${getWipStyle()} ${isOwner ? 'hover:ring-2 hover:ring-blue-400' : ''}`}
-              onClick={() => isOwner && setEditingWip(true)}
-              title={isOwner ? 'Clic para editar límite WIP' : limit ? `Límite: ${limit}` : ''}
-            >
-              {limit ? `${count}/${limit}${getWipIcon()}` : isOwner ? `${count} ✎` : count}
-            </span>
-          )}
         </div>
-
-        {limit && count > limit && (
-          <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded mb-2">
-            ⚠️ Límite WIP superado ({count - limit} tarjeta{count - limit > 1 ? 's' : ''} extra)
-          </div>
-        )}
-
         <button onClick={() => onCreateCard(column.id)}
           className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium">
           + Agregar Tarjeta
