@@ -78,7 +78,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
       <header className="relative z-10 flex justify-center pt-8 pb-4">
         <Link href="/">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             width={240}
             height={90}
             alt="KanbanBonsai"
