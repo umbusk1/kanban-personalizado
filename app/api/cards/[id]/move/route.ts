@@ -30,7 +30,7 @@ export async function PATCH(
     })
 
     if (!card) {
-      return NextResponse.json({ error: "Tarjeta no encontrada" }, { status: 404 })
+      return NextResponse.json({ error: "Hoja no encontrada" }, { status: 404 })
     }
 
     const hasAccess =
@@ -44,7 +44,7 @@ export async function PATCH(
     // Nombre de la columna destino para el log
     const targetColumn = await prisma.column.findUnique({ where: { id: columnId } })
 
-    // Mover la tarjeta
+    // Mover la hoja
     const updatedCard = await prisma.card.update({
       where: { id: params.id },
       data: { columnId, position: position ?? card.position },
@@ -67,7 +67,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedCard)
   } catch (error) {
-    console.error("Error al mover tarjeta:", error)
-    return NextResponse.json({ error: "Error al mover tarjeta" }, { status: 500 })
+    console.error("Error al mover hoja:", error)
+    return NextResponse.json({ error: "Error al mover hoja" }, { status: 500 })
   }
 }
