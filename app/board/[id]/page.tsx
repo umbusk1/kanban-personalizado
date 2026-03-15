@@ -259,14 +259,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         method, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, assignedTo: formData.assignedTo||null, dueDate: formData.dueDate||null, alertDate: formData.alertDate||null, resources: formData.resources||null }),
       })
-      if (!res.ok) { const d=await res.json(); setError(d.error||'Error al guardar tarjeta'); setSaving(false); return }
+      if (!res.ok) { const d=await res.json(); setError(d.error||'Error al guardar hoja'); setSaving(false); return }
       setShowModal(false); fetchBoard()
-    } catch { setError('Error al guardar tarjeta') }
+    } catch { setError('Error al guardar hoja') }
     finally { setSaving(false) }
   }
 
   const handleDelete = async (cardId: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta tarjeta?')) return
+    if (!confirm('¿Estás seguro de eliminar esta hoja?')) return
     try { const res = await fetch(`/api/cards/${cardId}`, { method: 'DELETE' }); if (res.ok) fetchBoard() }
     catch (e) { console.error('Error al eliminar:', e) }
   }
@@ -297,7 +297,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     finally { setSaving(false) }
   }
 
-  // ── 5E: handlers de prelación de tarjetas ──
+  // ── 5E: handlers de prelación de hojas ──
   const handlePClick = (cardId: string) => {
     setSelectingPredFor(prev => prev === cardId ? null : cardId)
   }
@@ -409,7 +409,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
                   <span>Propietario: {board.owner.name||board.owner.email}</span>
                   <span>•</span>
-                  <span>{allCards.length} tarjetas</span>
+                  <span>{allCards.length} hojas</span>
                 </div>
               </div>
               {isOwner && (
@@ -441,7 +441,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           {selectingPredFor && (
             <div className="mb-4 flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg px-4 py-3">
               <span className="text-amber-700 dark:text-amber-300 text-sm font-medium">
-                🔗 Modo prelación activo — haz clic en la tarjeta que prela a <strong>"{allCards.find(c=>c.id===selectingPredFor)?.title}"</strong>
+                🔗 Modo prelación activo — haz clic en la hoja que prela a <strong>"{allCards.find(c=>c.id===selectingPredFor)?.title}"</strong>
               </span>
               <button onClick={() => setSelectingPredFor(null)}
                 className="ml-auto text-xs text-amber-600 hover:text-amber-800 font-medium underline">
@@ -484,11 +484,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         ) : null}
       </DragOverlay>
 
-      {/* ── Modal Crear / Editar Tarjeta ── */}
+      {/* ── Modal Crear / Editar hoja ── */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 my-4">
-            <h2 className="text-xl font-bold mb-4">{modalMode==='create' ? 'Nueva Tarjeta' : 'Editar Tarjeta'}</h2>
+            <h2 className="text-xl font-bold mb-4">{modalMode==='create' ? 'Nueva Hoja' : 'Editar Hoja'}</h2>
             {/* ← 5D: barra de progreso en modal */}
             {(() => {
               const lines = formData.description.split('\n')
@@ -513,7 +513,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <input type="text" required value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Título de la tarjeta" />
+                  placeholder="Título de la hoja" />
               </div>
               {/* Descripción con botones de tarea */}
               <div>
@@ -714,7 +714,7 @@ function DroppableColumn({
       <div className="p-4 space-y-3 min-h-[200px]">
         <SortableContext items={column.cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
           {column.cards.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-8">Arrastra tarjetas aquí</p>
+            <p className="text-center text-gray-400 text-sm py-8">Arrastra hojas aquí</p>
           ) : column.cards.map(card => {
             // ← 5E: calcular si está realmente bloqueada
             const isBlocked = !!card.blockedById && card.blockedBy !== null && card.blockedBy.columnId !== lastColId
