@@ -84,11 +84,7 @@ function toggleLine(text: string, lineIndex: number, wasChecked: boolean): strin
 function ProgressBar({ done, total }: { done: number; total: number }) {
   if (total === 0) return null
   const pct = Math.round((done / total) * 100)
-  const color = pct === 100
-    ? 'bg-green-500'
-    : pct >= 50
-      ? 'bg-blue-500'
-      : 'bg-amber-400'
+  const color = 'bg-blue-500'
   return (
     <div className="mt-2 mb-1">
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -216,32 +212,10 @@ export function DraggableCard({
         </div>
       </div>
 
-      {/* ── 5D: checkboxes interactivos (si los hay) ── */}
+      {/* ── 5D: solo % de progreso, sin listar tareas ── */}
       {hasCheckboxes ? (
-        <div className="mb-2">
-          <ul className="space-y-1">
-            {checkboxItems.map((item, idx) => (
-              <li key={idx}
-                className="flex items-start gap-2 text-sm cursor-pointer select-none"
-                onClick={e => handleToggleCheckbox(e, item)}
-              >
-                <span className={`mt-0.5 text-base leading-none flex-shrink-0 ${saving ? 'opacity-50' : ''}`}>
-                  {item.checked ? '✅' : '⬜'}
-                </span>
-                <span className={item.checked
-                  ? 'line-through text-gray-400 dark:text-gray-500'
-                  : 'text-gray-700 dark:text-gray-300'
-                }>
-                  {item.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {/* Barra de progreso */}
-          <ProgressBar done={done} total={total} />
-        </div>
+        <ProgressBar done={done} total={total} />
       ) : (
-        /* Descripción libre (sin checkboxes) */
         currentDesc && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
             {currentDesc}
