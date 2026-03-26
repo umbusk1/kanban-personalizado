@@ -710,7 +710,7 @@ function DroppableColumn({
           <h2 className="font-semibold text-lg">{column.name}</h2>
         </div>
         <button onClick={() => onCreateCard(column.id)} className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium">
-          + Agregar Tarjeta
+          + Agregar Hoja
         </button>
       </div>
       <div className="p-4 space-y-3 min-h-[200px]">
