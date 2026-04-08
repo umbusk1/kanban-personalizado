@@ -22,21 +22,34 @@ model User {
   @@map("users")
 }
 
+model Bonsai {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  owner       User     @relation("BonsaiOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sprints     Board[]
+  @@map("bonsais")
+}
+
 model Board {
-  id           String            @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
   description  String?
   insights     String?
-  dependsOnId  String?           // ← 5E: prelación entre sprints
+  dependsOnId  String?
   ownerId      String
-  createdAt    DateTime          @default(now())
-  owner        User              @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  bonsaiId     String?          // ← AGREGADO
+  createdAt    DateTime @default(now())
+  owner        User     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  bonsai       Bonsai?  @relation(fields: [bonsaiId], references: [id])  // ← AGREGADO
   columns      Column[]
   members      BoardMember[]
   invitations  BoardInvitation[]
   activityLogs ActivityLog[]
-  dependsOn    Board?            @relation("BoardPrecedence", fields: [dependsOnId], references: [id])
-  dependents   Board[]           @relation("BoardPrecedence")
+  dependsOn    Board?   @relation("BoardPrecedence", fields: [dependsOnId], references: [id])
+  dependents   Board[]  @relation("BoardPrecedence")
   @@map("boards")
 }
 
