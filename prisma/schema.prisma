@@ -15,6 +15,7 @@ model User {
   isAdmin       Boolean       @default(false)
   createdAt     DateTime      @default(now())
   ownedBoards   Board[]       @relation("BoardOwner")
+  ownedBonsais  Bonsai[]      @relation("BonsaiOwner")  // ← AGREGADO
   boardMembers  BoardMember[]
   createdCards  Card[]        @relation("CardCreator")
   assignedCards Card[]        @relation("CardAssignee")
