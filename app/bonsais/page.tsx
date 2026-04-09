@@ -1,0 +1,391 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import AppHeader from "@/components/AppHeader"
+import AppFooter from "@/components/AppFooter"
+import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
+
+type Sprint = {
+  id: string
+  name: string
+  description: string | null
+  createdAt: string
+  totalCards: number
+  col3Cards: number
+  inProgress: boolean
+  progress: number
+}
+
+type Bonsai = {
+  id: string
+  name: string
+  description: string | null
+  createdAt: string
+  sprints: Sprint[]
+}
+
+export default function BonsaisPage() {
+  const router = useRouter()
+  const [bonsais, setBonsais]       = useState<Bonsai[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [selected, setSelected]     = useState<Bonsai | null>(null)
+
+  // Modal crear bonsai manual
+  const [showModal, setShowModal]           = useState(false)
+  const [creating, setCreating]             = useState(false)
+  const [newName, setNewName]               = useState("")
+  const [newDescription, setNewDescription] = useState("")
+  const [createError, setCreateError]       = useState("")
+
+  // Modal IA
+  const [showAgenteModal, setShowAgenteModal] = useState(false)
+
+  // Modal eliminar
+  const [deleteTarget, setDeleteTarget] = useState<Bonsai | null>(null)
+  const [deleting, setDeleting]         = useState(false)
+
+  useEffect(() => { fetchData() }, [])
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch("/api/bonsais")
+      if (res.ok) {
+        const data: Bonsai[] = await res.json()
+        setBonsais(data)
+        if (data.length > 0) setSelected(prev => {
+          // mantener selección si sigue existiendo, si no, el primero
+          const stillExists = data.find(b => b.id === prev?.id)
+          return stillExists ?? data[0]
+        })
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateBonsai = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreateError("")
+    setCreating(true)
+    try {
+      const res = await fetch("/api/bonsais", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName, description: newDescription }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setCreateError(data.error || "Error al crear bonsai")
+        setCreating(false)
+        return
+      }
+      setShowModal(false)
+      setNewName("")
+      setNewDescription("")
+      setCreating(false)
+      await fetchData()
+    } catch {
+      setCreateError("Error al crear bonsai")
+      setCreating(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/bonsais/${deleteTarget.id}`, { method: "DELETE" })
+      if (res.ok) {
+        const remaining = bonsais.filter(b => b.id !== deleteTarget.id)
+        setBonsais(remaining)
+        setSelected(remaining.length > 0 ? remaining[0] : null)
+        setDeleteTarget(null)
+      }
+    } catch {
+      console.error("Error al eliminar bonsai")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
+  )
+
+  const totalSprints = bonsais.reduce((sum, b) => sum + b.sprints.length, 0)
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div className="sticky top-0 z-30"><AppHeader /></div>
+
+      <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Cabecera */}
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-semibold mb-1">Mis Bonsais</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              {bonsais.length} proyecto{bonsais.length !== 1 ? "s" : ""}
+              {totalSprints > 0 && (
+                <span className="ml-2 text-indigo-500 font-medium">
+                  · {totalSprints} sprint{totalSprints !== 1 ? "s" : ""}
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setShowAgenteModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+              ✨ Generar con IA
+            </button>
+            <button onClick={() => setShowModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+              + Nuevo Bonsai
+            </button>
+          </div>
+        </div>
+
+        {bonsais.length === 0 ? (
+          <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <p className="text-4xl mb-4">🌳</p>
+            <p className="text-gray-500 mb-2 text-lg font-medium">Aún no tienes proyectos</p>
+            <p className="text-gray-400 text-sm mb-6">
+              Un Bonsai es un proyecto mayor compuesto por múltiples sprints.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setShowAgenteModal(true)}
+                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium">
+                ✨ Generar con IA
+              </button>
+              <button onClick={() => setShowModal(true)}
+                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
+                + Crear manualmente
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-5 items-start">
+
+            {/* ── Columna izquierda: Lista de Bonsais ── */}
+            <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  🌳 Proyectos
+                </p>
+                <p className="text-xs text-indigo-400 mt-0.5">{bonsais.length} bonsais</p>
+              </div>
+              <ul className="divide-y divide-gray-50 dark:divide-gray-700">
+                {bonsais.map(bonsai => {
+                  const done = bonsai.sprints.filter(s => !s.inProgress).length
+                  return (
+                    <li key={bonsai.id}>
+                      <button onClick={() => setSelected(bonsai)}
+                        className={`w-full text-left px-4 py-3 text-sm transition-colors
+                          hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                          selected?.id === bonsai.id
+                            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold border-l-4 border-indigo-500"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}>
+                        <span className="block truncate font-medium">{bonsai.name}</span>
+                        <span className="text-xs text-gray-400 font-normal mt-0.5 block">
+                          {bonsai.sprints.length} sprint{bonsai.sprints.length !== 1 ? "s" : ""}
+                          {bonsai.sprints.length > 0 && (
+                            <span className="ml-1 text-green-500">· {done} listo{done !== 1 ? "s" : ""}</span>
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </aside>
+
+            {/* ── Panel central: Bonsai seleccionado ── */}
+            <div className="flex-1 min-w-0">
+              {selected ? (
+                <div>
+                  {/* Header del Bonsai */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500 block mb-1">Bonsai</span>
+                        <h2 className="text-2xl font-bold">{selected.name}</h2>
+                        {selected.description && (
+                          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{selected.description}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg">🗑️</button>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-4 text-sm text-gray-500">
+                      <span>🌿 {selected.sprints.length} sprint{selected.sprints.length !== 1 ? "s" : ""}</span>
+                      <span>✅ {selected.sprints.filter(s => !s.inProgress).length} completados</span>
+                      <span>🔄 {selected.sprints.filter(s => s.inProgress).length} en proceso</span>
+                    </div>
+                  </div>
+
+                  {/* Grid de Sprints */}
+                  {selected.sprints.length === 0 ? (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                      <p className="text-gray-400 mb-4">Este bonsai aún no tiene sprints</p>
+                      <button onClick={() => setShowAgenteModal(true)}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium">
+                        ✨ Generar Sprint con IA
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {selected.sprints.map((sprint, idx) => (
+                        <div key={sprint.id}
+                          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 flex flex-col gap-3">
+                          {/* Número y nombre */}
+                          <div>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                              Sprint {idx + 1}
+                            </span>
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mt-0.5 leading-snug">
+                              {sprint.name}
+                            </h3>
+                            {sprint.description && (
+                              <p className="text-xs text-gray-400 mt-1 line-clamp-2">{sprint.description}</p>
+                            )}
+                          </div>
+
+                          {/* Barra de progreso */}
+                          <div>
+                            <div className="flex justify-between text-xs text-gray-400 mb-1">
+                              <span>{sprint.totalCards} hoja{sprint.totalCards !== 1 ? "s" : ""}</span>
+                              <span className={sprint.progress === 100 ? "text-green-500 font-medium" : "text-indigo-500 font-medium"}>
+                                {sprint.progress}% listo
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full transition-all ${
+                                  sprint.progress === 100 ? "bg-green-500" : "bg-indigo-500"
+                                }`}
+                                style={{ width: `${sprint.progress}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Estado + botón */}
+                          <div className="flex items-center justify-between mt-auto">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              sprint.inProgress
+                                ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300"
+                                : "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                            }`}>
+                              {sprint.inProgress ? "🔄 En proceso" : "✅ Completado"}
+                            </span>
+                            <Link href={`/board/${sprint.id}`}
+                              className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                              Abrir →
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+          </div>
+        )}
+      </main>
+
+      <AppFooter />
+
+      {/* Modal Crear Bonsai Manual */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">Nuevo Bonsai</h2>
+            <form onSubmit={handleCreateBonsai} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nombre *</label>
+                <input type="text" required value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ej: Plan de Mercadeo Compita 2026" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Descripción (opcional)</label>
+                <textarea value={newDescription}
+                  onChange={e => setNewDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3} placeholder="¿Cuál es el objetivo estratégico de este proyecto?" />
+              </div>
+              {createError && (
+                <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200">{createError}</p>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button type="button"
+                  onClick={() => { setShowModal(false); setNewName(""); setNewDescription(""); setCreateError("") }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                             hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={creating}
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
+                             disabled:opacity-50 transition-colors">
+                  {creating ? "Creando..." : "Crear Bonsai"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Eliminación */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-2">¿Eliminar bonsai?</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Estás a punto de eliminar <strong>"{deleteTarget.name}"</strong> y sus {deleteTarget.sprints.length} sprint{deleteTarget.sprints.length !== 1 ? "s" : ""}. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700
+                           disabled:opacity-50 transition-colors">
+                {deleting ? "Eliminando..." : "Sí, eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Agente IA */}
+      {showAgenteModal && (
+        <AgenteSprintModal
+          onClose={() => setShowAgenteModal(false)}
+          onSprintSuccess={(board: GeneratedBoard) => {
+            setShowAgenteModal(false)
+            router.push(`/board/${board.id}`)
+          }}
+          onBonsaiSuccess={(_result: GeneratedBonsai) => {
+            setShowAgenteModal(false)
+            fetchData()
+          }}
+        />
+      )}
+    </div>
+  )
+}
