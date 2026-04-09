@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
-import AgenteSprintModal, { GeneratedBoard } from "@/components/AgenteSprintModal"
+import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
                'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -59,9 +59,10 @@ export default function DashboardPage() {
   const [newDescription, setNewDescription] = useState("")
   const [createError, setCreateError]       = useState("")
   
-  // Agente Sprint
+  // Agente Sprint / Bonsai
   const [showAgenteModal, setShowAgenteModal] = useState(false)
   const [generatedBoard, setGeneratedBoard]   = useState<GeneratedBoard | null>(null)
+  const [generatedBonsai, setGeneratedBonsai] = useState<GeneratedBonsai | null>(null)
 
   // Edición inline
   const [editing, setEditing]     = useState(false)
@@ -519,18 +520,22 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      {/* Modal Agente Sprint IA */}
-      {showAgenteModal && (
-        <AgenteSprintModal
-          onClose={() => setShowAgenteModal(false)}
-          onSuccess={(board) => {
-          setGeneratedBoard(board)
-          setShowAgenteModal(false)
-          // Hoja 5: aquí irá el preview. Por ahora redirige directo al sprint.
-          router.push(`/board/${board.id}`)
-      }}
-    />
-  )}
+{/* Modal Agente Sprint / Bonsai IA */}
+{showAgenteModal && (
+  <AgenteSprintModal
+    onClose={() => setShowAgenteModal(false)}
+    onSprintSuccess={(board) => {
+      setGeneratedBoard(board)
+      setShowAgenteModal(false)
+      router.push(`/board/${board.id}`)
+    }}
+    onBonsaiSuccess={(result) => {
+      setGeneratedBonsai(result)
+      setShowAgenteModal(false)
+      fetchData()
+    }}
+  />
+)}
     </div>
   )
 }
