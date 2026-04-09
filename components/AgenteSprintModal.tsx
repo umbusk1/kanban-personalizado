@@ -30,15 +30,18 @@ interface Props {
   onSuccess: (board: GeneratedBoard) => void
 }
 
+type Mode = "sprint" | "bonsai"
+
 export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
-  const [bonsais, setBonsais]               = useState<Bonsai[]>([])
-  const [loadingBonsais, setLoadingBonsais] = useState(true)
+  const [mode, setMode]                         = useState<Mode>("sprint")
+  const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
+  const [loadingBonsais, setLoadingBonsais]     = useState(true)
   const [selectedBonsaiId, setSelectedBonsaiId] = useState("")
-  const [creatingBonsai, setCreatingBonsai] = useState(false)
-  const [newBonsaiName, setNewBonsaiName]   = useState("")
-  const [freeText, setFreeText]             = useState("")
-  const [loading, setLoading]               = useState(false)
-  const [error, setError]                   = useState("")
+  const [creatingBonsai, setCreatingBonsai]     = useState(false)
+  const [newBonsaiName, setNewBonsaiName]       = useState("")
+  const [freeText, setFreeText]                 = useState("")
+  const [loading, setLoading]                   = useState(false)
+  const [error, setError]                       = useState("")
 
   useEffect(() => { fetchBonsais() }, [])
 
@@ -108,9 +111,9 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
         {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div>
-            <h2 className="text-xl font-bold">✨ Generar Sprint con IA</h2>
+            <h2 className="text-xl font-bold">✨ Generar con IA</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Describe lo que quieres lograr y Claude lo convierte en un sprint
+              Describe lo que quieres lograr y Claude lo estructura
             </p>
           </div>
           <button onClick={onClose}
@@ -119,11 +122,42 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
           </button>
         </div>
 
+        {/* Toggle Sprint / Bonsai */}
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-5">
+          <button
+            onClick={() => setMode("sprint")}
+            className={`flex-1 py-2 text-sm font-medium transition-colors ${
+              mode === "sprint"
+                ? "bg-indigo-600 text-white"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+            }`}
+          >
+            🌿 Un Sprint
+          </button>
+          <button
+            onClick={() => setMode("bonsai")}
+            className={`flex-1 py-2 text-sm font-medium transition-colors relative ${
+              mode === "bonsai"
+                ? "bg-indigo-600 text-white"
+                : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+            }`}
+            disabled
+            title="Próximamente"
+          >
+            🌳 Bonsai completo
+            <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
+              Próximo
+            </span>
+          </button>
+        </div>
+
         <div className="space-y-4">
 
           {/* Selector de Bonsai */}
           <div>
-            <label className="block text-sm font-medium mb-1">Proyecto (Bonsai) *</label>
+            <label className="block text-sm font-medium mb-1">
+              Proyecto (Bonsai) *
+            </label>
             {loadingBonsais ? (
               <p className="text-sm text-gray-400">Cargando proyectos...</p>
             ) : !creatingBonsai ? (
@@ -182,7 +216,7 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
             <textarea
               value={freeText}
               onChange={e => setFreeText(e.target.value)}
-              placeholder="Ej: Lanzar una campaña de posts en LinkedIn para promocionar Compita entre directores de compras de empresas dominicanas."
+              placeholder="Ej: Lanzar una campaña de posts en LinkedIn para promocionar Compita entre directores de compras de empresas dominicanas. El objetivo es generar al menos 5 leads calificados en 30 días."
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
                          dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500
                          text-sm resize-none"
