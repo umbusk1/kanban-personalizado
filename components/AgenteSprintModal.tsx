@@ -25,21 +25,27 @@ export type GeneratedBoard = {
   }[]
 }
 
+export type GeneratedBonsai = {
+  bonsai: { id: string; name: string; description: string | null }
+  boards: GeneratedBoard[]
+}
+
 interface Props {
   onClose: () => void
-  onSuccess: (board: GeneratedBoard) => void
+  onSprintSuccess: (board: GeneratedBoard) => void
+  onBonsaiSuccess: (result: GeneratedBonsai) => void
 }
 
 type Mode = "sprint" | "bonsai"
 
-export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
+export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess }: Props) {
   const [mode, setMode]                         = useState<Mode>("sprint")
   const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
   const [loadingBonsais, setLoadingBonsais]     = useState(true)
   const [selectedBonsaiId, setSelectedBonsaiId] = useState("")
   const [creatingBonsai, setCreatingBonsai]     = useState(false)
   const [newBonsaiName, setNewBonsaiName]       = useState("")
-  const [sprintName, setSprintName]             = useState("")
+  const [customName, setCustomName]             = useState("")
   const [freeText, setFreeText]                 = useState("")
   const [loading, setLoading]                   = useState(false)
   const [error, setError]                       = useState("")
@@ -82,33 +88,58 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
   }
 
   const handleGenerate = async () => {
-    if (!freeText.trim() || !selectedBonsaiId) return
+    if (!freeText.trim()) return
+    if (mode === "sprint" && !selectedBonsaiId) return
     setLoading(true)
     setError("")
+
     try {
-      const res = await fetch("/api/create-sprint-from-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          freeText: sprintName.trim()
-            ? `Nombre del sprint: "${sprintName}"\n\n${freeText}`
-            : freeText,
-          bonsaiId: selectedBonsaiId,
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Error al generar el sprint")
-        setLoading(false)
-        return
+      if (mode === "sprint") {
+        const prompt = customName.trim()
+          ? `Nombre del sprint: "${customName}"\n\n${freeText}`
+          : freeText
+
+        const res = await fetch("/api/create-sprint-from-ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ freeText: prompt, bonsaiId: selectedBonsaiId }),
+        })
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || "Error al generar el sprint")
+          setLoading(false)
+          return
+        }
+        const board: GeneratedBoard = await res.json()
+        onSprintSuccess(board)
+
+      } else {
+        const prompt = customName.trim()
+          ? `Nombre del bonsai: "${customName}"\n\n${freeText}`
+          : freeText
+
+        const res = await fetch("/api/create-bonsai-from-ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ freeText: prompt }),
+        })
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || "Error al generar el bonsai")
+          setLoading(false)
+          return
+        }
+        const result: GeneratedBonsai = await res.json()
+        onBonsaiSuccess(result)
       }
-      const board: GeneratedBoard = await res.json()
-      onSuccess(board)
     } catch {
       setError("Error de conexión. Intenta de nuevo.")
       setLoading(false)
     }
   }
+
+  const canGenerate = freeText.trim() &&
+    (mode === "bonsai" || selectedBonsaiId)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
@@ -131,7 +162,7 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
         {/* Toggle Sprint / Bonsai */}
         <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-5">
           <button
-            onClick={() => setMode("sprint")}
+            onClick={() => { setMode("sprint"); setCustomName(""); setError("") }}
             className={`flex-1 py-2 text-sm font-medium transition-colors ${
               mode === "sprint"
                 ? "bg-indigo-600 text-white"
@@ -141,112 +172,123 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
             🌿 Un Sprint
           </button>
           <button
-            onClick={() => setMode("bonsai")}
-            className={`flex-1 py-2 text-sm font-medium transition-colors relative ${
+            onClick={() => { setMode("bonsai"); setCustomName(""); setError("") }}
+            className={`flex-1 py-2 text-sm font-medium transition-colors ${
               mode === "bonsai"
                 ? "bg-indigo-600 text-white"
-                : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
             }`}
-            disabled
-            title="Próximamente"
           >
             🌳 Bonsai completo
-            <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
-              Próximo
-            </span>
           </button>
         </div>
 
+        {/* Descripción del modo */}
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4 -mt-2">
+          {mode === "sprint"
+            ? "Genera un sprint con hojas de actividad listas para ejecutar."
+            : "Genera un proyecto completo con múltiples sprints estructurados con criterio MECE."}
+        </p>
+
         <div className="space-y-4">
 
-          {/* Nombre del Sprint (solo en modo sprint) */}
-          {mode === "sprint" && (
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Nombre del Sprint <span className="text-gray-400 font-normal">(opcional — Claude lo genera si lo dejas vacío)</span>
-              </label>
-              <input
-                type="text"
-                value={sprintName}
-                onChange={e => setSprintName(e.target.value)}
-                placeholder="Ej: Campaña LinkedIn Q2 2026"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                           dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              />
-            </div>
-          )}
-
-          {/* Selector de Bonsai */}
+          {/* Nombre personalizado */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              Proyecto (Bonsai) *
+              {mode === "sprint" ? "Nombre del Sprint" : "Nombre del Bonsai"}
+              <span className="text-gray-400 font-normal ml-1">(opcional)</span>
             </label>
-            {loadingBonsais ? (
-              <p className="text-sm text-gray-400">Cargando proyectos...</p>
-            ) : !creatingBonsai ? (
-              <select
-                value={selectedBonsaiId}
-                onChange={e => {
-                  if (e.target.value === "__nuevo__") {
-                    setCreatingBonsai(true)
-                    setSelectedBonsaiId("")
-                  } else {
-                    setSelectedBonsaiId(e.target.value)
-                  }
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                           dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              >
-                {bonsais.length === 0 && (
-                  <option value="" disabled>Sin proyectos — crea uno abajo</option>
-                )}
-                {bonsais.map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-                <option value="__nuevo__">+ Crear nuevo Bonsai</option>
-              </select>
-            ) : (
-              <div className="flex gap-2">
-                <input
-                  autoFocus
-                  type="text"
-                  value={newBonsaiName}
-                  onChange={e => setNewBonsaiName(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleCreateBonsai()}
-                  placeholder="Nombre del nuevo Bonsai"
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
-                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                />
-                <button onClick={handleCreateBonsai} disabled={!newBonsaiName.trim()}
-                  className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
-                             disabled:opacity-50 text-sm font-medium transition-colors">
-                  Crear
-                </button>
-                <button onClick={() => { setCreatingBonsai(false); setNewBonsaiName("") }}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                             hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">
-                  ×
-                </button>
-              </div>
-            )}
+            <input
+              type="text"
+              value={customName}
+              onChange={e => setCustomName(e.target.value)}
+              placeholder={
+                mode === "sprint"
+                  ? "Ej: Campaña LinkedIn Q2 2026"
+                  : "Ej: Plan de Mercadeo Compita 2026"
+              }
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                         dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            />
           </div>
+
+          {/* Selector de Bonsai — solo en modo Sprint */}
+          {mode === "sprint" && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Proyecto (Bonsai) *</label>
+              {loadingBonsais ? (
+                <p className="text-sm text-gray-400">Cargando proyectos...</p>
+              ) : !creatingBonsai ? (
+                <select
+                  value={selectedBonsaiId}
+                  onChange={e => {
+                    if (e.target.value === "__nuevo__") {
+                      setCreatingBonsai(true)
+                      setSelectedBonsaiId("")
+                    } else {
+                      setSelectedBonsaiId(e.target.value)
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                >
+                  {bonsais.length === 0 && (
+                    <option value="" disabled>Sin proyectos — crea uno abajo</option>
+                  )}
+                  {bonsais.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                  <option value="__nuevo__">+ Crear nuevo Bonsai</option>
+                </select>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newBonsaiName}
+                    onChange={e => setNewBonsaiName(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleCreateBonsai()}
+                    placeholder="Nombre del nuevo Bonsai"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                               dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  />
+                  <button onClick={handleCreateBonsai} disabled={!newBonsaiName.trim()}
+                    className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
+                               disabled:opacity-50 text-sm font-medium transition-colors">
+                    Crear
+                  </button>
+                  <button onClick={() => { setCreatingBonsai(false); setNewBonsaiName("") }}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                               hover:bg-gray-50 dark:hover:bg-gray-700 text-sm transition-colors">
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Brief */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              ¿Qué quieres lograr con este sprint? *
+              {mode === "sprint"
+                ? "¿Qué quieres lograr con este sprint? *"
+                : "¿Qué proyecto quieres estructurar? *"}
             </label>
             <textarea
               value={freeText}
               onChange={e => setFreeText(e.target.value)}
-              placeholder="Ej: Lanzar una campaña de posts en LinkedIn para promocionar Compita entre directores de compras de empresas dominicanas. El objetivo es generar al menos 5 leads calificados en 30 días."
+              placeholder={
+                mode === "sprint"
+                  ? "Ej: Lanzar una campaña de posts en LinkedIn para promocionar Compita entre directores de compras de empresas dominicanas. Objetivo: 5 leads calificados en 30 días."
+                  : "Ej: Ejecutar el primer Plan de Mercadeo de Compita para el mercado dominicano. Incluye rediseño de landing, campaña LinkedIn, y alianzas con asociaciones empresariales."
+              }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
                          dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500
                          text-sm resize-none"
               rows={5}
             />
             <p className="text-xs text-gray-400 mt-1">
-              Cuanto más detalle des, mejor será el sprint generado.
+              Cuanto más detalle des, mejor será el resultado generado.
             </p>
           </div>
 
@@ -266,15 +308,17 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
             </button>
             <button
               onClick={handleGenerate}
-              disabled={loading || !freeText.trim() || !selectedBonsaiId}
+              disabled={loading || !canGenerate}
               className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
                          disabled:opacity-50 transition-colors text-sm font-medium
                          flex items-center justify-center gap-2"
             >
               {loading ? (
                 <><span className="animate-spin inline-block">⟳</span> Generando...</>
-              ) : (
+              ) : mode === "sprint" ? (
                 "✨ Generar Sprint"
+              ) : (
+                "🌳 Generar Bonsai"
               )}
             </button>
           </div>
