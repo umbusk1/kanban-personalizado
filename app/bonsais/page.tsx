@@ -7,6 +7,9 @@ import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
 
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+               'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
 type Sprint = {
   id: string
   name: string
@@ -26,11 +29,33 @@ type Bonsai = {
   sprints: Sprint[]
 }
 
+function isCompleted(b: Bonsai) {
+  return b.sprints.length > 0 && b.sprints.every(s => !s.inProgress)
+}
+
+function groupByMonth(bonsais: Bonsai[]) {
+  const map = new Map<string, Bonsai[]>()
+  for (const b of bonsais) {
+    const d   = new Date(b.createdAt)
+    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(b)
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([, items]) => {
+      const d = new Date(items[0].createdAt)
+      return { label: `${MESES[d.getMonth()]} ${d.getFullYear()}`, items }
+    })
+}
+
 export default function BonsaisPage() {
   const router = useRouter()
-  const [bonsais, setBonsais]       = useState<Bonsai[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [selected, setSelected]     = useState<Bonsai | null>(null)
+  const [bonsais, setBonsais]         = useState<Bonsai[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [selected, setSelected]       = useState<Bonsai | null>(null)
+  const [openBonsais, setOpenBonsais] = useState<Set<string>>(new Set())
+  const [openMonths, setOpenMonths]   = useState<Set<string>>(new Set())
 
   // Modal crear bonsai manual
   const [showModal, setShowModal]           = useState(false)
@@ -54,10 +79,10 @@ export default function BonsaisPage() {
       if (res.ok) {
         const data: Bonsai[] = await res.json()
         setBonsais(data)
-        if (data.length > 0) setSelected(prev => {
-          // mantener selección si sigue existiendo, si no, el primero
+        setSelected(prev => {
           const stillExists = data.find(b => b.id === prev?.id)
-          return stillExists ?? data[0]
+          const inProgress  = data.filter(b => !isCompleted(b))
+          return stillExists ?? (inProgress.length > 0 ? inProgress[0] : data[0] ?? null)
         })
       }
     } catch (e) {
@@ -65,6 +90,33 @@ export default function BonsaisPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const toggleBonsai = (id: string) => {
+    setOpenBonsais(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleMonth = (key: string) => {
+    setOpenMonths(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  const monthKey = (b: Bonsai) => {
+    const d = new Date(b.createdAt)
+    return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`
+  }
+
+  const handleSelect = (bonsai: Bonsai) => {
+    setSelected(bonsai)
+    // Auto-abrir el acordeón al seleccionar
+    setOpenBonsais(prev => new Set(prev).add(bonsai.id))
   }
 
   const handleCreateBonsai = async (e: React.FormEvent) => {
@@ -116,7 +168,10 @@ export default function BonsaisPage() {
     <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
   )
 
-  const totalSprints = bonsais.reduce((sum, b) => sum + b.sprints.length, 0)
+  const inProgressBonsais = bonsais.filter(b => !isCompleted(b))
+  const completedBonsais  = bonsais.filter(b => isCompleted(b))
+  const historico         = groupByMonth(completedBonsais)
+  const totalSprints      = bonsais.reduce((sum, b) => sum + b.sprints.length, 0)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -170,41 +225,90 @@ export default function BonsaisPage() {
         ) : (
           <div className="flex gap-5 items-start">
 
-            {/* ── Columna izquierda: Lista de Bonsais ── */}
+            {/* ── Columna izquierda: En proceso (acordeón) ── */}
             <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  🌳 Proyectos
+                  🌳 En proceso
                 </p>
-                <p className="text-xs text-indigo-400 mt-0.5">{bonsais.length} bonsais</p>
+                <p className="text-xs text-indigo-400 mt-0.5">{inProgressBonsais.length} activos</p>
               </div>
-              <ul className="divide-y divide-gray-50 dark:divide-gray-700">
-                {bonsais.map(bonsai => {
-                  const done = bonsai.sprints.filter(s => !s.inProgress).length
-                  return (
-                    <li key={bonsai.id}>
-                      <button onClick={() => setSelected(bonsai)}
-                        className={`w-full text-left px-4 py-3 text-sm transition-colors
-                          hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+
+              {inProgressBonsais.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6 px-4">
+                  Todos los bonsais están completados
+                </p>
+              ) : (
+                <ul className="divide-y divide-gray-50 dark:divide-gray-700">
+                  {inProgressBonsais.map(bonsai => {
+                    const open = openBonsais.has(bonsai.id)
+                    const done = bonsai.sprints.filter(s => !s.inProgress).length
+                    return (
+                      <li key={bonsai.id}>
+                        {/* Fila del Bonsai */}
+                        <div className={`flex items-center transition-colors ${
                           selected?.id === bonsai.id
-                            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold border-l-4 border-indigo-500"
-                            : "text-gray-700 dark:text-gray-300"
+                            ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-500"
+                            : "border-l-4 border-transparent"
                         }`}>
-                        <span className="block truncate font-medium">{bonsai.name}</span>
-                        <span className="text-xs text-gray-400 font-normal mt-0.5 block">
-                          {bonsai.sprints.length} sprint{bonsai.sprints.length !== 1 ? "s" : ""}
-                          {bonsai.sprints.length > 0 && (
-                            <span className="ml-1 text-green-500">· {done} listo{done !== 1 ? "s" : ""}</span>
-                          )}
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
+                          {/* Nombre — selecciona en el panel central */}
+                          <button
+                            onClick={() => handleSelect(bonsai)}
+                            className={`flex-1 text-left px-3 py-3 text-sm transition-colors
+                              hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                              selected?.id === bonsai.id
+                                ? "text-indigo-700 dark:text-indigo-300 font-semibold"
+                                : "text-gray-700 dark:text-gray-300"
+                            }`}>
+                            <span className="block truncate">{bonsai.name}</span>
+                            <span className="text-xs text-gray-400 font-normal mt-0.5 block">
+                              {bonsai.sprints.length} sprint{bonsai.sprints.length !== 1 ? "s" : ""}
+                              {bonsai.sprints.length > 0 && (
+                                <span className="ml-1 text-green-500">· {done} listo{done !== 1 ? "s" : ""}</span>
+                              )}
+                            </span>
+                          </button>
+                          {/* Toggle acordeón */}
+                          <button
+                            onClick={() => toggleBonsai(bonsai.id)}
+                            className="px-3 py-3 text-gray-400 hover:text-indigo-500 transition-colors text-xs">
+                            {open ? '▾' : '▸'}
+                          </button>
+                        </div>
+
+                        {/* Sprints del acordeón */}
+                        {open && bonsai.sprints.length > 0 && (
+                          <ul className="bg-gray-50 dark:bg-gray-700/20 border-t border-gray-100 dark:border-gray-700">
+                            {bonsai.sprints.map((sprint, idx) => (
+                              <li key={sprint.id}
+                                className="flex items-center justify-between px-4 py-2 gap-2
+                                           hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                                <span className="text-xs text-gray-600 dark:text-gray-400 truncate flex-1">
+                                  <span className="text-gray-400 mr-1">{idx + 1}.</span>
+                                  {sprint.name}
+                                </span>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <span className="text-xs text-indigo-500 font-medium whitespace-nowrap">
+                                    {sprint.progress}%
+                                  </span>
+                                  <Link href={`/board/${sprint.id}`}
+                                    className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded
+                                               hover:bg-indigo-700 transition-colors font-medium">
+                                    Abrir
+                                  </Link>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
             </aside>
 
-            {/* ── Panel central: Bonsai seleccionado ── */}
+            {/* ── Panel central ── */}
             <div className="flex-1 min-w-0">
               {selected ? (
                 <div>
@@ -218,10 +322,8 @@ export default function BonsaisPage() {
                           <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{selected.description}</p>
                         )}
                       </div>
-                      <div className="flex gap-2 ml-4">
-                        <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg">🗑️</button>
-                      </div>
+                      <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg ml-4">🗑️</button>
                     </div>
                     <div className="mt-3 flex gap-4 text-sm text-gray-500">
                       <span>🌿 {selected.sprints.length} sprint{selected.sprints.length !== 1 ? "s" : ""}</span>
@@ -244,7 +346,6 @@ export default function BonsaisPage() {
                       {selected.sprints.map((sprint, idx) => (
                         <div key={sprint.id}
                           className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 flex flex-col gap-3">
-                          {/* Número y nombre */}
                           <div>
                             <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
                               Sprint {idx + 1}
@@ -256,8 +357,6 @@ export default function BonsaisPage() {
                               <p className="text-xs text-gray-400 mt-1 line-clamp-2">{sprint.description}</p>
                             )}
                           </div>
-
-                          {/* Barra de progreso */}
                           <div>
                             <div className="flex justify-between text-xs text-gray-400 mb-1">
                               <span>{sprint.totalCards} hoja{sprint.totalCards !== 1 ? "s" : ""}</span>
@@ -274,8 +373,6 @@ export default function BonsaisPage() {
                               />
                             </div>
                           </div>
-
-                          {/* Estado + botón */}
                           <div className="flex items-center justify-between mt-auto">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                               sprint.inProgress
@@ -296,6 +393,59 @@ export default function BonsaisPage() {
                 </div>
               ) : null}
             </div>
+
+            {/* ── Columna derecha: Histórico ── */}
+            <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/40">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  📚 Histórico
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">{completedBonsais.length} completados</p>
+              </div>
+              {completedBonsais.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6 px-4">
+                  Aún no hay bonsais completados
+                </p>
+              ) : (
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {historico.map(group => {
+                    const key  = monthKey(group.items[0])
+                    const open = openMonths.has(key)
+                    return (
+                      <div key={key}>
+                        <button onClick={() => toggleMonth(key)}
+                          className="w-full flex items-center justify-between px-4 py-2.5
+                                     text-xs font-semibold text-gray-600 dark:text-gray-300
+                                     hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors capitalize">
+                          <span>{group.label}</span>
+                          <span className="text-gray-400">{open ? '▾' : '▸'}</span>
+                        </button>
+                        {open && (
+                          <ul className="bg-gray-50 dark:bg-gray-700/20">
+                            {group.items.map(bonsai => (
+                              <li key={bonsai.id}>
+                                <button onClick={() => handleSelect(bonsai)}
+                                  className={`w-full text-left px-5 py-2.5 text-sm transition-colors
+                                    hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${
+                                    selected?.id === bonsai.id
+                                      ? "text-indigo-600 dark:text-indigo-400 font-semibold border-l-4 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
+                                      : "text-gray-600 dark:text-gray-400"
+                                  }`}>
+                                  <span className="block truncate">{bonsai.name}</span>
+                                  <span className="text-xs text-gray-400 font-normal mt-0.5 block">
+                                    {bonsai.sprints.length} sprint{bonsai.sprints.length !== 1 ? "s" : ""} · ✅ Completado
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </aside>
 
           </div>
         )}
