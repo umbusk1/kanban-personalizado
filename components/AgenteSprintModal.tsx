@@ -39,6 +39,7 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
   const [selectedBonsaiId, setSelectedBonsaiId] = useState("")
   const [creatingBonsai, setCreatingBonsai]     = useState(false)
   const [newBonsaiName, setNewBonsaiName]       = useState("")
+  const [sprintName, setSprintName]             = useState("")
   const [freeText, setFreeText]                 = useState("")
   const [loading, setLoading]                   = useState(false)
   const [error, setError]                       = useState("")
@@ -88,7 +89,12 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
       const res = await fetch("/api/create-sprint-from-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ freeText, bonsaiId: selectedBonsaiId }),
+        body: JSON.stringify({
+          freeText: sprintName.trim()
+            ? `Nombre del sprint: "${sprintName}"\n\n${freeText}`
+            : freeText,
+          bonsaiId: selectedBonsaiId,
+        }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -152,6 +158,23 @@ export default function AgenteSprintModal({ onClose, onSuccess }: Props) {
         </div>
 
         <div className="space-y-4">
+
+          {/* Nombre del Sprint (solo en modo sprint) */}
+          {mode === "sprint" && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Nombre del Sprint <span className="text-gray-400 font-normal">(opcional — Claude lo genera si lo dejas vacío)</span>
+              </label>
+              <input
+                type="text"
+                value={sprintName}
+                onChange={e => setSprintName(e.target.value)}
+                placeholder="Ej: Campaña LinkedIn Q2 2026"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                           dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              />
+            </div>
+          )}
 
           {/* Selector de Bonsai */}
           <div>
