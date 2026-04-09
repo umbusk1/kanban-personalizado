@@ -9,11 +9,48 @@ export async function GET() {
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
+
     const bonsais = await prisma.bonsai.findMany({
       where: { ownerId: session.user.id },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        sprints: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            columns: {
+              orderBy: { position: "asc" },
+              include: { _count: { select: { cards: true } } },
+            },
+          },
+        },
+      },
     })
-    return NextResponse.json(bonsais)
+
+    // Calcular stats de progreso para cada sprint
+    const result = bonsais.map((bonsai) => ({
+      id: bonsai.id,
+      name: bonsai.name,
+      description: bonsai.description,
+      createdAt: bonsai.createdAt,
+      sprints: bonsai.sprints.map((board) => {
+        const totalCards = board.columns.reduce((sum, col) => sum + col._count.cards, 0)
+        const lastCol    = board.columns[board.columns.length - 1]
+        const col3Cards  = lastCol?._count.cards ?? 0
+        const inProgress = totalCards > 0 && col3Cards < totalCards
+        return {
+          id:          board.id,
+          name:        board.name,
+          description: board.description,
+          createdAt:   board.createdAt,
+          totalCards,
+          col3Cards,
+          inProgress,
+          progress:    totalCards > 0 ? Math.round((col3Cards / totalCards) * 100) : 0,
+        }
+      }),
+    }))
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error("Error al obtener bonsais:", error)
     return NextResponse.json({ error: "Error al obtener bonsais" }, { status: 500 })
