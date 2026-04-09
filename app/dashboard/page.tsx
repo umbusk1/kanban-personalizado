@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
+import AgenteSprintModal, { GeneratedBoard } from "@/components/AgenteSprintModal"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
                'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -57,6 +58,10 @@ export default function DashboardPage() {
   const [newName, setNewName]               = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [createError, setCreateError]       = useState("")
+  
+  // Agente Sprint
+  const [showAgenteModal, setShowAgenteModal] = useState(false)
+  const [generatedBoard, setGeneratedBoard]   = useState<GeneratedBoard | null>(null)
 
   // Edición inline
   const [editing, setEditing]     = useState(false)
@@ -205,7 +210,8 @@ export default function DashboardPage() {
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Bienvenida + botón nuevo */}
+
+      {/* Bienvenida + botón nuevo */}
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-semibold mb-1">
@@ -220,10 +226,16 @@ export default function DashboardPage() {
               )}
             </p>
           </div>
-          <button onClick={() => setShowModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
-            + Nuevo Sprint
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setShowAgenteModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+              ✨ Generar con IA
+            </button>
+            <button onClick={() => setShowModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+              + Nuevo Sprint
+            </button>
+          </div>
         </div>
 
         {boards.length === 0 ? (
@@ -507,6 +519,18 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      {/* Modal Agente Sprint IA */}
+      {showAgenteModal && (
+        <AgenteSprintModal
+          onClose={() => setShowAgenteModal(false)}
+          onSuccess={(board) => {
+          setGeneratedBoard(board)
+          setShowAgenteModal(false)
+          // Hoja 5: aquí irá el preview. Por ahora redirige directo al sprint.
+          router.push(`/board/${board.id}`)
+      }}
+    />
+  )}
     </div>
   )
 }
