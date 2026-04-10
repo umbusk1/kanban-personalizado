@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { name, description } = await request.json()
+    const { name, description, bonsaiId } = await request.json()
 
     if (!name) {
       return NextResponse.json(
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
         name,
         description: description || null,
         ownerId: session.user.id,
+        bonsaiId: bonsaiId || null,
         columns: {
           create: [
             {
