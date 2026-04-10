@@ -12,7 +12,6 @@ export async function GET(
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-
     const board = await prisma.board.findUnique({
       where: { id: params.id },
       include: {
@@ -24,7 +23,6 @@ export async function GET(
               include: {
                 assignee: true,
                 creator:  true,
-                // ← 5E: prelación entre hojas
                 blockedBy: {
                   select: { id: true, title: true, columnId: true },
                 },
@@ -34,23 +32,19 @@ export async function GET(
         },
         owner:   true,
         members: { include: { user: true } },
-        // ← 5E: prelación entre sprints
         dependsOn: { select: { id: true, name: true } },
+        bonsai:    { select: { id: true, name: true } },  // ← NUEVO
       },
     })
-
     if (!board) {
       return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
-
     const hasAccess =
       board.ownerId === session.user.id ||
       board.members.some(m => m.userId === session.user.id)
-
     if (!hasAccess) {
       return NextResponse.json({ error: "No tienes acceso" }, { status: 403 })
     }
-
     return NextResponse.json(board)
   } catch (error) {
     console.error("Error:", error)
@@ -67,33 +61,26 @@ export async function PATCH(
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-
     const board = await prisma.board.findUnique({ where: { id: params.id } })
     if (!board) {
       return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
-
     if (board.ownerId !== session.user.id) {
       return NextResponse.json({ error: "Solo el dueño puede editar el sprint" }, { status: 403 })
     }
-
-    // ← 5E: recibimos dependsOnId además de los existentes
     const { name, description, insights, dependsOnId } = await request.json()
-
     if (!name) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
     }
-
     const updated = await prisma.board.update({
       where: { id: params.id },
       data: {
         name,
-        description: description !== undefined ? description    : board.description,
-        insights:    insights    !== undefined ? insights       : board.insights,
-        dependsOnId: dependsOnId !== undefined ? (dependsOnId || null) : board.dependsOnId, // ← 5E
+        description: description !== undefined ? description         : board.description,
+        insights:    insights    !== undefined ? insights            : board.insights,
+        dependsOnId: dependsOnId !== undefined ? (dependsOnId||null) : board.dependsOnId,
       },
     })
-
     return NextResponse.json(updated)
   } catch (error) {
     console.error("Error al editar sprint:", error)
@@ -110,16 +97,13 @@ export async function DELETE(
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-
     const board = await prisma.board.findUnique({ where: { id: params.id } })
     if (!board) {
       return NextResponse.json({ error: "Sprint no encontrado" }, { status: 404 })
     }
-
     if (board.ownerId !== session.user.id) {
       return NextResponse.json({ error: "Solo el dueño puede eliminar el sprint" }, { status: 403 })
     }
-
     await prisma.board.delete({ where: { id: params.id } })
     return NextResponse.json({ success: true })
   } catch (error) {
