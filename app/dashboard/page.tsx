@@ -6,6 +6,7 @@ import Link from "next/link"
 import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
+import QuotaSurveyModal from "@/components/QuotaSurveyModal"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
                'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -21,6 +22,8 @@ type Board = {
   totalCards: number
   col3Cards:  number
   createdAt:  string
+  generatedByAI: boolean
+  aiPrompt: string | null
 }
 
 type User = {
@@ -44,6 +47,33 @@ function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
     })
 }
 
+function PromptViewer({ prompt, onReuse }: { prompt: string; onReuse: () => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mt-3 border border-purple-200 dark:border-purple-800 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium
+                   text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
+        <span>✨ Ver prompt original</span>
+        <span>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 pt-1 bg-purple-50 dark:bg-purple-900/10">
+          <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+            {prompt}
+          </p>
+          <button
+            onClick={onReuse}
+            className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">
+            Usar de nuevo →
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser]         = useState<User | null>(null)
@@ -58,11 +88,6 @@ export default function DashboardPage() {
   const [newName, setNewName]               = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [createError, setCreateError]       = useState("")
-  
-  // Agente Sprint / Bonsai
-  const [showAgenteModal, setShowAgenteModal] = useState(false)
-  const [generatedBoard, setGeneratedBoard]   = useState<GeneratedBoard | null>(null)
-  const [generatedBonsai, setGeneratedBonsai] = useState<GeneratedBonsai | null>(null)
 
   // Edición inline
   const [editing, setEditing]     = useState(false)
@@ -74,6 +99,15 @@ export default function DashboardPage() {
   // Modal eliminar
   const [deleteTarget, setDeleteTarget] = useState<Board | null>(null)
   const [deleting, setDeleting]         = useState(false)
+
+  // Agente Sprint / Bonsai
+  const [showAgenteModal, setShowAgenteModal] = useState(false)
+  const [generatedBoard, setGeneratedBoard]   = useState<GeneratedBoard | null>(null)
+  const [generatedBonsai, setGeneratedBonsai] = useState<GeneratedBonsai | null>(null)
+
+  // Quota survey
+  const [showQuotaModal, setShowQuotaModal] = useState(false)
+  const [quotaType, setQuotaType]           = useState<"sprint" | "bonsai">("sprint")
 
   useEffect(() => { fetchData() }, [])
 
@@ -205,14 +239,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-        <div className="sticky top-0 z-30">
-          <AppHeader />
-        </div>
+      <div className="sticky top-0 z-30">
+        <AppHeader />
+      </div>
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
-
-      {/* Bienvenida + botón nuevo */}
+        {/* Bienvenida + botones */}
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-semibold mb-1">
@@ -274,6 +307,9 @@ export default function DashboardPage() {
                             : "text-gray-700 dark:text-gray-300"
                         }`}>
                         <span className="block truncate">
+                          {board.generatedByAI && (
+                            <span className="mr-1 text-xs" title="Generado con IA">✨</span>
+                          )}
                           {board.userRole === "member" && (
                             <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
                           )}
@@ -347,12 +383,27 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </div>
+
                       {selected.description && (
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">{selected.description}</p>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">{selected.description}</p>
                       )}
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6">
+
+                      {/* Prompt viewer para sprints generados con IA */}
+                      {selected.generatedByAI && selected.aiPrompt && (
+                        <PromptViewer
+                          prompt={selected.aiPrompt}
+                          onReuse={() => setShowAgenteModal(true)}
+                        />
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mt-5 mb-6">
                         <span>🃏 {selected.totalCards} hoja{selected.totalCards !== 1 ? 's' : ''}</span>
                         <span>👥 {selected._count.members + 1} miembro{selected._count.members + 1 !== 1 ? 's' : ''}</span>
+                        {selected.generatedByAI && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+                            ✨ Generado con IA
+                          </span>
+                        )}
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           selected.inProgress
                             ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300"
@@ -422,8 +473,11 @@ export default function DashboardPage() {
                                     : "text-gray-600 dark:text-gray-400"
                                 }`}>
                                 <span className="block truncate">
+                                  {board.generatedByAI && (
+                                    <span className="mr-1 text-xs" title="Generado con IA">✨</span>
+                                  )}
                                   {board.userRole === "member" && (
-                                    <span className="text-green-500 mr-1" title={`Invitado por ${board.owner.name || board.owner.email}`}>🤝</span>
+                                    <span className="text-green-500 mr-1">🤝</span>
                                   )}
                                   {board.name}
                                 </span>
@@ -520,22 +574,36 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-{/* Modal Agente Sprint / Bonsai IA */}
-{showAgenteModal && (
-  <AgenteSprintModal
-    onClose={() => setShowAgenteModal(false)}
-    onSprintSuccess={(board) => {
-      setGeneratedBoard(board)
-      setShowAgenteModal(false)
-      router.push(`/board/${board.id}`)
-    }}
-    onBonsaiSuccess={(result) => {
-      setGeneratedBonsai(result)
-      setShowAgenteModal(false)
-      fetchData()
-    }}
-  />
-)}
+
+      {/* Modal Agente Sprint / Bonsai IA */}
+      {showAgenteModal && (
+        <AgenteSprintModal
+          onClose={() => setShowAgenteModal(false)}
+          onSprintSuccess={(board: GeneratedBoard) => {
+            setGeneratedBoard(board)
+            setShowAgenteModal(false)
+            router.push(`/board/${board.id}`)
+          }}
+          onBonsaiSuccess={(result: GeneratedBonsai) => {
+            setGeneratedBonsai(result)
+            setShowAgenteModal(false)
+            fetchData()
+          }}
+          onQuotaExceeded={(type) => {
+            setShowAgenteModal(false)
+            setQuotaType(type)
+            setShowQuotaModal(true)
+          }}
+        />
+      )}
+
+      {/* Modal Encuesta de Cuota */}
+      {showQuotaModal && (
+        <QuotaSurveyModal
+          type={quotaType}
+          onClose={() => setShowQuotaModal(false)}
+        />
+      )}
     </div>
   )
 }
