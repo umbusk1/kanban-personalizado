@@ -3,6 +3,18 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+const WEEKLY_SPRINT_LIMIT = 3
+
+function getWeekStart() {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1) // lunes
+  const monday = new Date(now)
+  monday.setDate(diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
 interface SprintHoja {
   title: string
   description: string | null
@@ -21,22 +33,17 @@ interface SprintPayload {
 export async function POST(request: Request) {
   try {
 
-    // 1. Verificar sesión
     const session = await getServerSession(authOptions)
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    // 2. Leer body
     const { freeText, bonsaiId } = await request.json()
     if (!freeText || !bonsaiId) {
-      return NextResponse.json(
-        { error: "Se requieren freeText y bonsaiId" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Se requieren freeText y bonsaiId" }, { status: 400 })
     }
 
-    // 3. Verificar que el bonsai pertenece al usuario
+    // ── Verificar bonsai ─────────────────────────────────────────────────────
     const bonsai = await prisma.bonsai.findFirst({
       where: { id: bonsaiId, ownerId: session.user.id },
     })
@@ -44,7 +51,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bonsai no encontrado" }, { status: 404 })
     }
 
-    // 4. Llamar a Claude
+    // ── Verificar cuota semanal ───────────────────────────────────────────────
+    const weekStart = getWeekStart()
+    const usedThisWeek = await prisma.board.count({
+      where: {
+        ownerId: session.user.id,
+        generatedByAI: true,
+        createdAt: { gte: weekStart },
+      },
+    })
+    if (usedThisWeek >= WEEKLY_SPRINT_LIMIT) {
+      return NextResponse.json(
+        { error: "QUOTA_EXCEEDED", type: "sprint", used: usedThisWeek, limit: WEEKLY_SPRINT_LIMIT },
+        { status: 429 }
+      )
+    }
+
+    // ── Llamar a Claude ───────────────────────────────────────────────────────
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -65,8 +88,8 @@ CONTEXTO:
 
 CRITERIO MECE PARA LAS HOJAS:
 Aplica el Principio de la Pirámide de Minto. Las hojas deben ser:
-- Mutuamente Exclusivas: ninguna hoja se solapa con otra. Si "Diseño" y "Prototipado" se solapan, fúsionalas.
-- Colectivamente Exhaustivas: entre todas las hojas cubren todo lo necesario para lograr el objetivo del sprint. Si falta un área obvia, inclúyela aunque el usuario no la haya mencionado.
+- Mutuamente Exclusivas: ninguna hoja se solapa con otra.
+- Colectivamente Exhaustivas: entre todas cubren todo lo necesario para lograr el objetivo del sprint.
 
 LÍMITES COGNITIVOS (Ley de Miller: 7 ± 2):
 - Mínimo 2 hojas, ideal 5, máximo 7.
@@ -75,38 +98,35 @@ LÍMITES COGNITIVOS (Ley de Miller: 7 ± 2):
 
 CRITERIOS PARA LAS HOJAS:
 - Cada hoja representa un área de trabajo distinta y coherente.
-- El nombre debe ser corto y orientado a la acción (ej: "Investigación", "Producción de contenido", "Configuración técnica").
+- Nombre corto y orientado a la acción.
 - El orden (position) debe seguir una secuencia lógica de ejecución.
 
 CRITERIOS PARA LAS TAREAS (campo description de cada hoja):
 - Son sub-tareas en formato markdown: - [ ] texto de la tarea
-- Deben empezar con verbo en infinitivo: "Definir", "Crear", "Revisar", "Publicar"
-- Si no hay sub-tareas claras, description es null
+- Deben empezar con verbo en infinitivo.
+- Si no hay sub-tareas claras, description es null.
 
 PRIORIDADES:
-- "high": hojas bloqueantes o críticas para el objetivo del sprint
-- "medium": hojas importantes pero no bloqueantes
-- "low": hojas opcionales o de refinamiento
-- null: cuando no hay información suficiente para determinarla
+- "high": hojas bloqueantes o críticas
+- "medium": importantes pero no bloqueantes
+- "low": opcionales o de refinamiento
+- null: sin información suficiente
 
-IDIOMA:
-- Responde siempre en el mismo idioma del brief del usuario.
+IDIOMA: responde siempre en el mismo idioma del brief del usuario.
 
 REGLAS ABSOLUTAS:
 - Responde ÚNICAMENTE con el JSON. Sin texto adicional, sin markdown, sin explicaciones.
 - El JSON debe ser parseable directamente con JSON.parse()
-- No inventes información que no esté en el brief ni pueda inferirse razonablemente
-- Si el brief es vago, genera un sprint útil con lo que puedas inferir
 
 ESTRUCTURA JSON REQUERIDA:
 {
   "sprint": {
-    "name": "string — nombre del sprint orientado al resultado",
-    "description": "string — una oración que resume el objetivo, o null",
+    "name": "string",
+    "description": "string o null",
     "hojas": [
       {
-        "title": "string — nombre del área de trabajo",
-        "description": "string con sub-tareas en markdown (- [ ] tarea), o null",
+        "title": "string",
+        "description": "string con sub-tareas en markdown o null",
         "position": 0,
         "priority": "high | medium | low | null"
       }
@@ -122,7 +142,6 @@ ESTRUCTURA JSON REQUERIDA:
       return NextResponse.json({ error: "Error al llamar a Claude" }, { status: 502 })
     }
 
-    // 5. Parsear respuesta de Claude
     let sprintData: SprintPayload
     try {
       const claudeBody = await claudeRes.json()
@@ -136,22 +155,20 @@ ESTRUCTURA JSON REQUERIDA:
       )
     }
 
-    // 6. Validación mínima
     const { sprint } = sprintData
     if (!sprint?.name || !Array.isArray(sprint?.hojas) || sprint.hojas.length === 0) {
-      return NextResponse.json(
-        { error: "La estructura del sprint generado no es válida." },
-        { status: 422 }
-      )
+      return NextResponse.json({ error: "La estructura del sprint generado no es válida." }, { status: 422 })
     }
 
-    // 7. Insertar en Neon — 3 columnas fijas + hojas en "Por Hacer"
+    // ── Insertar en Neon ──────────────────────────────────────────────────────
     const board = await prisma.board.create({
       data: {
         name: sprint.name,
         description: sprint.description ?? null,
         ownerId: session.user.id,
         bonsaiId: bonsaiId,
+        generatedByAI: true,
+        aiPrompt: freeText,
         columns: {
           create: [
             {
@@ -170,17 +187,8 @@ ESTRUCTURA JSON REQUERIDA:
                   })),
               },
             },
-            {
-              name: "En Progreso",
-              position: 1,
-              color: "#eab308",
-              wipLimit: 5,
-            },
-            {
-              name: "Completado",
-              position: 2,
-              color: "#22c55e",
-            },
+            { name: "En Progreso", position: 1, color: "#eab308", wipLimit: 5 },
+            { name: "Completado",  position: 2, color: "#22c55e" },
           ],
         },
       },
