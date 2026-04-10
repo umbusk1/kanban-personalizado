@@ -99,6 +99,13 @@ export default function BonsaisPage() {
   const [agenteInitialPrompt, setAgenteInitialPrompt] = useState("")
   const [agenteInitialMode, setAgenteInitialMode]     = useState<"sprint" | "bonsai">("bonsai")
 
+  // Modal nuevo sprint manual
+  const [showSprintModal, setShowSprintModal]       = useState(false)
+  const [creatingSprint, setCreatingSprint]         = useState(false)
+  const [newSprintName, setNewSprintName]           = useState("")
+  const [newSprintDesc, setNewSprintDesc]           = useState("")
+  const [createSprintError, setCreateSprintError]   = useState("")
+
   const [deleteTarget, setDeleteTarget] = useState<Bonsai | null>(null)
   const [deleting, setDeleting]         = useState(false)
 
@@ -183,6 +190,39 @@ export default function BonsaisPage() {
     } catch {
       setCreateError("Error al crear bonsai")
       setCreating(false)
+    }
+  }
+
+  const handleCreateSprint = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selected) return
+    setCreateSprintError("")
+    setCreatingSprint(true)
+    try {
+      const res = await fetch("/api/boards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newSprintName,
+          description: newSprintDesc,
+          bonsaiId: selected.id,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setCreateSprintError(data.error || "Error al crear sprint")
+        setCreatingSprint(false)
+        return
+      }
+      const newBoard = await res.json()
+      setShowSprintModal(false)
+      setNewSprintName("")
+      setNewSprintDesc("")
+      setCreatingSprint(false)
+      router.push(`/board/${newBoard.id}`)
+    } catch {
+      setCreateSprintError("Error al crear sprint")
+      setCreatingSprint(false)
     }
   }
 
