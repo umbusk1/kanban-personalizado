@@ -35,19 +35,21 @@ interface Props {
   onSprintSuccess: (board: GeneratedBoard) => void
   onBonsaiSuccess: (result: GeneratedBonsai) => void
   onQuotaExceeded: (type: "sprint" | "bonsai") => void
+  initialPrompt?: string
+  initialMode?: "sprint" | "bonsai"
 }
 
 type Mode = "sprint" | "bonsai"
 
-export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded }: Props) {
-  const [mode, setMode]                         = useState<Mode>("sprint")
+export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded, initialPrompt, initialMode }: Props) {
+  const [mode, setMode]                         = useState<Mode>(initialMode ?? "sprint")
   const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
   const [loadingBonsais, setLoadingBonsais]     = useState(true)
   const [selectedBonsaiId, setSelectedBonsaiId] = useState("")
   const [creatingBonsai, setCreatingBonsai]     = useState(false)
   const [newBonsaiName, setNewBonsaiName]       = useState("")
   const [customName, setCustomName]             = useState("")
-  const [freeText, setFreeText]                 = useState("")
+  const [freeText, setFreeText]                 = useState(initialPrompt ?? "")
   const [loading, setLoading]                   = useState(false)
   const [error, setError]                       = useState("")
 
