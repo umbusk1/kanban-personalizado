@@ -6,6 +6,7 @@ import Link from "next/link"
 import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
+import QuotaSurveyModal from "@/components/QuotaSurveyModal"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
                'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -19,6 +20,8 @@ type Sprint = {
   col3Cards: number
   inProgress: boolean
   progress: number
+  generatedByAI: boolean
+  aiPrompt: string | null
 }
 
 type Bonsai = {
@@ -27,6 +30,8 @@ type Bonsai = {
   description: string | null
   createdAt: string
   sprints: Sprint[]
+  generatedByAI: boolean
+  aiPrompt: string | null
 }
 
 function isCompleted(b: Bonsai) {
@@ -49,6 +54,33 @@ function groupByMonth(bonsais: Bonsai[]) {
     })
 }
 
+function PromptViewer({ prompt, onReuse }: { prompt: string; onReuse: () => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mt-3 border border-purple-200 dark:border-purple-800 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium
+                   text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
+        <span>✨ Ver prompt original</span>
+        <span>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 pt-1 bg-purple-50 dark:bg-purple-900/10">
+          <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+            {prompt}
+          </p>
+          <button
+            onClick={onReuse}
+            className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">
+            Usar de nuevo →
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function BonsaisPage() {
   const router = useRouter()
   const [bonsais, setBonsais]         = useState<Bonsai[]>([])
@@ -57,19 +89,19 @@ export default function BonsaisPage() {
   const [openBonsais, setOpenBonsais] = useState<Set<string>>(new Set())
   const [openMonths, setOpenMonths]   = useState<Set<string>>(new Set())
 
-  // Modal crear bonsai manual
   const [showModal, setShowModal]           = useState(false)
   const [creating, setCreating]             = useState(false)
   const [newName, setNewName]               = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [createError, setCreateError]       = useState("")
 
-  // Modal IA
   const [showAgenteModal, setShowAgenteModal] = useState(false)
 
-  // Modal eliminar
   const [deleteTarget, setDeleteTarget] = useState<Bonsai | null>(null)
   const [deleting, setDeleting]         = useState(false)
+
+  const [showQuotaModal, setShowQuotaModal] = useState(false)
+  const [quotaType, setQuotaType]           = useState<"sprint" | "bonsai">("bonsai")
 
   useEffect(() => { fetchData() }, [])
 
@@ -115,7 +147,6 @@ export default function BonsaisPage() {
 
   const handleSelect = (bonsai: Bonsai) => {
     setSelected(bonsai)
-    // Auto-abrir el acordeón al seleccionar
     setOpenBonsais(prev => new Set(prev).add(bonsai.id))
   }
 
@@ -179,7 +210,6 @@ export default function BonsaisPage() {
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Cabecera */}
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-semibold mb-1">Mis Bonsais</h2>
@@ -225,7 +255,7 @@ export default function BonsaisPage() {
         ) : (
           <div className="flex gap-5 items-start">
 
-            {/* ── Columna izquierda: En proceso (acordeón) ── */}
+            {/* ── Columna izquierda: acordeón ── */}
             <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
@@ -245,13 +275,11 @@ export default function BonsaisPage() {
                     const done = bonsai.sprints.filter(s => !s.inProgress).length
                     return (
                       <li key={bonsai.id}>
-                        {/* Fila del Bonsai */}
                         <div className={`flex items-center transition-colors ${
                           selected?.id === bonsai.id
                             ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-500"
                             : "border-l-4 border-transparent"
                         }`}>
-                          {/* Nombre — selecciona en el panel central */}
                           <button
                             onClick={() => handleSelect(bonsai)}
                             className={`flex-1 text-left px-3 py-3 text-sm transition-colors
@@ -260,7 +288,12 @@ export default function BonsaisPage() {
                                 ? "text-indigo-700 dark:text-indigo-300 font-semibold"
                                 : "text-gray-700 dark:text-gray-300"
                             }`}>
-                            <span className="block truncate">{bonsai.name}</span>
+                            <span className="block truncate">
+                              {bonsai.generatedByAI && (
+                                <span className="mr-1 text-xs" title="Generado con IA">✨</span>
+                              )}
+                              {bonsai.name}
+                            </span>
                             <span className="text-xs text-gray-400 font-normal mt-0.5 block">
                               {bonsai.sprints.length} sprint{bonsai.sprints.length !== 1 ? "s" : ""}
                               {bonsai.sprints.length > 0 && (
@@ -268,7 +301,6 @@ export default function BonsaisPage() {
                               )}
                             </span>
                           </button>
-                          {/* Toggle acordeón */}
                           <button
                             onClick={() => toggleBonsai(bonsai.id)}
                             className="px-3 py-3 text-gray-400 hover:text-indigo-500 transition-colors text-xs">
@@ -276,7 +308,6 @@ export default function BonsaisPage() {
                           </button>
                         </div>
 
-                        {/* Sprints del acordeón */}
                         {open && bonsai.sprints.length > 0 && (
                           <ul className="bg-gray-50 dark:bg-gray-700/20 border-t border-gray-100 dark:border-gray-700">
                             {bonsai.sprints.map((sprint, idx) => (
@@ -285,6 +316,9 @@ export default function BonsaisPage() {
                                            hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
                                 <span className="text-xs text-gray-600 dark:text-gray-400 truncate flex-1">
                                   <span className="text-gray-400 mr-1">{idx + 1}.</span>
+                                  {sprint.generatedByAI && (
+                                    <span className="mr-1 text-xs" title="Generado con IA">✨</span>
+                                  )}
                                   {sprint.name}
                                 </span>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -310,29 +344,38 @@ export default function BonsaisPage() {
 
             {/* ── Panel central ── */}
             <div className="flex-1 min-w-0">
-              {selected ? (
+              {selected && (
                 <div>
-                  {/* Header del Bonsai */}
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500 block mb-1">Bonsai</span>
                         <h2 className="text-2xl font-bold">{selected.name}</h2>
                         {selected.description && (
                           <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{selected.description}</p>
                         )}
+                        {selected.generatedByAI && selected.aiPrompt && (
+                          <PromptViewer
+                            prompt={selected.aiPrompt}
+                            onReuse={() => setShowAgenteModal(true)}
+                          />
+                        )}
                       </div>
                       <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg ml-4">🗑️</button>
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg ml-4 flex-shrink-0">🗑️</button>
                     </div>
-                    <div className="mt-3 flex gap-4 text-sm text-gray-500">
+                    <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-500">
                       <span>🌿 {selected.sprints.length} sprint{selected.sprints.length !== 1 ? "s" : ""}</span>
                       <span>✅ {selected.sprints.filter(s => !s.inProgress).length} completados</span>
                       <span>🔄 {selected.sprints.filter(s => s.inProgress).length} en proceso</span>
+                      {selected.generatedByAI && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+                          ✨ Generado con IA
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Grid de Sprints */}
                   {selected.sprints.length === 0 ? (
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
                       <p className="text-gray-400 mb-4">Este bonsai aún no tiene sprints</p>
@@ -347,10 +390,15 @@ export default function BonsaisPage() {
                         <div key={sprint.id}
                           className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 flex flex-col gap-3">
                           <div>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
-                              Sprint {idx + 1}
-                            </span>
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mt-0.5 leading-snug">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                                Sprint {idx + 1}
+                              </span>
+                              {sprint.generatedByAI && (
+                                <span className="text-xs text-purple-500 font-medium">✨ IA</span>
+                              )}
+                            </div>
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 leading-snug">
                               {sprint.name}
                             </h3>
                             {sprint.description && (
@@ -391,7 +439,7 @@ export default function BonsaisPage() {
                     </div>
                   )}
                 </div>
-              ) : null}
+              )}
             </div>
 
             {/* ── Columna derecha: Histórico ── */}
@@ -431,7 +479,12 @@ export default function BonsaisPage() {
                                       ? "text-indigo-600 dark:text-indigo-400 font-semibold border-l-4 border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
                                       : "text-gray-600 dark:text-gray-400"
                                   }`}>
-                                  <span className="block truncate">{bonsai.name}</span>
+                                  <span className="block truncate">
+                                    {bonsai.generatedByAI && (
+                                      <span className="mr-1 text-xs" title="Generado con IA">✨</span>
+                                    )}
+                                    {bonsai.name}
+                                  </span>
                                   <span className="text-xs text-gray-400 font-normal mt-0.5 block">
                                     {bonsai.sprints.length} sprint{bonsai.sprints.length !== 1 ? "s" : ""} · ✅ Completado
                                   </span>
@@ -534,6 +587,19 @@ export default function BonsaisPage() {
             setShowAgenteModal(false)
             fetchData()
           }}
+          onQuotaExceeded={(type) => {
+            setShowAgenteModal(false)
+            setQuotaType(type)
+            setShowQuotaModal(true)
+          }}
+        />
+      )}
+
+      {/* Modal Encuesta de Cuota */}
+      {showQuotaModal && (
+        <QuotaSurveyModal
+          type={quotaType}
+          onClose={() => setShowQuotaModal(false)}
         />
       )}
     </div>
