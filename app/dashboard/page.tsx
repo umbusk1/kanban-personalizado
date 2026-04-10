@@ -605,6 +605,7 @@ export default function DashboardPage() {
           }}
           initialPrompt={agenteInitialPrompt}
           initialMode={agenteInitialMode}
+          context="sprints"
         />
       )}
 
