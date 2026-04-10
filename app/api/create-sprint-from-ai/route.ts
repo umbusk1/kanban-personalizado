@@ -166,7 +166,7 @@ ESTRUCTURA JSON REQUERIDA:
         name: sprint.name,
         description: sprint.description ?? null,
         ownerId: session.user.id,
-        bonsaiId: bonsaiId,
+        bonsaiId: bonsaiId ?? null,
         generatedByAI: true,
         aiPrompt: freeText,
         columns: {
