@@ -47,7 +47,7 @@ function groupByMonth(boards: Board[]): { label: string; items: Board[] }[] {
     })
 }
 
-function PromptViewer({ prompt, onReuse }: { prompt: string; onReuse: () => void }) {
+function PromptViewer({ prompt, onRegenerate }: { prompt: string; onRegenerate: (prompt: string) => void }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="mt-3 border border-purple-200 dark:border-purple-800 rounded-lg overflow-hidden">
@@ -64,9 +64,9 @@ function PromptViewer({ prompt, onReuse }: { prompt: string; onReuse: () => void
             {prompt}
           </p>
           <button
-            onClick={onReuse}
+            onClick={() => onRegenerate(prompt)}
             className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">
-            Usar de nuevo →
+            ✏️ Editar y re-generar →
           </button>
         </div>
       )}
@@ -104,6 +104,8 @@ export default function DashboardPage() {
   const [showAgenteModal, setShowAgenteModal] = useState(false)
   const [generatedBoard, setGeneratedBoard]   = useState<GeneratedBoard | null>(null)
   const [generatedBonsai, setGeneratedBonsai] = useState<GeneratedBonsai | null>(null)
+  const [agenteInitialPrompt, setAgenteInitialPrompt] = useState("")
+  const [agenteInitialMode, setAgenteInitialMode]     = useState<"sprint" | "bonsai">("sprint")
 
   // Quota survey
   const [showQuotaModal, setShowQuotaModal] = useState(false)
@@ -392,7 +394,11 @@ export default function DashboardPage() {
                       {selected.generatedByAI && selected.aiPrompt && (
                         <PromptViewer
                           prompt={selected.aiPrompt}
-                          onReuse={() => setShowAgenteModal(true)}
+                          onRegenerate={(prompt) => {
+                            setAgenteInitialPrompt(prompt)
+                            setAgenteInitialMode("sprint")
+                            setShowAgenteModal(true)
+                          }}
                         />
                       )}
 
@@ -578,22 +584,27 @@ export default function DashboardPage() {
       {/* Modal Agente Sprint / Bonsai IA */}
       {showAgenteModal && (
         <AgenteSprintModal
-          onClose={() => setShowAgenteModal(false)}
+          onClose={() => { setShowAgenteModal(false); setAgenteInitialPrompt("") }}
           onSprintSuccess={(board: GeneratedBoard) => {
             setGeneratedBoard(board)
             setShowAgenteModal(false)
+            setAgenteInitialPrompt("")
             router.push(`/board/${board.id}`)
           }}
           onBonsaiSuccess={(result: GeneratedBonsai) => {
             setGeneratedBonsai(result)
             setShowAgenteModal(false)
+            setAgenteInitialPrompt("")
             fetchData()
           }}
           onQuotaExceeded={(type) => {
             setShowAgenteModal(false)
+            setAgenteInitialPrompt("")
             setQuotaType(type)
             setShowQuotaModal(true)
           }}
+          initialPrompt={agenteInitialPrompt}
+          initialMode={agenteInitialMode}
         />
       )}
 
