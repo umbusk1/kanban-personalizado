@@ -14,6 +14,7 @@ export async function GET() {
 
     const boards = await prisma.board.findMany({
       where: {
+        bonsaiId: null,  // ← solo sprints huérfanos (sin Bonsai padre)
         OR: [
           { ownerId: session.user.id },
           { members: { some: { userId: session.user.id } } },
