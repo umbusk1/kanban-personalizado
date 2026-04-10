@@ -43,11 +43,11 @@ type Board = {
   name: string
   description: string | null
   insights:    string | null
-  dependsOnId: string | null                              // ← 5E
-  dependsOn:   { id: string; name: string } | null       // ← 5E
-  owner: { id: string; name: string | null; email: string }
-  columns: Column[]
-  members: Array<{ user: { id: string; name: string | null; email: string } }>
+  dependsOnId: string | null
+  dependsOn:   { id: string; name: string } | null
+  bonsaiId:    string | null
+  bonsai:      { id: string; name: string } | null
+  owner: { id: string; name: string | null; email: string 
 }
 
 type CardFormData = {
@@ -383,6 +383,15 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
+                  {board.bonsai && (
+                    <>
+                      <a href="/bonsais"
+                        className="text-xs font-semibold uppercase tracking-wider text-amber-500 hover:text-amber-600 transition-colors">
+                        🌳 {board.bonsai.name}
+                      </a>
+                      <span className="text-gray-300 dark:text-gray-600">›</span>
+                    </>
+                  )}
                   <span className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Sprint</span>
                   {isOwner && (
                     <button onClick={handleEditSprint} className="text-xs text-gray-400 hover:text-indigo-500 transition-colors" title="Editar sprint">✏️</button>
