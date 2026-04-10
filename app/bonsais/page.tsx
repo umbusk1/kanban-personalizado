@@ -54,7 +54,7 @@ function groupByMonth(bonsais: Bonsai[]) {
     })
 }
 
-function PromptViewer({ prompt, onReuse }: { prompt: string; onReuse: () => void }) {
+function PromptViewer({ prompt, onRegenerate }: { prompt: string; onRegenerate: (prompt: string) => void }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="mt-3 border border-purple-200 dark:border-purple-800 rounded-lg overflow-hidden">
@@ -71,9 +71,9 @@ function PromptViewer({ prompt, onReuse }: { prompt: string; onReuse: () => void
             {prompt}
           </p>
           <button
-            onClick={onReuse}
+            onClick={() => onRegenerate(prompt)}
             className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">
-            Usar de nuevo →
+            ✏️ Editar y re-generar →
           </button>
         </div>
       )}
@@ -96,6 +96,8 @@ export default function BonsaisPage() {
   const [createError, setCreateError]       = useState("")
 
   const [showAgenteModal, setShowAgenteModal] = useState(false)
+  const [agenteInitialPrompt, setAgenteInitialPrompt] = useState("")
+  const [agenteInitialMode, setAgenteInitialMode]     = useState<"sprint" | "bonsai">("bonsai")
 
   const [deleteTarget, setDeleteTarget] = useState<Bonsai | null>(null)
   const [deleting, setDeleting]         = useState(false)
@@ -357,7 +359,11 @@ export default function BonsaisPage() {
                         {selected.generatedByAI && selected.aiPrompt && (
                           <PromptViewer
                             prompt={selected.aiPrompt}
-                            onReuse={() => setShowAgenteModal(true)}
+                            onRegenerate={(prompt) => {
+                              setAgenteInitialPrompt(prompt)
+                              setAgenteInitialMode("bonsai")
+                              setShowAgenteModal(true)
+                            }}
                           />
                         )}
                       </div>
@@ -578,20 +584,25 @@ export default function BonsaisPage() {
       {/* Modal Agente IA */}
       {showAgenteModal && (
         <AgenteSprintModal
-          onClose={() => setShowAgenteModal(false)}
+          onClose={() => { setShowAgenteModal(false); setAgenteInitialPrompt("") }}
           onSprintSuccess={(board: GeneratedBoard) => {
             setShowAgenteModal(false)
+            setAgenteInitialPrompt("")
             router.push(`/board/${board.id}`)
           }}
           onBonsaiSuccess={(_result: GeneratedBonsai) => {
             setShowAgenteModal(false)
+            setAgenteInitialPrompt("")
             fetchData()
           }}
           onQuotaExceeded={(type) => {
             setShowAgenteModal(false)
+            setAgenteInitialPrompt("")
             setQuotaType(type)
             setShowQuotaModal(true)
           }}
+          initialPrompt={agenteInitialPrompt}
+          initialMode={agenteInitialMode}
         />
       )}
 
