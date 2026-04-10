@@ -385,9 +385,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  {board.bonsai && (
+                 {board.bonsai && (
                     <>
-                      <a href="/bonsais"
+                      <a href={`/bonsais?id=${board.bonsai.id}`}
                         className="text-xs font-semibold uppercase tracking-wider text-amber-500 hover:text-amber-600 transition-colors">
                         🌳 {board.bonsai.name}
                       </a>
