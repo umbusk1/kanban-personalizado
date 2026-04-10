@@ -34,11 +34,12 @@ interface Props {
   onClose: () => void
   onSprintSuccess: (board: GeneratedBoard) => void
   onBonsaiSuccess: (result: GeneratedBonsai) => void
+  onQuotaExceeded: (type: "sprint" | "bonsai") => void
 }
 
 type Mode = "sprint" | "bonsai"
 
-export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess }: Props) {
+export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded }: Props) {
   const [mode, setMode]                         = useState<Mode>("sprint")
   const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
   const [loadingBonsais, setLoadingBonsais]     = useState(true)
@@ -106,6 +107,11 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
         })
         if (!res.ok) {
           const data = await res.json()
+          if (res.status === 429 && data.error === "QUOTA_EXCEEDED") {
+            setLoading(false)
+            onQuotaExceeded(data.type as "sprint" | "bonsai")
+            return
+          }
           setError(data.error || "Error al generar el sprint")
           setLoading(false)
           return
@@ -125,6 +131,11 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
         })
         if (!res.ok) {
           const data = await res.json()
+          if (res.status === 429 && data.error === "QUOTA_EXCEEDED") {
+            setLoading(false)
+            onQuotaExceeded(data.type as "sprint" | "bonsai")
+            return
+          }
           setError(data.error || "Error al generar el bonsai")
           setLoading(false)
           return
@@ -138,14 +149,12 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
     }
   }
 
-  const canGenerate = freeText.trim() &&
-    (mode === "bonsai" || selectedBonsaiId)
+  const canGenerate = freeText.trim() && (mode === "bonsai" || selectedBonsaiId)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full p-6 shadow-2xl">
 
-        {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div>
             <h2 className="text-xl font-bold">✨ Generar con IA</h2>
@@ -160,15 +169,14 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
         </div>
 
         {/* Toggle Sprint / Bonsai */}
-        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-5">
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-2">
           <button
             onClick={() => { setMode("sprint"); setCustomName(""); setError("") }}
             className={`flex-1 py-2 text-sm font-medium transition-colors ${
               mode === "sprint"
                 ? "bg-indigo-600 text-white"
                 : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}
-          >
+            }`}>
             🌿 Un Sprint
           </button>
           <button
@@ -177,14 +185,12 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
               mode === "bonsai"
                 ? "bg-indigo-600 text-white"
                 : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}
-          >
+            }`}>
             🌳 Bonsai completo
           </button>
         </div>
 
-        {/* Descripción del modo */}
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4 -mt-2">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
           {mode === "sprint"
             ? "Genera un sprint con hojas de actividad listas para ejecutar."
             : "Genera un proyecto completo con múltiples sprints estructurados con criterio MECE."}
@@ -212,7 +218,7 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
             />
           </div>
 
-          {/* Selector de Bonsai — solo en modo Sprint */}
+          {/* Selector de Bonsai — solo modo Sprint */}
           {mode === "sprint" && (
             <div>
               <label className="block text-sm font-medium mb-1">Proyecto (Bonsai) *</label>
@@ -292,14 +298,12 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
             </p>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
               <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
-          {/* Botones */}
           <div className="flex gap-3 pt-1">
             <button onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
