@@ -37,11 +37,12 @@ interface Props {
   onQuotaExceeded: (type: "sprint" | "bonsai") => void
   initialPrompt?: string
   initialMode?: "sprint" | "bonsai"
+  context?: "sprints" | "bonsais"  // ← determina si se muestra el selector de Bonsai
 }
 
 type Mode = "sprint" | "bonsai"
 
-export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded, initialPrompt, initialMode }: Props) {
+export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded, initialPrompt, initialMode, context = "sprints" }: Props) {
   const [mode, setMode]                         = useState<Mode>(initialMode ?? "sprint")
   const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
   const [loadingBonsais, setLoadingBonsais]     = useState(true)
@@ -151,7 +152,8 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
     }
   }
 
-  const canGenerate = freeText.trim() && (mode === "bonsai" || selectedBonsaiId)
+  const canGenerate = freeText.trim() &&
+    (mode === "bonsai" || context === "sprints" || selectedBonsaiId)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
@@ -220,8 +222,8 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
             />
           </div>
 
-          {/* Selector de Bonsai — solo modo Sprint */}
-          {mode === "sprint" && (
+          {/* Selector de Bonsai — solo en modo Sprint Y contexto bonsais */}
+          {mode === "sprint" && context === "bonsais" && (
             <div>
               <label className="block text-sm font-medium mb-1">Proyecto (Bonsai) *</label>
               {loadingBonsais ? (
