@@ -427,6 +427,16 @@ export default function BonsaisPage() {
                         </span>
                       )}
                     </div>
+                    <div className="mt-4 flex gap-2">
+                      <button onClick={() => setShowAgenteModal(true)}
+                        className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                        ✨ Generar Sprint con IA
+                      </button>
+                      <button onClick={() => setShowSprintModal(true)}
+                        className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                        + Nuevo Sprint
+                      </button>
+                    </div>
                   </div>
 
                   {selected.sprints.length === 0 ? (
@@ -559,6 +569,55 @@ export default function BonsaisPage() {
 
       <AppFooter />
 
+      {/* Modal Nuevo Sprint Manual */}
+      {showSprintModal && selected && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-1">Nuevo Sprint</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              En: <span className="font-medium text-indigo-500">{selected.name}</span>
+            </p>
+            <form onSubmit={handleCreateSprint} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nombre *</label>
+                <input type="text" required value={newSprintName}
+                  onChange={e => setNewSprintName(e.target.value)}
+                  autoFocus
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ej: Preparación de ingredientes" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Descripción (opcional)</label>
+                <textarea value={newSprintDesc}
+                  onChange={e => setNewSprintDesc(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
+                             dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={3} placeholder="¿Qué resultado entrega este sprint?" />
+              </div>
+              {createSprintError && (
+                <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200">{createSprintError}</p>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button type="button"
+                  onClick={() => { setShowSprintModal(false); setNewSprintName(""); setNewSprintDesc(""); setCreateSprintError("") }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                             hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={creatingSprint}
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
+                             disabled:opacity-50 transition-colors">
+                  {creatingSprint ? "Creando..." : "Crear Sprint"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal Crear Bonsai Manual */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -650,6 +709,7 @@ export default function BonsaisPage() {
           }}
           initialPrompt={agenteInitialPrompt}
           initialMode={agenteInitialMode}
+          context="bonsais"
         />
       )}
 
