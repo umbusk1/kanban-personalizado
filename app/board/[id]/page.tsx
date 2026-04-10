@@ -47,7 +47,9 @@ type Board = {
   dependsOn:   { id: string; name: string } | null
   bonsaiId:    string | null
   bonsai:      { id: string; name: string } | null
-  owner: { id: string; name: string | null; email: string 
+  owner: { id: string; name: string | null; email: string }
+  columns: Column[]
+  members: Array<{ user: { id: string; name: string | null; email: string } }>
 }
 
 type CardFormData = {
