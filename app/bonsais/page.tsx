@@ -113,7 +113,14 @@ export default function BonsaisPage() {
       if (res.ok) {
         const data: Bonsai[] = await res.json()
         setBonsais(data)
+        const idFromUrl = typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("id")
+          : null
         setSelected(prev => {
+          if (idFromUrl) {
+            const fromUrl = data.find(b => b.id === idFromUrl)
+            if (fromUrl) return fromUrl
+          }
           const stillExists = data.find(b => b.id === prev?.id)
           const inProgress  = data.filter(b => !isCompleted(b))
           return stillExists ?? (inProgress.length > 0 ? inProgress[0] : data[0] ?? null)
