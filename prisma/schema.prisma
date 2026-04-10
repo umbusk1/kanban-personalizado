@@ -31,6 +31,8 @@ model Bonsai {
   createdAt   DateTime @default(now())
   owner       User     @relation("BonsaiOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   sprints     Board[]
+  generatedByAI Boolean  @default(false)  // ← AGREGAR
+  aiPrompt      String?                   // ← AGREGAR
   @@map("bonsais")
 }
 
@@ -51,6 +53,8 @@ model Board {
   activityLogs ActivityLog[]
   dependsOn    Board?   @relation("BoardPrecedence", fields: [dependsOnId], references: [id])
   dependents   Board[]  @relation("BoardPrecedence")
+  generatedByAI Boolean  @default(false)  // ← AGREGAR
+  aiPrompt      String?                   // ← AGREGAR
   @@map("boards")
 }
 
