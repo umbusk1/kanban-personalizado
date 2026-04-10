@@ -26,26 +26,29 @@ export async function GET() {
       },
     })
 
-    // Calcular stats de progreso para cada sprint
     const result = bonsais.map((bonsai) => ({
-      id: bonsai.id,
-      name: bonsai.name,
-      description: bonsai.description,
-      createdAt: bonsai.createdAt,
+      id:            bonsai.id,
+      name:          bonsai.name,
+      description:   bonsai.description,
+      createdAt:     bonsai.createdAt,
+      generatedByAI: bonsai.generatedByAI,  // ← AGREGADO
+      aiPrompt:      bonsai.aiPrompt,        // ← AGREGADO
       sprints: bonsai.sprints.map((board) => {
         const totalCards = board.columns.reduce((sum, col) => sum + col._count.cards, 0)
         const lastCol    = board.columns[board.columns.length - 1]
         const col3Cards  = lastCol?._count.cards ?? 0
         const inProgress = totalCards > 0 && col3Cards < totalCards
         return {
-          id:          board.id,
-          name:        board.name,
-          description: board.description,
-          createdAt:   board.createdAt,
+          id:            board.id,
+          name:          board.name,
+          description:   board.description,
+          createdAt:     board.createdAt,
+          generatedByAI: board.generatedByAI,  // ← AGREGADO
+          aiPrompt:      board.aiPrompt,        // ← AGREGADO
           totalCards,
           col3Cards,
           inProgress,
-          progress:    totalCards > 0 ? Math.round((col3Cards / totalCards) * 100) : 0,
+          progress: totalCards > 0 ? Math.round((col3Cards / totalCards) * 100) : 0,
         }
       }),
     }))
