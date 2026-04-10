@@ -3,6 +3,18 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+const WEEKLY_BONSAI_LIMIT = 1
+
+function getWeekStart() {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1) // lunes
+  const monday = new Date(now)
+  monday.setDate(diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
 interface BonsaiHoja {
   title: string
   description: string | null
@@ -28,19 +40,33 @@ interface BonsaiPayload {
 export async function POST(request: Request) {
   try {
 
-    // 1. Verificar sesión
     const session = await getServerSession(authOptions)
     if (!session?.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    // 2. Leer body
     const { freeText } = await request.json()
     if (!freeText) {
       return NextResponse.json({ error: "Se requiere freeText" }, { status: 400 })
     }
 
-    // 3. Llamar a Claude
+    // ── Verificar cuota semanal ───────────────────────────────────────────────
+    const weekStart = getWeekStart()
+    const usedThisWeek = await prisma.bonsai.count({
+      where: {
+        ownerId: session.user.id,
+        generatedByAI: true,
+        createdAt: { gte: weekStart },
+      },
+    })
+    if (usedThisWeek >= WEEKLY_BONSAI_LIMIT) {
+      return NextResponse.json(
+        { error: "QUOTA_EXCEEDED", type: "bonsai", used: usedThisWeek, limit: WEEKLY_BONSAI_LIMIT },
+        { status: 429 }
+      )
+    }
+
+    // ── Llamar a Claude ───────────────────────────────────────────────────────
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -56,58 +82,46 @@ export async function POST(request: Request) {
 JERARQUÍA DE KANBANBONSAI:
 - Bonsai: proyecto mayor con un objetivo estratégico claro
 - Sprint: etapa del proyecto con un resultado entregable concreto y verificable
-- Hoja: área de trabajo dentro del sprint (será una tarjeta en el tablero Kanban)
-- Las Hojas se crean en "Por Hacer" y el usuario las mueve a "En Progreso" y "Completado"
+- Hoja: área de trabajo dentro del sprint (tarjeta en el tablero Kanban)
 
 CRITERIO MECE — APLICAR EN TODOS LOS NIVELES:
-Mutuamente Exclusivos: ningún Sprint se solapa con otro. Ninguna Hoja se solapa con otra dentro del mismo Sprint.
-Colectivamente Exhaustivos: el conjunto de Sprints cubre todo lo necesario para lograr el objetivo del Bonsai. El conjunto de Hojas cubre todo lo necesario para completar el Sprint.
+- Mutuamente Exclusivos: ningún Sprint se solapa con otro. Ninguna Hoja se solapa dentro del mismo Sprint.
+- Colectivamente Exhaustivos: el conjunto de Sprints cubre todo lo necesario para el objetivo del Bonsai.
 
 LÍMITES COGNITIVOS (Ley de Miller — 7 ± 2):
 - Sprints por Bonsai: mínimo 2, ideal 3–5, máximo 7
 - Hojas por Sprint: mínimo 2, ideal 5, máximo 7
-- Sub-tareas por Hoja (en description): máximo 5
+- Sub-tareas por Hoja: máximo 5
 
 CRITERIOS PARA LOS SPRINTS:
 - Cada Sprint representa una etapa o dimensión distinta del proyecto
-- El nombre debe orientarse al resultado entregable (ej: "Landing page rediseñada", "Campaña LinkedIn activa")
-- El orden (position) debe seguir la secuencia lógica de ejecución del proyecto
-- Preferir nombres orientados a resultados, no a actividades
+- Nombre orientado al resultado entregable
+- El orden (position) debe seguir la secuencia lógica de ejecución
 
 CRITERIOS PARA LAS HOJAS:
-- Cada Hoja es un área de trabajo concreta dentro del Sprint
-- Nombre corto y orientado a la acción (ej: "Investigación", "Producción de contenido")
+- Nombre corto y orientado a la acción
 - Sub-tareas en description como markdown: - [ ] verbo + acción
-- Las tareas deben empezar con verbo en infinitivo
-
-PRIORIDADES:
-- "high": bloqueante o crítico para el objetivo del sprint
-- "medium": importante pero no bloqueante
-- "low": opcional o de refinamiento
-- null: sin información suficiente
 
 IDIOMA: responde siempre en el idioma del texto del usuario.
 
 REGLAS ABSOLUTAS:
 - Responde ÚNICAMENTE con el JSON. Sin texto, sin markdown, sin explicaciones.
 - El JSON debe ser parseable directamente con JSON.parse()
-- No inventes información que no pueda inferirse del brief
-- Si el brief es vago, genera una estructura útil con lo que puedas inferir
 
 ESTRUCTURA JSON REQUERIDA:
 {
   "bonsai": {
-    "name": "string — nombre del proyecto orientado al objetivo estratégico",
-    "description": "string — una oración que resume el objetivo del bonsai, o null",
+    "name": "string",
+    "description": "string o null",
     "sprints": [
       {
-        "name": "string — nombre del sprint orientado al resultado entregable",
-        "description": "string — objetivo concreto del sprint, o null",
+        "name": "string",
+        "description": "string o null",
         "position": 0,
         "hojas": [
           {
-            "title": "string — nombre del área de trabajo",
-            "description": "string con sub-tareas en markdown (- [ ] tarea), o null",
+            "title": "string",
+            "description": "string con sub-tareas en markdown o null",
             "position": 0,
             "priority": "high | medium | low | null"
           }
@@ -125,7 +139,6 @@ ESTRUCTURA JSON REQUERIDA:
       return NextResponse.json({ error: "Error al llamar a Claude" }, { status: 502 })
     }
 
-    // 4. Parsear respuesta de Claude
     let bonsaiData: BonsaiPayload
     try {
       const claudeBody = await claudeRes.json()
@@ -139,39 +152,32 @@ ESTRUCTURA JSON REQUERIDA:
       )
     }
 
-    // 5. Validación mínima
     const { bonsai } = bonsaiData
-    if (
-      !bonsai?.name ||
-      !Array.isArray(bonsai?.sprints) ||
-      bonsai.sprints.length === 0
-    ) {
-      return NextResponse.json(
-        { error: "La estructura del bonsai generado no es válida." },
-        { status: 422 }
-      )
+    if (!bonsai?.name || !Array.isArray(bonsai?.sprints) || bonsai.sprints.length === 0) {
+      return NextResponse.json({ error: "La estructura del bonsai generado no es válida." }, { status: 422 })
     }
 
-    // 6. Crear el Bonsai en Neon
+    // ── Crear Bonsai + Sprints en Neon ────────────────────────────────────────
     const newBonsai = await prisma.bonsai.create({
       data: {
         name: bonsai.name,
         description: bonsai.description ?? null,
         ownerId: session.user.id,
+        generatedByAI: true,
+        aiPrompt: freeText,
       },
     })
 
-    // 7. Crear cada Sprint (Board) con sus columnas fijas y hojas
     const createdBoards = []
-    const sortedSprints = [...bonsai.sprints].sort((a, b) => a.position - b.position)
-
-    for (const sprint of sortedSprints) {
+    for (const sprint of [...bonsai.sprints].sort((a, b) => a.position - b.position)) {
       const board = await prisma.board.create({
         data: {
           name: sprint.name,
           description: sprint.description ?? null,
           ownerId: session.user.id,
           bonsaiId: newBonsai.id,
+          generatedByAI: true,
+          aiPrompt: freeText,
           columns: {
             create: [
               {
@@ -190,17 +196,8 @@ ESTRUCTURA JSON REQUERIDA:
                     })),
                 },
               },
-              {
-                name: "En Progreso",
-                position: 1,
-                color: "#eab308",
-                wipLimit: 5,
-              },
-              {
-                name: "Completado",
-                position: 2,
-                color: "#22c55e",
-              },
+              { name: "En Progreso", position: 1, color: "#eab308", wipLimit: 5 },
+              { name: "Completado",  position: 2, color: "#22c55e" },
             ],
           },
         },
@@ -214,13 +211,7 @@ ESTRUCTURA JSON REQUERIDA:
       createdBoards.push(board)
     }
 
-    return NextResponse.json(
-      {
-        bonsai: newBonsai,
-        boards: createdBoards,
-      },
-      { status: 201 }
-    )
+    return NextResponse.json({ bonsai: newBonsai, boards: createdBoards }, { status: 201 })
 
   } catch (error) {
     console.error("Error en create-bonsai-from-ai:", error)
