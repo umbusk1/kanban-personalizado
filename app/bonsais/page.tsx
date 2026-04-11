@@ -95,7 +95,8 @@ export default function BonsaisPage() {
   const [newDescription, setNewDescription] = useState("")
   const [createError, setCreateError]       = useState("")
 
-  const [showAgenteModal, setShowAgenteModal] = useState(false)
+  const [showAgenteModal, setShowAgenteModal]         = useState(false)
+  const [showAgenteSprintModal, setShowAgenteSprintModal] = useState(false)
   const [agenteInitialPrompt, setAgenteInitialPrompt] = useState("")
   const [agenteInitialMode, setAgenteInitialMode]     = useState<"sprint" | "bonsai">("bonsai")
 
@@ -428,7 +429,7 @@ export default function BonsaisPage() {
                       )}
                     </div>
                     <div className="mt-4 flex gap-2">
-                      <button onClick={() => setShowAgenteModal(true)}
+                      <button onClick={() => setShowAgenteSprintModal(true)}
                         className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
                         ✨ Generar Sprint con IA
                       </button>
@@ -687,7 +688,7 @@ export default function BonsaisPage() {
         </div>
       )}
 
-      {/* Modal Agente IA */}
+      {/* Modal Agente IA — solo Bonsais (botón top) */}
       {showAgenteModal && (
         <AgenteSprintModal
           onClose={() => { setShowAgenteModal(false); setAgenteInitialPrompt("") }}
@@ -708,7 +709,30 @@ export default function BonsaisPage() {
             setShowQuotaModal(true)
           }}
           initialPrompt={agenteInitialPrompt}
-          initialMode={agenteInitialMode}
+          initialMode="bonsai"
+          context="bonsais"
+        />
+      )}
+
+      {/* Modal Agente IA — Sprint para el bonsai seleccionado (botón interno) */}
+      {showAgenteSprintModal && selected && (
+        <AgenteSprintModal
+          onClose={() => setShowAgenteSprintModal(false)}
+          onSprintSuccess={(board: GeneratedBoard) => {
+            setShowAgenteSprintModal(false)
+            router.push(`/board/${board.id}`)
+          }}
+          onBonsaiSuccess={(_result: GeneratedBonsai) => {
+            setShowAgenteSprintModal(false)
+            fetchData()
+          }}
+          onQuotaExceeded={(type) => {
+            setShowAgenteSprintModal(false)
+            setQuotaType(type)
+            setShowQuotaModal(true)
+          }}
+          fixedBonsaiId={selected.id}
+          fixedBonsaiName={selected.name}
           context="bonsais"
         />
       )}
