@@ -7,6 +7,7 @@ import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
 import QuotaSurveyModal from "@/components/QuotaSurveyModal"
+import { useSession } from "next-auth/react"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
                'Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -83,7 +84,8 @@ function PromptViewer({ prompt, onRegenerate }: { prompt: string; onRegenerate: 
 
 export default function BonsaisPage() {
   const router = useRouter()
-  const [bonsais, setBonsais]         = useState<Bonsai[]>([])
+  const { data: session } = useSession()
+  const [bonsais, setBonsais] = useState<Bonsai[]>([])
   const [loading, setLoading]         = useState(true)
   const [selected, setSelected]       = useState<Bonsai | null>(null)
   const [openBonsais, setOpenBonsais] = useState<Set<string>>(new Set())
@@ -262,7 +264,9 @@ export default function BonsaisPage() {
 
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-semibold mb-1">Mis Bonsais</h2>
+            <h2 className="text-xl font-semibold mb-1">
+              Bienvenido, {session?.user?.name || session?.user?.email}
+            </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               {bonsais.length} proyecto{bonsais.length !== 1 ? "s" : ""}
               {totalSprints > 0 && (
