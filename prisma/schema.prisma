@@ -130,3 +130,14 @@ model ActivityLog {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("activity_logs")
 }
+
+model UsageSurvey {
+  id             String   @id @default(cuid())
+  userId         String?
+  email          String
+  wantsMore      Boolean
+  bonsaisPerWeek Int?
+  sprintsPerWeek Int?
+  createdAt      DateTime @default(now())
+  @@map("usage_surveys")
+}
