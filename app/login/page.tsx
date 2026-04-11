@@ -135,7 +135,7 @@ function StatCounter({ value, label }: { value: number; label: string }) {
 }
 
 // ── Tipos ──
-type ColorKey = "green" | "emerald" | "teal" | "blue" | "indigo" | "yellow"
+type ColorKey = "green" | "emerald" | "teal" | "blue" | "indigo" | "yellow" | "purple"
 
 interface Feature {
   icon: string
@@ -143,6 +143,7 @@ interface Feature {
   badge: string
   color: ColorKey
   desc: string
+  isNew?: boolean
   modal: {
     headline: string
     body: string
@@ -151,36 +152,69 @@ interface Feature {
   }
 }
 
-// ── Funcionalidades con contenido de modal ──
+// ── Funcionalidades v3.0 ──
 const features: Feature[] = [
   {
+    icon: "🌳", title: "Bonsais", badge: "Proyectos completos", color: "purple", isNew: true,
+    desc: "Un Bonsai es un proyecto mayor que agrupa múltiples Sprints. La capa que faltaba para gestionar proyectos complejos con visión completa.",
+    modal: {
+      headline: "El Bonsai: tu proyecto completo",
+      body: "Un Bonsai es un proyecto mayor compuesto por múltiples Sprints. Cada Sprint representa una etapa con un resultado concreto. Desde un plan de mercadeo hasta la organización de un evento — todo cabe en un Bonsai.",
+      bullets: [
+        "Agrupa 2 a 7 Sprints en un solo proyecto con visión completa",
+        "Ve el progreso de todos los Sprints desde un solo dashboard",
+        "Histórico de proyectos completados organizado por fecha",
+        "Acordeón visual: navega los Sprints de cada Bonsai sin salir de la vista",
+        "Crea Bonsais manualmente o genera uno completo con IA en segundos",
+      ],
+      footer: "Del QUÉ al CÓMO: describe tu proyecto y KanbanBonsai lo estructura por ti.",
+    },
+  },
+  {
+    icon: "✨", title: "Agente IA", badge: "Generación con Claude", color: "yellow", isNew: true,
+    desc: "Describe lo que quieres lograr en lenguaje natural. El Agente genera el Bonsai completo o el Sprint con sus Hojas, aplicando criterios que toman en cuenta las capacidades del cerebro humano (basados en lo propuesto por Barbara Minto).",
+    modal: {
+      headline: "Del QUÉ al CÓMO en segundos",
+      body: "El cuello de botella de cualquier proyecto siempre fue el mismo: ¿cómo lo estructuro? ¿por dónde empiezo? ¿cómo lo explico al equipo? El Agente IA de KanbanBonsai elimina esa barrera. Describes lo que quieres lograr y Claude lo convierte en un plan ejecutable.",
+      bullets: [
+        "Genera un Sprint completo con Hojas estructuradas desde un brief de texto libre",
+        "Genera un Bonsai completo con múltiples Sprints para proyectos mayores",
+        "Aplica el Principio de la Pirámide de Minto: categorías MECE en cada nivel",
+        "Respeta los límites cognitivos de Miller: máximo 7 elementos por nivel",
+        "Guarda el prompt original para editarlo y re-generar si el resultado no te convence",
+        "Badge ✨ que distingue lo generado con IA de lo creado manualmente",
+      ],
+      footer: "Cualquier persona, sin importar su experiencia en gestión de proyectos, puede llegar a un plan profesional en segundos.",
+    },
+  },
+  {
     icon: "🌿", title: "Sprints", badge: "Tableros visuales", color: "green",
-    desc: "Organiza tu proyecto en tableros con columnas personalizables. Mueve el trabajo de Pendiente → En progreso → Listo con un clic.",
+    desc: "Organiza cada etapa de tu proyecto en un tablero con tres columnas: Por Hacer, En Progreso y Completado. Mueve Hojas con un clic.",
     modal: {
       headline: "El Sprint: tu tablero de mando",
       body: "Un Sprint es un tablero visual dividido en tres columnas que representan el estado de cada tarea: Por Hacer, En Progreso y Completado. De un vistazo, tú y tu equipo saben exactamente en qué punto está cada parte del proyecto.",
       bullets: [
         "Crea tantos Sprints como proyectos o fases necesites",
-        "Renombra las columnas según tu flujo de trabajo",
-        "Asigna un lapso de tiempo (fecha de inicio y fin) a cada Sprint",
-        "Visualiza el porcentaje de avance general del Sprint en tiempo real",
+        "Cada Sprint puede pertenecer a un Bonsai o existir de forma independiente",
+        "Asigna un lapso de tiempo a cada Sprint",
+        "Visualiza el porcentaje de avance en tiempo real",
         "Archiva Sprints terminados sin perder su historial",
       ],
-      footer: "La metáfora del bonsai: el Sprint es el árbol completo. Las Hojas son sus ramas y brotes.",
+      footer: "La metáfora del bonsai: el Sprint es una rama del árbol. Las Hojas son sus brotes.",
     },
   },
   {
     icon: "🍃", title: "Hojas", badge: "Tareas inteligentes", color: "emerald",
-    desc: "Cada tarea es una Hoja: asigna fechas de inicio y fin, recursos del equipo, prioridad y descripción detallada.",
+    desc: "Cada tarea es una Hoja: asigna fechas, recursos del equipo, prioridad y subtareas con checkboxes en markdown.",
     modal: {
       headline: "La Hoja: donde vive el detalle",
       body: "Cada tarea en KanbanBonsai es una Hoja. Va mucho más allá de un simple post-it: contiene toda la información necesaria para ejecutar y hacer seguimiento de ese trabajo específico.",
       bullets: [
-        "Título, descripción y notas de avance editables",
+        "Título, descripción y subtareas con checkboxes en markdown",
         "Fecha de inicio y fecha límite con indicador visual de vencimiento",
-        "Asignación a uno o varios miembros del equipo",
+        "Asignación a miembros del equipo",
         "Nivel de prioridad: Alta, Media o Baja",
-        "Barra de progreso con subtareas contabilizadas",
+        "Barra de progreso calculada desde las subtareas completadas",
         "Registro automático en la Bitácora de cada cambio realizado",
       ],
       footer: "Una Hoja bien completada elimina las reuniones de seguimiento innecesarias.",
@@ -196,45 +230,13 @@ const features: Feature[] = [
         "Marca una Hoja como bloqueada por otra Hoja que debe completarse primero",
         "Establece que un Sprint no puede iniciarse hasta que otro esté cerrado",
         "Visualiza las dependencias con indicadores de bloqueo en cada Hoja afectada",
-        "Recibe alertas si intentas mover una Hoja bloqueada a 'En Progreso'",
         "Ideal para proyectos de construcción, tecnología, eventos o cualquier proceso secuencial",
       ],
       footer: "Como en un bonsai: no puedes dar forma a las ramas superiores antes de que el tronco esté firme.",
     },
   },
   {
-    icon: "📋", title: "Bitácora", badge: "Registro de actividad", color: "blue",
-    desc: "Historial completo de todo lo que ocurre en el Sprint. Quién hizo qué, cuándo y cómo — sin perder ningún detalle.",
-    modal: {
-      headline: "La Bitácora: memoria perfecta del equipo",
-      body: "La Bitácora es el registro cronológico e inmutable de todas las acciones realizadas en un Sprint. No hay que preguntar '¿quién cambió esto?' — la Bitácora lo sabe.",
-      bullets: [
-        "Registro automático de cada movimiento de Hoja entre columnas",
-        "Historial de ediciones: qué campo cambió, valor anterior y nuevo valor",
-        "Registro de asignaciones, cambios de prioridad y fechas modificadas",
-        "Marca de tiempo y autoría de cada acción",
-        "Filtrable por fecha, usuario o tipo de acción",
-        "Exportable para reportes de avance o auditorías del proyecto",
-      ],
-      footer: "La transparencia es la base de la confianza en equipos distribuidos.",
-    },
-  },
-  {
-    icon: "📊", title: "Histórico", badge: "Cuarta columna", color: "indigo",
-    desc: "Una cuarta columna en el dashboard que muestra todos tus Sprints: los que ya terminaron y los que están activos ahora mismo.",
-    modal: {
-      headline: "Histórico: el repositorio de tu proyecto",
-      body: "El Histórico es una cuarta columna en el dashboard que muestra todos tus Sprints: los que ya terminaron y los que están activos ahora mismo.",
-      bullets: [
-        "Acceso directo a cualquier Sprint desde el Histórico con un clic",
-        "Vista completa para reuniones de gerencia o reportes ejecutivos",
-        "Permite encontrar Sprints actuales y anteriores",
-      ],
-      footer: "Cada Sprint puede tener insights o lecciones aprendidas, que es lo que distingue la gestión estratégica de la operativa.",
-    },
-  },
-  {
-    icon: "👥", title: "Equipos", badge: "Colaboración real", color: "yellow",
+    icon: "👥", title: "Equipos", badge: "Colaboración real", color: "blue",
     desc: "Invita colaboradores por email, asigna roles y trabaja en tiempo real con equipos distribuidos geográficamente.",
     modal: {
       headline: "Equipos: gestión sin fronteras",
@@ -250,6 +252,21 @@ const features: Feature[] = [
       footer: "Equipos en Venezuela, República Dominicana y Panamá trabajando en el mismo tablero — así nació KanbanBonsai.",
     },
   },
+  {
+    icon: "📋", title: "Bitácora", badge: "Registro de actividad", color: "indigo",
+    desc: "Historial completo de todo lo que ocurre en el Sprint. Quién hizo qué, cuándo y cómo — sin perder ningún detalle.",
+    modal: {
+      headline: "La Bitácora: memoria perfecta del equipo",
+      body: "La Bitácora es el registro cronológico e inmutable de todas las acciones realizadas en un Sprint. No hay que preguntar '¿quién cambió esto?' — la Bitácora lo sabe.",
+      bullets: [
+        "Registro automático de cada movimiento de Hoja entre columnas",
+        "Historial de ediciones con marca de tiempo y autoría",
+        "Filtrable por fecha, usuario o tipo de acción",
+        "Exportable para reportes de avance o auditorías del proyecto",
+      ],
+      footer: "La transparencia es la base de la confianza en equipos distribuidos.",
+    },
+  },
 ]
 
 const colorMap: Record<ColorKey, { bg: string; border: string; text: string; badge: string; modalAccent: string }> = {
@@ -259,6 +276,7 @@ const colorMap: Record<ColorKey, { bg: string; border: string; text: string; bad
   blue:    { bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-800/40 border-blue-500/30 text-blue-300",    modalAccent:"border-blue-500/40" },
   indigo:  { bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-800/40 border-indigo-500/30 text-indigo-300",  modalAccent:"border-indigo-500/40" },
   yellow:  { bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-800/40 border-yellow-500/30 text-yellow-300",  modalAccent:"border-yellow-500/40" },
+  purple:  { bg:"bg-purple-900/20",  border:"border-purple-500/20",  text:"text-purple-300",  badge:"bg-purple-800/40 border-purple-500/30 text-purple-300",  modalAccent:"border-purple-500/40" },
 }
 
 // ── Modal de funcionalidad ──
@@ -274,13 +292,7 @@ function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => v
         className={`relative bg-[#0e1f17] border ${c.modalAccent} rounded-2xl p-8 max-w-lg w-full shadow-2xl`}
         onClick={e => e.stopPropagation()}
       >
-        {/* Cerrar */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/40 hover:text-white text-xl leading-none transition-colors"
-        >✕</button>
-
-        {/* Cabecera */}
+        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white text-xl leading-none transition-colors">✕</button>
         <div className="flex items-center gap-3 mb-5">
           <span className="text-4xl">{feature.icon}</span>
           <div>
@@ -290,11 +302,7 @@ function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => v
             <h3 className={`text-xl font-bold ${c.text}`}>{feature.modal.headline}</h3>
           </div>
         </div>
-
-        {/* Cuerpo */}
         <p className="text-white/70 text-sm leading-relaxed mb-5">{feature.modal.body}</p>
-
-        {/* Bullets */}
         <ul className="space-y-2 mb-6">
           {feature.modal.bullets.map((b, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-white/65">
@@ -303,8 +311,6 @@ function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => v
             </li>
           ))}
         </ul>
-
-        {/* Footer de modal */}
         <div className={`border-t ${c.modalAccent} pt-4`}>
           <p className={`text-xs italic ${c.text} opacity-80`}>{feature.modal.footer}</p>
         </div>
@@ -323,7 +329,9 @@ const historySteps = [
     text:"Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y hasta filosófica: usar KANBAN para construir KANBAN. Cada funcionalidad fue una Hoja. Cada entrega, un Sprint." },
   { num:"3", color:"indigo", title:"Vibe-coded junto a Claude de Anthropic",
     text:"Una colaboración inusual: un consultor con 45 años de experiencia sin escribir una línea de código, y una IA generando cada componente, explicando cada decisión, corrigiendo cada error. Sprint tras sprint, pestaña tras pestaña." },
-  { num:"✓", color:"green",  title:"El resultado: kanbanbonsai v2.0",
+  { num:"4", color:"purple", title:"v3.0: del QUÉ al CÓMO",
+    text:"La barrera más fastidiosa de cualquier proyecto siempre fue la misma: saber qué quieres lograr no es suficiente — el cuello de botella está en estructurarlo. Con el Agente IA y la capa Bonsai, KanbanBonsai rompe esa barrera. Describes tu proyecto en lenguaje natural y el sistema lo convierte en un plan ejecutable al instante." },
+  { num:"✓", color:"green",  title:"El resultado: kanbanbonsai v3.0",
     text:"Una app en producción que demuestra que la experiencia humana + inteligencia artificial pueden crear herramientas reales, simples y con alma propia. Como un bonsai: pequeño, cuidado y perfectamente formado." },
 ]
 
@@ -338,7 +346,6 @@ export default function LandingPage() {
     fetch("/api/stats").then(r => r.json()).then(setStats).catch(() => {})
   }, [])
 
-  // Bloquear scroll del body cuando el modal está abierto
   useEffect(() => {
     if (activeFeature) document.body.style.overflow = "hidden"
     else document.body.style.overflow = ""
@@ -350,7 +357,6 @@ export default function LandingPage() {
       background: "linear-gradient(135deg, #0a1a10 0%, #0e1f17 30%, #101820 60%, #0a1a10 100%)"
     }}>
 
-      {/* Modal */}
       {activeFeature && (
         <FeatureModal feature={activeFeature} onClose={() => setActiveFeature(null)} />
       )}
@@ -367,30 +373,30 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* ── Zona con trama ── */}
       <div className="relative flex-1 flex flex-col">
         <JapanesePattern />
 
-        {/* Hero */}
+        {/* ── Hero ── */}
         <section className="relative z-10 py-16 px-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex justify-center mb-8">
-              <div className="inline-flex items-center gap-2 bg-green-900/40 border border-green-500/30 rounded-full px-4 py-1.5 text-green-300 text-xs font-medium">
-                <span>🌱</span>
-                <span>v2.0 — Sprints · Hojas · Bitácora · Histórico</span>
+              <div className="inline-flex items-center gap-2 bg-purple-900/40 border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-300 text-xs font-medium">
+                <span>✨</span>
+                <span>v3.0 — Bonsais · Agente IA · Sprints · Hojas · Bitácora</span>
               </div>
             </div>
             <div className="flex flex-col lg:flex-row items-center justify-center gap-10">
               <div className="flex-1 max-w-lg text-center lg:text-left">
                 <h1 className="text-4xl lg:text-5xl font-bold text-white leading-tight mb-5">
-                  La herramienta de gestión para equipos que valoran la
-                  <span className="text-green-400"> simplicidad</span>
+                  Del <span className="text-white/50">QUÉ</span> al{" "}
+                  <span className="text-green-400">CÓMO</span>{" "}
+                  en segundos
                 </h1>
-                <p className="text-white/60 text-base leading-relaxed mb-8">
-                  Organiza proyectos en <strong className="text-green-300">Sprints</strong>, gestiona tareas
-                  como <strong className="text-green-300">Hojas</strong> con fechas y recursos, consulta
-                  la <strong className="text-white/80">Bitácora</strong> y sigue el avance en
-                  el <strong className="text-white/80">Histórico</strong>.
+                <p className="text-white/60 text-base leading-relaxed mb-4">
+                  Describe tu proyecto en lenguaje natural. KanbanBonsai y Claude lo convierten en un plan ejecutable al instante — con <strong className="text-purple-300">Bonsais</strong>, <strong className="text-green-300">Sprints</strong> y <strong className="text-emerald-300">Hojas</strong> listos para trabajar.
+                </p>
+                <p className="text-white/40 text-sm leading-relaxed mb-8">
+                  Sin manuales. Sin reuniones de planificación de 3 horas. Sin la barrera del ¿por dónde empiezo?
                 </p>
                 <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                   <Link href="/register"
@@ -413,10 +419,35 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── Propuesta de valor central ── */}
+        <section className="relative z-10 border-t border-white/10 py-16 px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-6">El problema que resolvemos</p>
+            <blockquote className="text-2xl lg:text-3xl font-light text-white/80 leading-relaxed mb-8 italic">
+              "Saber qué quieres lograr nunca fue el problema.<br/>
+              El cuello de botella siempre fue el paso siguiente."
+            </blockquote>
+            <div className="flex items-center justify-center gap-6 flex-wrap text-sm text-white/50">
+              <span>¿Cómo lo estructuro?</span>
+              <span className="text-white/20">·</span>
+              <span>¿Por dónde empiezo?</span>
+              <span className="text-white/20">·</span>
+              <span>¿Cómo lo explico al equipo?</span>
+            </div>
+            <div className="mt-10 inline-flex items-center gap-3 bg-purple-900/30 border border-purple-500/20 rounded-xl px-6 py-4">
+              <span className="text-2xl">✨</span>
+              <p className="text-purple-200 text-sm text-left leading-relaxed">
+                <strong>KanbanBonsai v3.0 elimina esa barrera.</strong><br/>
+                Describes tu proyecto. Claude lo estructura. Tú lo ejecutas.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* ── Funcionalidades ── */}
         <section id="funcionalidades" className="relative z-10 border-t border-white/10 py-24 px-8">
           <div className="max-w-5xl mx-auto">
-            <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">Funcionalidades v2.0</p>
+            <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">Funcionalidades v3.0</p>
             <h2 className="text-3xl font-bold text-white text-center mb-4">Todo lo que necesitas, nada que no</h2>
             <p className="text-white/45 text-center mb-3 max-w-lg mx-auto text-sm">
               Cada funcionalidad fue una Hoja en nuestro propio Sprint de desarrollo.
@@ -431,9 +462,14 @@ export default function LandingPage() {
                   <div
                     key={f.title}
                     onClick={() => setActiveFeature(f)}
-                    className={`${c.bg} border ${c.border} rounded-xl p-6 cursor-pointer
+                    className={`${c.bg} border ${c.border} rounded-xl p-6 cursor-pointer relative
                       transition-all hover:scale-[1.03] hover:border-opacity-60 hover:brightness-110 group`}
                   >
+                    {f.isNew && (
+                      <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-700/60 border border-purple-400/30 text-purple-200">
+                        Nuevo
+                      </span>
+                    )}
                     <div className="text-3xl mb-4">{f.icon}</div>
                     <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-3`}>
                       {f.badge}
@@ -450,35 +486,37 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Metáfora */}
+        {/* ── Metáfora ── */}
         <section className="relative z-10 border-t border-white/10 py-20 px-8">
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-8">La metáfora</p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-8">La jerarquía</p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
               {[
-                {emoji:"🌳", label:"Bonsai",  sub:"La plataforma"},
+                {emoji:"🌳", label:"Bonsai",  sub:"El proyecto"},
                 {arrow:true},
-                {emoji:"📋", label:"Sprints", sub:"Los tableros"},
+                {emoji:"🌿", label:"Sprint",  sub:"La etapa"},
                 {arrow:true},
-                {emoji:"🍃", label:"Hojas",   sub:"Las tareas"},
-              ].map((item,i) =>
+                {emoji:"🍃", label:"Hoja",    sub:"La actividad"},
+                {arrow:true},
+                {emoji:"☐",  label:"Tarea",   sub:"El paso"},
+              ].map((item, i) =>
                 "arrow" in item
-                  ? <span key={i} className="text-white/20 text-2xl">→</span>
-                  : <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-7 py-5 text-center min-w-[110px]">
-                      <div className="text-3xl mb-1">{item.emoji}</div>
-                      <div className="text-white font-semibold text-sm">{item.label}</div>
+                  ? <span key={i} className="text-white/20 text-xl">→</span>
+                  : <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-center min-w-[90px]">
+                      <div className="text-2xl mb-1">{item.emoji}</div>
+                      <div className="text-white font-semibold text-xs">{item.label}</div>
                       <div className="text-white/40 text-xs mt-0.5">{item.sub}</div>
                     </div>
               )}
             </div>
             <p className="mt-8 text-white/40 text-sm max-w-md mx-auto leading-relaxed">
-              Como cultivar un bonsai — cada tarea en su lugar, cada equipo en armonía,
-              cada Sprint avanzando con disciplina hacia el resultado.
+              Cada nivel tiene su propósito. El Agente IA genera la estructura completa desde arriba.
+              Tú la ejecutas desde abajo.
             </p>
           </div>
         </section>
 
-        {/* Estadísticas */}
+        {/* ── Estadísticas ── */}
         {stats && (
           <section id="stats" className="relative z-10 border-t border-white/10 py-16 px-8">
             <div className="max-w-3xl mx-auto">
@@ -492,7 +530,7 @@ export default function LandingPage() {
           </section>
         )}
 
-        {/* Historia */}
+        {/* ── Historia ── */}
         <section id="historia" className="relative z-10 border-t border-white/10 py-20 px-8">
           <div className="max-w-3xl mx-auto">
             <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">El origen</p>
@@ -506,6 +544,7 @@ export default function LandingPage() {
                   s.color==="green"  ? "bg-green-800/60 border-green-500/30 text-green-400"
                  :s.color==="yellow" ? "bg-yellow-800/60 border-yellow-500/30 text-yellow-400"
                  :s.color==="blue"   ? "bg-blue-800/60 border-blue-500/30 text-blue-400"
+                 :s.color==="purple" ? "bg-purple-800/60 border-purple-500/30 text-purple-400"
                  :                    "bg-indigo-800/60 border-indigo-500/30 text-indigo-400"
                 return (
                   <div key={s.num} className="flex gap-6">
@@ -518,11 +557,13 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* CTA final */}
+        {/* ── CTA final ── */}
         <section className="relative z-10 border-t border-white/10 py-24 px-8">
           <div className="max-w-2xl mx-auto text-center">
             <div className="text-5xl mb-6">🌳</div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">¿Listo para cultivar tu primer Sprint?</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+              ¿Listo para pasar del QUÉ al CÓMO?
+            </h2>
             <p className="text-white/50 mb-10 text-lg">Gratis. Sin tarjeta de crédito. Sin complicaciones.</p>
             <Link href="/register"
               className="inline-block bg-green-600 hover:bg-green-500 text-white font-semibold px-12 py-4 rounded-xl transition-colors text-base shadow-xl shadow-green-900/30">
