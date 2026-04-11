@@ -39,16 +39,18 @@ export async function POST(request: Request) {
     }
 
     const { freeText, bonsaiId } = await request.json()
-    if (!freeText || !bonsaiId) {
-      return NextResponse.json({ error: "Se requieren freeText y bonsaiId" }, { status: 400 })
+    if (!freeText) {
+      return NextResponse.json({ error: "Se requiere freeText" }, { status: 400 })
     }
 
-    // ── Verificar bonsai ─────────────────────────────────────────────────────
-    const bonsai = await prisma.bonsai.findFirst({
-      where: { id: bonsaiId, ownerId: session.user.id },
-    })
-    if (!bonsai) {
-      return NextResponse.json({ error: "Bonsai no encontrado" }, { status: 404 })
+    // ── Verificar bonsai (solo si se proporcionó) ────────────────────────────
+    if (bonsaiId) {
+      const bonsai = await prisma.bonsai.findFirst({
+        where: { id: bonsaiId, ownerId: session.user.id },
+      })
+      if (!bonsai) {
+        return NextResponse.json({ error: "Bonsai no encontrado" }, { status: 404 })
+      }
     }
 
     // ── Verificar cuota semanal ───────────────────────────────────────────────
@@ -157,7 +159,10 @@ ESTRUCTURA JSON REQUERIDA:
 
     const { sprint } = sprintData
     if (!sprint?.name || !Array.isArray(sprint?.hojas) || sprint.hojas.length === 0) {
-      return NextResponse.json({ error: "La estructura del sprint generado no es válida." }, { status: 422 })
+      return NextResponse.json(
+        { error: "La estructura del sprint generado no es válida." },
+        { status: 422 }
+      )
     }
 
     // ── Insertar en Neon ──────────────────────────────────────────────────────
