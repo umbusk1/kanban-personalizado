@@ -172,7 +172,7 @@ const features: Feature[] = [
   },
   {
     icon: "✨", title: "Agente IA", badge: "Generación con Claude", color: "yellow", isNew: true,
-    desc: "Describe lo que quieres lograr en lenguaje natural. El Agente genera el Bonsai completo o el Sprint con sus Hojas, aplicando criterios que toman en cuenta las capacidades del cerebro humano (basados en lo propuesto por Barbara Minto y George A. Miller).",
+    desc: "Describe lo que quieres lograr en lenguaje natural. El Agente genera el Bonsai completo o el Sprint con sus Hojas, aplicando criterio MECE y principio de Minto.",
     modal: {
       headline: "Del QUÉ al CÓMO en segundos",
       body: "El cuello de botella de cualquier proyecto siempre fue el mismo: ¿cómo lo estructuro? ¿por dónde empiezo? ¿cómo lo explico al equipo? El Agente IA de KanbanBonsai elimina esa barrera. Describes lo que quieres lograr y Claude lo convierte en un plan ejecutable.",
@@ -184,7 +184,7 @@ const features: Feature[] = [
         "Guarda el prompt original para editarlo y re-generar si el resultado no te convence",
         "Badge ✨ que distingue lo generado con IA de lo creado manualmente",
       ],
-      footer: "Cualquier persona, sin importar su experiencia en gestión de proyectos, puede llegar a un plan profesional en segundos.",
+      footer: "Plan gratuito: 1 Bonsai y 3 Sprints generados con IA por semana. Se renueva cada lunes.",
     },
   },
   {
