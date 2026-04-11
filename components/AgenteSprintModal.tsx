@@ -52,7 +52,6 @@ export default function AgenteSprintModal({
   const [mode, setMode] = useState<Mode>(
     fixedBonsaiId ? "sprint" : (initialMode ?? "sprint")
   )
-  const [mode, setMode]                         = useState<Mode>(initialMode ?? "sprint")
   const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
   const [loadingBonsais, setLoadingBonsais]     = useState(true)
   const [selectedBonsaiId, setSelectedBonsaiId] = useState("")
