@@ -353,6 +353,9 @@ export default function AgenteSprintModal({
               )}
             </button>
           </div>
+          <p className="text-xs text-center text-gray-400 dark:text-gray-500 mt-2">
+            ✨ Plan gratuito: 1 bonsai · 3 sprints por semana · se renueva cada lunes
+          </p>
 
         </div>
       </div>
