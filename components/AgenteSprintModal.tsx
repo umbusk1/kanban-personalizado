@@ -37,12 +37,21 @@ interface Props {
   onQuotaExceeded: (type: "sprint" | "bonsai") => void
   initialPrompt?: string
   initialMode?: "sprint" | "bonsai"
-  context?: "sprints" | "bonsais"  // ← determina si se muestra el selector de Bonsai
+  context?: "sprints" | "bonsais"
+  fixedBonsaiId?: string      // ← si viene, el sprint se asocia a este bonsai sin selector
+  fixedBonsaiName?: string    // ← para mostrar en la UI
 }
 
 type Mode = "sprint" | "bonsai"
 
-export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded, initialPrompt, initialMode, context = "sprints" }: Props) {
+export default function AgenteSprintModal({
+  onClose, onSprintSuccess, onBonsaiSuccess, onQuotaExceeded,
+  initialPrompt, initialMode, context = "sprints",
+  fixedBonsaiId, fixedBonsaiName,
+}: Props) {
+  const [mode, setMode] = useState<Mode>(
+    fixedBonsaiId ? "sprint" : (initialMode ?? "sprint")
+  )
   const [mode, setMode]                         = useState<Mode>(initialMode ?? "sprint")
   const [bonsais, setBonsais]                   = useState<Bonsai[]>([])
   const [loadingBonsais, setLoadingBonsais]     = useState(true)
@@ -103,10 +112,12 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
           ? `Nombre del sprint: "${customName}"\n\n${freeText}`
           : freeText
 
+        const bonsaiToUse = fixedBonsaiId || (context === "bonsais" ? selectedBonsaiId : undefined)
+
         const res = await fetch("/api/create-sprint-from-ai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ freeText: prompt, bonsaiId: selectedBonsaiId }),
+          body: JSON.stringify({ freeText: prompt, bonsaiId: bonsaiToUse }),
         })
         if (!res.ok) {
           const data = await res.json()
@@ -153,7 +164,7 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
   }
 
   const canGenerate = freeText.trim() &&
-    (mode === "bonsai" || context === "sprints" || selectedBonsaiId)
+    (mode === "bonsai" || context === "sprints" || fixedBonsaiId || selectedBonsaiId)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
@@ -172,27 +183,40 @@ export default function AgenteSprintModal({ onClose, onSprintSuccess, onBonsaiSu
           </button>
         </div>
 
-        {/* Toggle Sprint / Bonsai */}
-        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-2">
-          <button
-            onClick={() => { setMode("sprint"); setCustomName(""); setError("") }}
-            className={`flex-1 py-2 text-sm font-medium transition-colors ${
-              mode === "sprint"
-                ? "bg-indigo-600 text-white"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}>
-            🌿 Un Sprint
-          </button>
-          <button
-            onClick={() => { setMode("bonsai"); setCustomName(""); setError("") }}
-            className={`flex-1 py-2 text-sm font-medium transition-colors ${
-              mode === "bonsai"
-                ? "bg-indigo-600 text-white"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}>
-            🌳 Bonsai completo
-          </button>
-        </div>
+        {/* Toggle Sprint / Bonsai — oculto si hay fixedBonsaiId o contexto es solo sprints */}
+        {!fixedBonsaiId && (
+          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-2">
+            <button
+              onClick={() => { setMode("sprint"); setCustomName(""); setError("") }}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                mode === "sprint"
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+              }`}>
+              🌿 Un Sprint
+            </button>
+            {context === "bonsais" && (
+              <button
+                onClick={() => { setMode("bonsai"); setCustomName(""); setError("") }}
+                className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                  mode === "bonsai"
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}>
+                🌳 Bonsai completo
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Indicador de bonsai fijo */}
+        {fixedBonsaiId && fixedBonsaiName && (
+          <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+            <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+              🌳 Sprint para: <strong>{fixedBonsaiName}</strong>
+            </span>
+          </div>
+        )}
 
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
           {mode === "sprint"
