@@ -237,7 +237,7 @@ export default function DashboardPage() {
   )
 
   const inProgressSprints = boards.filter(b => b.inProgress)
-  const historico         = groupByMonth(boards)
+  const historico = groupByMonth(boards.filter(b => !b.inProgress))
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -452,7 +452,7 @@ export default function DashboardPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   📚 Histórico
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">{boards.length} sprints</p>
+                <p className="text-xs text-gray-400 mt-0.5">{boards.filter(b => !b.inProgress).length} sprints</p>
               </div>
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {historico.map(group => {
