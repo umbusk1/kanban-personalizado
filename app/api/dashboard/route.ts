@@ -37,12 +37,13 @@ export async function GET() {
 
     const boardsWithRole = boards.map(board => {
       const totalCards = board.columns.reduce((sum, col) => sum + col._count.cards, 0)
-      const col1and2Cards = board.columns
-        .filter(col => col.position <= 2)
-        .reduce((sum, col) => sum + col._count.cards, 0)
+      const maxPosition = Math.max(...board.columns.map(col => col.position))
       const col3Cards = board.columns
-        .filter(col => col.position === 3)
-        .reduce((sum, col) => sum + col._count.cards, 0)
+      .filter(col => col.position === maxPosition)
+      .reduce((sum, col) => sum + col._count.cards, 0)
+      const col1and2Cards = board.columns
+      .filter(col => col.position !== maxPosition)
+      .reduce((sum, col) => sum + col._count.cards, 0)
       const inProgress = totalCards > 0 && col1and2Cards > 0
 
       return {
