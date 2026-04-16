@@ -584,28 +584,25 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={8} placeholder="Describe la tarea..." />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Prioridad</label>
-                <select value={formData.priority} onChange={e => setFormData({...formData,priority:e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Sin prioridad</option>
-                  <option value="baja">Baja</option>
-                  <option value="media">Media</option>
-                  <option value="alta">Alta</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Asignar a</label>
-                <select value={formData.assignedTo} onChange={e => setFormData({...formData,assignedTo:e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Sin asignar</option>
-                  {allMembers.map(m => <option key={m.id} value={m.id}>{m.name||m.email}</option>)}
-                </select>
-                {!formData.assignedTo && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg mt-2">
-                    ⚠️ Esta hoja no tiene persona asignada. Completa las definiciones antes de guardar.
-                  </p>
-                )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Prioridad</label>
+                  <select value={formData.priority} onChange={e => setFormData({...formData,priority:e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Sin prioridad</option>
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="alta">Alta</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Asignar a</label>
+                  <select value={formData.assignedTo} onChange={e => setFormData({...formData,assignedTo:e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Sin asignar</option>
+                    {allMembers.map(m => <option key={m.id} value={m.id}>{m.name||m.email}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
