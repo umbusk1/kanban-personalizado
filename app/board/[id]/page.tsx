@@ -533,22 +533,23 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium">Descripción</label>
                   <div className="flex gap-1">
-                    <button type="button" title="Insertar tarea por hacer"
+<button type="button" title="Insertar tarea por hacer"
                       onClick={() => {
                         const ta=descRef.current; if (!ta) return
                         const pos=ta.selectionStart??formData.description.length
+                        const scrollTop=ta.scrollTop
                         const lines=formData.description.split('\n')
                         let cc=0,li=0; for(let i=0;i<lines.length;i++){cc+=lines[i].length+1;if(cc>pos){li=i;break}}
                         if (lines[li].match(/^- \[x\] /i)) {
                           lines[li]=lines[li].replace(/^- \[x\] /i,'- [ ] ')
                           setFormData({...formData,description:lines.join('\n')})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos,pos)},0)
+                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos,pos);ta.scrollTop=scrollTop},0)
                         } else {
                           const before=formData.description.substring(0,pos),after=formData.description.substring(pos)
                           const prefix=(before.length>0&&!before.endsWith('\n'))?'\n':''
                           const insert=`${prefix}- [ ] `
                           setFormData({...formData,description:before+insert+after})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos+insert.length,pos+insert.length)},0)
+                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos+insert.length,pos+insert.length);ta.scrollTop=scrollTop},0)
                         }
                       }}
                       className="text-xs text-gray-600 hover:text-gray-800 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-2 py-1 rounded font-medium">
@@ -558,18 +559,19 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                       onClick={() => {
                         const ta=descRef.current; if (!ta) return
                         const pos=ta.selectionStart??formData.description.length
+                        const scrollTop=ta.scrollTop
                         const lines=formData.description.split('\n')
                         let cc=0,li=0; for(let i=0;i<lines.length;i++){cc+=lines[i].length+1;if(cc>pos){li=i;break}}
                         if (lines[li].match(/^- \[ \] /)) {
                           lines[li]=lines[li].replace('- [ ] ','- [x] ')
                           setFormData({...formData,description:lines.join('\n')})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos,pos)},0)
+                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos,pos);ta.scrollTop=scrollTop},0)
                         } else {
                           const before=formData.description.substring(0,pos),after=formData.description.substring(pos)
                           const prefix=(before.length>0&&!before.endsWith('\n'))?'\n':''
                           const insert=`${prefix}- [x] `
                           setFormData({...formData,description:before+insert+after})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos+insert.length,pos+insert.length)},0)
+                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos+insert.length,pos+insert.length);ta.scrollTop=scrollTop},0)
                         }
                       }}
                       className="text-xs text-green-700 hover:text-green-800 dark:text-green-400 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-2 py-1 rounded font-medium">
@@ -580,7 +582,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <textarea ref={descRef} value={formData.description}
                   onChange={e => setFormData({...formData,description:e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3} placeholder="Describe la tarea..." />
+                  rows={8} placeholder="Describe la tarea..." />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Prioridad</label>
@@ -618,11 +620,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">🔗 Recursos (URLs)</label>
+                <label className="block text-sm font-medium mb-1">📝 Notas</label>
                 <textarea value={formData.resources} onChange={e => setFormData({...formData,resources:e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                  rows={3} placeholder={"https://docs.google.com/...\nhttps://drive.google.com/..."} />
-                <p className="text-xs text-gray-400 mt-1">Una URL por línea</p>
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  rows={3} placeholder="" />
               </div>
               {error && <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg"><p className="text-sm text-red-800 dark:text-red-200">{error}</p></div>}
               <div className="flex gap-3 pt-2">
