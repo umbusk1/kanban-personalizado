@@ -43,7 +43,7 @@ export async function GET() {
       const col3Cards = board.columns
         .filter(col => col.position === 3)
         .reduce((sum, col) => sum + col._count.cards, 0)
-      const inProgress = totalCards === 0 || col1and2Cards > 0
+      const inProgress = totalCards > 0 && col1and2Cards > 0
 
       return {
         ...board,
