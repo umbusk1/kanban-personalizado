@@ -360,7 +360,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
   if (!board)  return <div className="min-h-screen flex items-center justify-center"><p>Sprint no encontrado</p></div>
 
-  const isOwner    = session?.user?.id === board.owner.id
+  const isOwner = session?.user?.id === board.owner.id || session?.user?.email === board.owner.email
   const allMembers = [board.owner, ...board.members.map(m => m.user)]
   const allCards   = board.columns.flatMap(c => c.cards)
   const cardTimes  = allCards.map(c => new Date(c.createdAt).getTime())
