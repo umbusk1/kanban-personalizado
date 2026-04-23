@@ -8,35 +8,47 @@ interface InviteModalProps {
 }
 
 export default function InviteModal({ boardId, onClose }: InviteModalProps) {
-  const [email, setEmail] = useState('')
+  const [emailInput, setEmailInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [sentEmails, setSentEmails] = useState<string[]>([])
+  const [errors, setErrors] = useState<string[]>([])
+  const [done, setDone] = useState(false)
 
   const handleInvite = async () => {
-    if (!email.trim()) return
+    const emails = emailInput
+      .split(',')
+      .map(e => e.trim())
+      .filter(Boolean)
+
+    if (emails.length === 0) return
     setLoading(true)
-    setError('')
+    setErrors([])
 
-    try {
-      const res = await fetch('/api/invitations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ boardId, email: email.trim() }),
-      })
-      const data = await res.json()
+    const sent: string[] = []
+    const errs: string[] = []
 
-      if (!res.ok) {
-        setError(data.error || 'Error al enviar invitación')
-        return
+    for (const email of emails) {
+      try {
+        const res = await fetch('/api/invitations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ boardId, email }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          errs.push(`${email}: ${data.error || 'Error al enviar'}`)
+        } else {
+          sent.push(email)
+        }
+      } catch {
+        errs.push(`${email}: Error de conexión`)
       }
-
-      setSuccess(true)
-    } catch {
-      setError('Error de conexión')
-    } finally {
-      setLoading(false)
     }
+
+    setSentEmails(sent)
+    setErrors(errs)
+    setLoading(false)
+    if (sent.length > 0) setDone(true)
   }
 
   return (
@@ -54,13 +66,24 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
           </button>
         </div>
 
-        {success ? (
+        {done ? (
           <div className="text-center py-4">
             <div className="text-4xl mb-3">✅</div>
-            <p className="text-gray-700 dark:text-gray-200 font-medium">¡Invitación enviada!</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              Se envió un email a <strong>{email}</strong>
+            <p className="text-gray-700 dark:text-gray-200 font-medium">
+              {sentEmails.length === 1 ? '¡Invitación enviada!' : '¡Invitaciones enviadas!'}
             </p>
+            <div className="mt-2 space-y-1">
+              {sentEmails.map(e => (
+                <p key={e} className="text-gray-500 dark:text-gray-400 text-sm">
+                  ✉️ <strong>{e}</strong>
+                </p>
+              ))}
+            </div>
+            {errors.length > 0 && (
+              <div className="mt-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg p-3 text-sm text-left">
+                {errors.map((err, i) => <p key={i}>⚠️ {err}</p>)}
+              </div>
+            )}
             <button
               onClick={onClose}
               className="mt-6 w-full bg-indigo-600 text-white py-2 rounded-xl hover:bg-indigo-700 transition-colors"
@@ -75,19 +98,20 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
                 Email del colaborador
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                type="text"
+                value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleInvite()}
-                placeholder="correo@ejemplo.com"
+                placeholder="correo@ejemplo.com, otro@ejemplo.com"
                 className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm
                            dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
+              <p className="text-xs text-gray-400 mt-1.5">Separa varios emails con comas</p>
             </div>
 
-            {error && (
+            {errors.length > 0 && (
               <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg p-3 mb-4 text-sm">
-                {error}
+                {errors.map((err, i) => <p key={i}>{err}</p>)}
               </div>
             )}
 
@@ -101,7 +125,7 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
               </button>
               <button
                 onClick={handleInvite}
-                disabled={loading || !email.trim()}
+                disabled={loading || !emailInput.trim()}
                 className="flex-1 bg-indigo-600 text-white py-2 rounded-xl font-semibold
                            hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
