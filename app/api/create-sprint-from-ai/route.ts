@@ -62,7 +62,11 @@ export async function POST(request: Request) {
         createdAt: { gte: weekStart },
       },
     })
-    if (usedThisWeek >= WEEKLY_SPRINT_LIMIT && !session.user.isAdmin) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isAdmin: true }
+    })
+    if (usedThisWeek >= WEEKLY_SPRINT_LIMIT && !currentUser?.isAdmin) {
       return NextResponse.json(
         { error: "QUOTA_EXCEEDED", type: "sprint", used: usedThisWeek, limit: WEEKLY_SPRINT_LIMIT },
         { status: 429 }
