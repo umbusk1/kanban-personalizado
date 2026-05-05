@@ -111,7 +111,9 @@ export default function BonsaisPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Bonsai | null>(null)
   const [deleting, setDeleting]         = useState(false)
-
+  const [deleteSprintTarget, setDeleteSprintTarget] = useState<Sprint | null>(null)
+  const [deletingSprint, setDeletingSprint]         = useState(false)
+  
   const [showQuotaModal, setShowQuotaModal] = useState(false)
   const [quotaType, setQuotaType]           = useState<"sprint" | "bonsai">("bonsai")
 
@@ -246,6 +248,21 @@ export default function BonsaisPage() {
       setDeleting(false)
     }
   }
+  const handleDeleteSprint = async () => {
+  if (!deleteSprintTarget) return
+  setDeletingSprint(true)
+  try {
+    const res = await fetch(`/api/boards/${deleteSprintTarget.id}`, { method: "DELETE" })
+    if (res.ok) {
+      setDeleteSprintTarget(null)
+      await fetchData()
+    }
+  } catch {
+    console.error("Error al eliminar sprint")
+  } finally {
+    setDeletingSprint(false)
+  }
+}
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
@@ -379,11 +396,18 @@ export default function BonsaisPage() {
                                   <span className="text-xs text-indigo-500 font-medium whitespace-nowrap">
                                     {sprint.progress}%
                                   </span>
-                                  <Link href={`/board/${sprint.id}`}
-                                    className="px-1.5 py-0.5 text-xs bg-indigo-600 text-white rounded
-                                               hover:bg-indigo-700 transition-colors font-medium">
-                                    Abrir
-                                  </Link>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setDeleteSprintTarget(sprint)}
+                                        className="text-gray-300 hover:text-red-500 transition-colors text-sm"
+                                        title="Eliminar sprint">
+                                        🗑️
+                                    </button>
+                                      <Link href={`/board/${sprint.id}`}
+                                        className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                                        Abrir →
+                                      </Link>
+                                    </div>
                                 </div>
                               </li>
                             ))}
@@ -691,6 +715,30 @@ export default function BonsaisPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Confirmar Eliminación de Sprint */}
+        {deleteSprintTarget && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+              <h2 className="text-xl font-bold mb-2">¿Eliminar sprint?</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Estás a punto de eliminar <strong>"{deleteSprintTarget.name}"</strong> y todas sus hojas. Esta acción no se puede deshacer.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteSprintTarget(null)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                             hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={handleDeleteSprint} disabled={deletingSprint}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700
+                             disabled:opacity-50 transition-colors">
+                  {deletingSprint ? "Eliminando..." : "Sí, eliminar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Modal Agente IA — solo Bonsais (botón top) */}
       {showAgenteModal && (
