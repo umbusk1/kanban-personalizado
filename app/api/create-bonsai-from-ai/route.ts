@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         createdAt: { gte: weekStart },
       },
     })
-    if (usedThisWeek >= WEEKLY_BONSAI_LIMIT) {
+    if (usedThisWeek >= WEEKLY_BONSAI_LIMIT && !session.user.isAdmin) {
       return NextResponse.json(
         { error: "QUOTA_EXCEEDED", type: "bonsai", used: usedThisWeek, limit: WEEKLY_BONSAI_LIMIT },
         { status: 429 }
