@@ -4,10 +4,11 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { signIn, useSession } from "next-auth/react"
 
 type DecodedToken = {
-  empresa_id: number
-  email:      string
-  nombre:     string
-  plan:       string
+  empresaId: number   // camelCase en el JWT de Compita
+  email:     string
+  userId?:   number
+  rol?:      string
+  plan?:     string
 }
 
 type Stage =
@@ -40,20 +41,16 @@ export default function DesdeCompitaPage() {
     }
 
     try {
-      // Soporta tanto JWT (header.payload.firma) como base64-JSON plano
-      const parts = rawToken.split('.')
+      // JWT → extraer payload (parte del medio), convertir base64url → base64
+      const parts   = rawToken.split('.')
       const segment = parts.length === 3 ? parts[1] : rawToken
-      // base64url → base64 estándar
-      const base64 = segment.replace(/-/g, '+').replace(/_/g, '/')
-      const padded  = base64 + '=='.slice(0, (4 - base64.length % 4) % 4)
-      const dec = JSON.parse(
-        Buffer.from(padded, "base64").toString("utf-8")
-      ) as DecodedToken
-      if (!dec.email || !dec.empresa_id) throw new Error("Incompleto")
+      const base64  = segment.replace(/-/g, '+').replace(/_/g, '/')
+      const padded  = base64 + '='.repeat((4 - base64.length % 4) % 4)
+      const dec     = JSON.parse(atob(padded)) as DecodedToken   // atob: nativo del browser
+      if (!dec.email || !dec.empresaId) throw new Error("Incompleto")
       setDecoded(dec)
       setToken(rawToken)
-      setPrompt(rawPrompt)
-    } catch {
+      setPrompt(rawPrompt)    } catch {
       setErrorMsg("Token de Compita inválido. Vuelve a Compita e intenta de nuevo.")
       setStage("error")
     }
