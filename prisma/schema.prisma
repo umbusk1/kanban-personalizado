@@ -11,28 +11,42 @@ model User {
   id            String        @id @default(cuid())
   email         String        @unique
   name          String?
-  passwordHash  String
+  passwordHash  String?                         // ← era String, ahora nullable (usuarios Compita no tienen contraseña KB)
+  empresaId     Int?                            // ← NUEVO: id de empresa en Compita
+  plan          String?                         // ← NUEVO: plan Compita (ej: "enterprise_platinum")
   isAdmin       Boolean       @default(false)
   createdAt     DateTime      @default(now())
   ownedBoards   Board[]       @relation("BoardOwner")
-  ownedBonsais  Bonsai[]      @relation("BonsaiOwner")  // ← AGREGADO
+  ownedBonsais  Bonsai[]      @relation("BonsaiOwner")
   boardMembers  BoardMember[]
   createdCards  Card[]        @relation("CardCreator")
   assignedCards Card[]        @relation("CardAssignee")
   activityLogs  ActivityLog[]
+  kbIaUso       KbIaUso[]                       // ← NUEVO: relación con cuota semanal nativa
   @@map("users")
 }
 
+// ── NUEVO: cuota semanal de IA para usuarios KB nativos ───────────────────────
+model KbIaUso {
+  userId    String
+  semana    String    // formato 'YYYY-WNN', ej: '2026-W20'
+  bonsaisIa Int      @default(0)
+  sprintsIa Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, semana])
+  @@map("kb_ia_uso")
+}
+
 model Bonsai {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  ownerId     String
-  createdAt   DateTime @default(now())
-  owner       User     @relation("BonsaiOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  sprints     Board[]
-  generatedByAI Boolean  @default(false)  // ← AGREGAR
-  aiPrompt      String?                   // ← AGREGAR
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  ownerId       String
+  createdAt     DateTime @default(now())
+  owner         User     @relation("BonsaiOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sprints       Board[]
+  generatedByAI Boolean  @default(false)
+  aiPrompt      String?
   @@map("bonsais")
 }
 
@@ -43,18 +57,18 @@ model Board {
   insights     String?
   dependsOnId  String?
   ownerId      String
-  bonsaiId     String?          // ← AGREGADO
+  bonsaiId     String?
   createdAt    DateTime @default(now())
   owner        User     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  bonsai       Bonsai?  @relation(fields: [bonsaiId], references: [id])  // ← AGREGADO
+  bonsai       Bonsai?  @relation(fields: [bonsaiId], references: [id])
   columns      Column[]
   members      BoardMember[]
   invitations  BoardInvitation[]
   activityLogs ActivityLog[]
   dependsOn    Board?   @relation("BoardPrecedence", fields: [dependsOnId], references: [id])
   dependents   Board[]  @relation("BoardPrecedence")
-  generatedByAI Boolean  @default(false)  // ← AGREGAR
-  aiPrompt      String?                   // ← AGREGAR
+  generatedByAI Boolean  @default(false)
+  aiPrompt      String?
   @@map("boards")
 }
 
@@ -83,7 +97,7 @@ model Card {
   dueDate     DateTime?
   alertDate   DateTime?
   resources   String?
-  blockedById String?   // ← 5E: prelación entre hojas
+  blockedById String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   column    Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
