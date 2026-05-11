@@ -54,35 +54,32 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Decodificar el token base64-JSON de Compita
-        let decoded: { empresa_id: number; email: string; nombre: string; plan: string }
+        let decoded: { empresaId: number; email: string; plan?: string }
         try {
-          // Soporta JWT (header.payload.firma) y base64-JSON plano
-          const parts = credentials.compitaToken.split('.')
+          const parts   = credentials.compitaToken.split('.')
           const segment = parts.length === 3 ? parts[1] : credentials.compitaToken
           const base64  = segment.replace(/-/g, '+').replace(/_/g, '/')
-          const padded  = base64 + '=='.slice(0, (4 - base64.length % 4) % 4)
+          const padded  = base64 + '='.repeat((4 - base64.length % 4) % 4)
           decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf-8"))
         } catch {
           throw new Error("Token de Compita inválido")
         }
 
-        if (!decoded.email || !decoded.empresa_id) {
+        if (!decoded.email || !decoded.empresaId) {
           throw new Error("Token de Compita incompleto")
         }
 
-        // Buscar o crear el usuario en KB
         const user = await prisma.user.upsert({
           where: { email: decoded.email },
           update: {
-            empresaId: decoded.empresa_id,
+            empresaId: decoded.empresaId,
             plan:      decoded.plan ?? null,
-            name:      decoded.nombre ?? null,
           },
           create: {
             email:        decoded.email,
-            name:         decoded.nombre ?? null,
-            passwordHash: null,           // sin contraseña KB
-            empresaId:    decoded.empresa_id,
+            name:         decoded.email,   // JWT no trae nombre
+            passwordHash: null,
+            empresaId:    decoded.empresaId,
             plan:         decoded.plan ?? null,
           },
         })
