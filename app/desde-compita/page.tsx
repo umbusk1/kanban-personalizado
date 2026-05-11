@@ -63,7 +63,7 @@ export default function DesdeCompitaPage() {
 
     const esElMismoUsuario =
       status === "authenticated" &&
-      (session?.user as any)?.empresaId === decoded.empresa_id
+      (session?.user as any)?.empresaId === decoded.empresaId
 
     setStage(esElMismoUsuario ? "ready-generate" : "ready-login")
   }, [decoded, status, session])
