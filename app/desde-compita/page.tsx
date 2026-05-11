@@ -203,7 +203,7 @@ export default function DesdeCompitaPage() {
 
         {stage === "ready-generate" && (
           <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-5 text-sm text-green-700 dark:text-green-300">
-            ✅ Sesión activa como <strong>{decoded?.nombre}</strong>. Listo para generar.
+            ✅ Sesión activa como <strong>{decoded?.email}</strong>. Listo para generar.
           </div>
         )}
 
