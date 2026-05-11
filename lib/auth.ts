@@ -56,9 +56,12 @@ export const authOptions: NextAuthOptions = {
         // Decodificar el token base64-JSON de Compita
         let decoded: { empresa_id: number; email: string; nombre: string; plan: string }
         try {
-          decoded = JSON.parse(
-            Buffer.from(credentials.compitaToken, "base64").toString("utf-8")
-          )
+          // Soporta JWT (header.payload.firma) y base64-JSON plano
+          const parts = credentials.compitaToken.split('.')
+          const segment = parts.length === 3 ? parts[1] : credentials.compitaToken
+          const base64  = segment.replace(/-/g, '+').replace(/_/g, '/')
+          const padded  = base64 + '=='.slice(0, (4 - base64.length % 4) % 4)
+          decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf-8"))
         } catch {
           throw new Error("Token de Compita inválido")
         }
