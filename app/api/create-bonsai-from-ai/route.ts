@@ -21,13 +21,20 @@ const COMPITA_API = "https://compita.umbusk.com/api/business-features"
 
 async function checkCompitaQuota(empresaId: number): Promise<{ ok: boolean; error?: string }> {
   try {
-    const res = await fetch(
-      `${COMPITA_API}?action=kb-entitlements&empresa_id=${empresaId}`,
-      { headers: { "x-kb-secret": process.env.COMPITA_KB_SECRET ?? "" } }
-    )
-    if (res.ok) return { ok: true }
+    const res = await fetch(COMPITA_API, {
+      method:  "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-kb-secret":  process.env.COMPITA_KB_SECRET ?? "",
+      },
+      body: JSON.stringify({ accion: "kb-entitlements", empresa_id: empresaId }),
+    })
+    if (!res.ok) return { ok: false, error: "Error al verificar cupo de Compita" }
     const data = await res.json()
-    return { ok: false, error: data.error ?? "Cupo de Compita agotado" }
+    // kb-entitlements siempre devuelve 200 — hay que leer el cuerpo
+    if (!data.tiene_acceso) return { ok: false, error: data.razon ?? "Plan no incluye KanbanBonsai IA" }
+    if (data.restantes <= 0) return { ok: false, error: "Cupo mensual de Compita agotado" }
+    return { ok: true }
   } catch {
     return { ok: false, error: "No se pudo verificar el cupo de Compita" }
   }
