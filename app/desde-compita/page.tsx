@@ -40,8 +40,14 @@ export default function DesdeCompitaPage() {
     }
 
     try {
+      // Soporta tanto JWT (header.payload.firma) como base64-JSON plano
+      const parts = rawToken.split('.')
+      const segment = parts.length === 3 ? parts[1] : rawToken
+      // base64url → base64 estándar
+      const base64 = segment.replace(/-/g, '+').replace(/_/g, '/')
+      const padded  = base64 + '=='.slice(0, (4 - base64.length % 4) % 4)
       const dec = JSON.parse(
-        Buffer.from(rawToken, "base64").toString("utf-8")
+        Buffer.from(padded, "base64").toString("utf-8")
       ) as DecodedToken
       if (!dec.email || !dec.empresa_id) throw new Error("Incompleto")
       setDecoded(dec)
