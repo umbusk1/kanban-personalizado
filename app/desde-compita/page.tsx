@@ -77,7 +77,7 @@ export default function DesdeCompitaPage() {
       // Login con Compita si aún no hay sesión válida
       const necesitaLogin =
         status !== "authenticated" ||
-        (session?.user as any)?.empresaId !== decoded.empresa_id
+        (session?.user as any)?.empresaId !== decoded.empresaId
 
       if (necesitaLogin) {
         const result = await signIn("compita", {
