@@ -46,7 +46,7 @@ export default function DesdeCompitaPage() {
       if (!dec.email || !dec.empresa_id) throw new Error("Incompleto")
       setDecoded(dec)
       setToken(rawToken)
-      setPrompt(decodeURIComponent(rawPrompt))
+      setPrompt(rawPrompt)
     } catch {
       setErrorMsg("Token de Compita inválido. Vuelve a Compita e intenta de nuevo.")
       setStage("error")
