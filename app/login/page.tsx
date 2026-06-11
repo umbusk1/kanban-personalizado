@@ -90,11 +90,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 w-full shadow-2xl">
-      <h2 className="text-white text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
-      {registered && <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p className="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p></div>}
-      {reset      && <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p className="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p></div>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div ="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 w-full shadow-2xl">
+      <h2 ="text-white text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+      {registered && <div ="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p ="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p></div>}
+      {reset      && <div ="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p ="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p></div>}
+      <form onSubmit={handleSubmit} ="space-y-4">
         <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email"
           className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"/>
         <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Contraseña"
@@ -371,7 +371,7 @@ export default function LandingPage() {
             alt="kanbanbonsai"
             width={260}
             height={80}
-            className="h-[60px] md:h-[80px] w-auto"
+            className="h-[50px] md:h-[80px] w-auto"
             priority
           />
 
