@@ -25,6 +25,8 @@ Este proyecto se desarrolla principalmente usando las interfaces web de:
 - Vercel (deployment)
 - Neon (base de datos)
 
+Branch: responsive — desarrollo UI móvil
+
 ## 📝 Notas
 
 Proyecto desarrollado usando metodología KANBAN para gestionar su propio desarrollo.
