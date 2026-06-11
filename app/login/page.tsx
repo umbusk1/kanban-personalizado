@@ -341,7 +341,7 @@ const APP_BG = "#0a1a10"
 export default function LandingPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null)
-
+  const [menuOpen, setMenuOpen] = useState(false)
   useEffect(() => {
     fetch("/api/stats").then(r => r.json()).then(setStats).catch(() => {})
   }, [])
