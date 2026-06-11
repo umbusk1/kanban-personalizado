@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect, Suspense } from "react"
 import { signIn } from "next-auth/react"
@@ -20,41 +20,19 @@ function JapanesePattern() {
             <text x="30"   y="420" fontSize="170" fill="#4ade80" opacity="0.042" fontFamily="serif" transform="rotate(-4,30,420)">看</text>
             <text x="290"  y="490" fontSize="175" fill="#16a34a" opacity="0.040" fontFamily="serif" transform="rotate(7,290,490)">板</text>
             <g transform="translate(160,230) rotate(25)" opacity="0.07">
-              <ellipse cx="0" cy="0" rx="14" ry="38" fill="#4ade"/>
+              <ellipse cx="0" cy="0" rx="14" ry="38" fill="#4ade80"/>
               <line x1="0" y1="-38" x2="0" y2="38" stroke="#22c55e" strokeWidth="1.5"/>
               <line x1="0" y1="-10" x2="-10" y2="-24" stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="-10" x2="10"  y2="-24" stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="8"   x2="-12" y2="-4"  stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="8"   x2="12"  y2="-4"  stroke="#22c55e" strokeWidth="0.8"/>
             </g>
-            <g transform="translate(430,1) rotate(-18)" opacity="0.065">
-              <ellipse cx="0" cy="0" rx="12" ry="32" fill="#86efac"/>
-              <line x1="0" y1="-32" x2="0" y2="32" stroke="#4ade" strokeWidth="1.2"/>
-              <line x1="0" y1="-6"  x2="-9"  y2="-18" stroke="#4ade" strokeWidth="0.7"/>
-              <line x1="0" y1="-6"  x2="9"   y2="-18" stroke="#4ade" strokeWidth="0.7"/>
+            <g transform="translate(430,180) rotate(-18)" opacity="0.065">
+              <ellipse cx="0" cy="0" rx="10" ry="28" fill="#22c55e"/>
+              <line x1="0" y1="-28" x2="0" y2="28" stroke="#16a34a" strokeWidth="1"/>
             </g>
-            <g transform="translate(,350) rotate(42)" opacity="0.06">
-              <ellipse cx="0" cy="0" rx="16" ry="44" fill="#22c55e"/>
-              <line x1="0" y1="-44" x2="0" y2="44" stroke="#16a34a" strokeWidth="1.8"/>
-              <line x1="0" y1="-12" x2="-14" y2="-28" stroke="#16a34a" strokeWidth="1"/>
-              <line x1="0" y1="-12" x2="14"  y2="-28" stroke="#16a34a" strokeWidth="1"/>
-              <line x1="0" y1="10"  x2="-13" y2="-2"  stroke="#16a34a" strokeWidth="1"/>
-              <line x1="0" y1="10"  x2="13"  y2="-2"  stroke="#16a34a" strokeWidth="1"/>
-            </g>
-            <g transform="translate(390,3) rotate(-33)" opacity="0.055">
-              <ellipse cx="0" cy="0" rx="11" ry="30" fill="#4ade"/>
-              <line x1="0" y1="-30" x2="0" y2="30" stroke="#22c55e" strokeWidth="1.2"/>
-            </g>
-            <g transform="translate(270,290)" opacity="0.065">
-              <path d="M0,0 Q-12,-20 0,-44 Q12,-20 0,0" fill="#4ade"/>
-              <line x1="0" y1="0" x2="0" y2="22" stroke="#22c55e" strokeWidth="1.5"/>
-            </g>
-            <g transform="translate(460,430)" opacity="0.055">
-              <path d="M0,0 Q-9,-16 0,-34 Q9,-16 0,0" fill="#86efac"/>
-              <line x1="0" y1="0" x2="0" y2="16" stroke="#4ade" strokeWidth="1.2"/>
-            </g>
-            <g transform="translate(340,) rotate(15)" opacity="0.06">
-              <ellipse cx="0" cy="0" rx="7" ry="18" fill="#4ade"/>
+            <g transform="translate(340,80) rotate(15)" opacity="0.06">
+              <ellipse cx="0" cy="0" rx="7" ry="18" fill="#4ade80"/>
               <line x1="0" y1="-18" x2="0" y2="18" stroke="#22c55e" strokeWidth="0.8"/>
             </g>
             <g transform="translate(490,260) rotate(-50)" opacity="0.05">
@@ -90,11 +68,11 @@ function LoginForm() {
   }
 
   return (
-    <div ="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 w-full shadow-2xl">
-      <h2 ="text-white text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
-      {registered && <div ="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p ="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p></div>}
-      {reset      && <div ="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p ="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p></div>}
-      <form onSubmit={handleSubmit} ="space-y-4">
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 w-full shadow-2xl">
+      <h2 className="text-white text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+      {registered && <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p className="text-green-200 text-sm">✅ Cuenta creada. Ya puedes iniciar sesión.</p></div>}
+      {reset      && <div className="mb-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3"><p className="text-green-200 text-sm">✅ Clave actualizada exitosamente.</p></div>}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email"
           className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"/>
         <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Contraseña"
@@ -152,6 +130,57 @@ interface Feature {
   }
 }
 
+// ── Mapa de colores ──
+const colorMap: Record<ColorKey, { bg: string; border: string; text: string; badge: string; modalAccent: string }> = {
+  green:   { bg:"bg-green-900/20",   border:"border-green-500/20",   text:"text-green-300",   badge:"bg-green-800/40 border-green-500/30 text-green-300",   modalAccent:"border-green-500/40" },
+  emerald: { bg:"bg-emerald-900/20", border:"border-emerald-500/20", text:"text-emerald-300", badge:"bg-emerald-800/40 border-emerald-500/30 text-emerald-300", modalAccent:"border-emerald-500/40" },
+  teal:    { bg:"bg-teal-900/20",    border:"border-teal-500/20",    text:"text-teal-300",    badge:"bg-teal-800/40 border-teal-500/30 text-teal-300",    modalAccent:"border-teal-500/40" },
+  blue:    { bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-800/40 border-blue-500/30 text-blue-300",    modalAccent:"border-blue-500/40" },
+  indigo:  { bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-800/40 border-indigo-500/30 text-indigo-300",  modalAccent:"border-indigo-500/40" },
+  yellow:  { bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-800/40 border-yellow-500/30 text-yellow-300",  modalAccent:"border-yellow-500/40" },
+  purple:  { bg:"bg-purple-900/20",  border:"border-purple-500/20",  text:"text-purple-300",  badge:"bg-purple-800/40 border-purple-500/30 text-purple-300",  modalAccent:"border-purple-500/40" },
+}
+
+// ── Modal de funcionalidad ──
+function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => void }) {
+  const c = colorMap[feature.color]
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+      onClick={onClose}
+    >
+      <div
+        className={`relative bg-[#0e1f17] border ${c.modalAccent} rounded-2xl p-8 max-w-lg w-full shadow-2xl`}
+        onClick={e => e.stopPropagation()}
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white text-xl leading-none transition-colors">✕</button>
+        <div className="flex items-center gap-3 mb-5">
+          <span className="text-4xl">{feature.icon}</span>
+          <div>
+            <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-1`}>
+              {feature.badge}
+            </div>
+            <h3 className={`text-xl font-bold ${c.text}`}>{feature.modal.headline}</h3>
+          </div>
+        </div>
+        <p className="text-white/70 text-sm leading-relaxed mb-5">{feature.modal.body}</p>
+        <ul className="space-y-2 mb-6">
+          {feature.modal.bullets.map((b, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-white/65">
+              <span className={`mt-0.5 flex-shrink-0 ${c.text}`}>🍃</span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+        <div className={`border-t ${c.modalAccent} pt-4`}>
+          <p className={`text-xs italic ${c.text} opacity-80`}>{feature.modal.footer}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Funcionalidades v3.0 ──
 const features: Feature[] = [
   {
@@ -194,30 +223,30 @@ const features: Feature[] = [
       headline: "El Sprint: tu tablero de mando",
       body: "Un Sprint es un tablero visual dividido en tres columnas que representan el estado de cada tarea: Por Hacer, En Progreso y Completado. De un vistazo, tú y tu equipo saben exactamente en qué punto está cada parte del proyecto.",
       bullets: [
-        "Crea tantos Sprints como proyectos o fases necesites",
-        "Cada Sprint puede pertenecer a un Bonsai o existir de forma independiente",
-        "Asigna un lapso de tiempo a cada Sprint",
-        "Visualiza el porcentaje de avance en tiempo real",
-        "Archiva Sprints terminados sin perder su historial",
+        "Tres columnas claras: Por Hacer, En Progreso, Completado",
+        "Mueve Hojas entre columnas con drag & drop o con un clic",
+        "Barra de progreso automática basada en subtareas completadas",
+        "Fecha límite, prioridad y asignación de responsable por Hoja",
+        "Bitácora de actividad: registro cronológico de todos los movimientos",
       ],
-      footer: "La metáfora del bonsai: el Sprint es una rama del árbol. Las Hojas son sus brotes.",
+      footer: "Un Sprint bien diseñado es como una rama de bonsai: cada elemento tiene su lugar y propósito.",
     },
   },
   {
-    icon: "🍃", title: "Hojas", badge: "Tareas inteligentes", color: "emerald",
-    desc: "Cada tarea es una Hoja: asigna fechas, recursos del equipo, prioridad y subtareas con checkboxes en markdown.",
+    icon: "🍃", title: "Hojas", badge: "Tareas con contexto", color: "emerald",
+    desc: "Cada Hoja es una tarea con título, descripción, subtareas en markdown, prioridad, fecha límite y responsable asignado.",
     modal: {
-      headline: "La Hoja: donde vive el detalle",
-      body: "Cada tarea en KanbanBonsai es una Hoja. Va mucho más allá de un simple post-it: contiene toda la información necesaria para ejecutar y hacer seguimiento de ese trabajo específico.",
+      headline: "La Hoja: la unidad mínima de trabajo",
+      body: "Una Hoja es mucho más que una tarea. Es una unidad de trabajo con todo el contexto necesario para que cualquier miembro del equipo pueda ejecutarla sin preguntar.",
       bullets: [
-        "Título, descripción y subtareas con checkboxes en markdown",
-        "Fecha de inicio y fecha límite con indicador visual de vencimiento",
-        "Asignación a miembros del equipo",
-        "Nivel de prioridad: Alta, Media o Baja",
-        "Barra de progreso calculada desde las subtareas completadas",
-        "Registro automático en la Bitácora de cada cambio realizado",
+        "Título orientado a la acción",
+        "Descripción con subtareas en formato markdown: - [ ] acción",
+        "Barra de progreso automática según subtareas marcadas",
+        "Prioridad: Alta, Media o Baja",
+        "Fecha límite con indicador visual de urgencia",
+        "Asignación a un miembro específico del equipo",
       ],
-      footer: "Una Hoja bien completada elimina las reuniones de seguimiento innecesarias.",
+      footer: "Como las hojas de un bonsai: pequeñas, precisas, y cada una en su lugar exacto.",
     },
   },
   {
@@ -269,56 +298,6 @@ const features: Feature[] = [
   },
 ]
 
-const colorMap: Record<ColorKey, { bg: string; border: string; text: string; badge: string; modalAccent: string }> = {
-  green:   { bg:"bg-green-900/20",   border:"border-green-500/20",   text:"text-green-300",   badge:"bg-green-0/40 border-green-500/30 text-green-300",   modalAccent:"border-green-500/40" },
-  emerald: { bg:"bg-emerald-900/20", border:"border-emerald-500/20", text:"text-emerald-300", badge:"bg-emerald-0/40 border-emerald-500/30 text-emerald-300", modalAccent:"border-emerald-500/40" },
-  teal:    { bg:"bg-teal-900/20",    border:"border-teal-500/20",    text:"text-teal-300",    badge:"bg-teal-0/40 border-teal-500/30 text-teal-300",    modalAccent:"border-teal-500/40" },
-  blue:    { bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-0/40 border-blue-500/30 text-blue-300",    modalAccent:"border-blue-500/40" },
-  indigo:  { bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-0/40 border-indigo-500/30 text-indigo-300",  modalAccent:"border-indigo-500/40" },
-  yellow:  { bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-0/40 border-yellow-500/30 text-yellow-300",  modalAccent:"border-yellow-500/40" },
-  purple:  { bg:"bg-purple-900/20",  border:"border-purple-500/20",  text:"text-purple-300",  badge:"bg-purple-0/40 border-purple-500/30 text-purple-300",  modalAccent:"border-purple-500/40" },
-}
-
-// ── Modal de funcionalidad ──
-function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => void }) {
-  const c = colorMap[feature.color]
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.75)" }}
-      onClick={onClose}
-    >
-      <div
-        className={`relative bg-[#0e1f17] border ${c.modalAccent} rounded-2xl p-8 max-w-lg w-full shadow-2xl`}
-        onClick={e => e.stopPropagation()}
-      >
-        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white text-xl leading-none transition-colors">✕</button>
-        <div className="flex items-center gap-3 mb-5">
-          <span className="text-4xl">{feature.icon}</span>
-          <div>
-            <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-1`}>
-              {feature.badge}
-            </div>
-            <h3 className={`text-xl font-bold ${c.text}`}>{feature.modal.headline}</h3>
-          </div>
-        </div>
-        <p className="text-white/70 text-sm leading-relaxed mb-5">{feature.modal.body}</p>
-        <ul className="space-y-2 mb-6">
-          {feature.modal.bullets.map((b, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-white/65">
-              <span className={`mt-0.5 flex-shrink-0 ${c.text}`}>🍃</span>
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-        <div className={`border-t ${c.modalAccent} pt-4`}>
-          <p className={`text-xs italic ${c.text} opacity-`}>{feature.modal.footer}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Historia ──
 const historySteps = [
   { num:"0", color:"green",  title:"El método: una pizarra, tres columnas",
@@ -342,6 +321,7 @@ export default function LandingPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+
   useEffect(() => {
     fetch("/api/stats").then(r => r.json()).then(setStats).catch(() => {})
   }, [])
@@ -365,7 +345,6 @@ export default function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
 
-          {/* Logo — igual que antes */}
           <Image
             src="/logo.svg"
             alt="kanbanbonsai"
@@ -375,47 +354,39 @@ export default function LandingPage() {
             priority
           />
 
-          {/* Nav desktop — visible solo en md y arriba */}
+          {/* Nav desktop */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-white/60">
             <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#historia"        className="hover:text-white transition-colors">Historia</a>
             <a href="#stats"           className="hover:text-white transition-colors">En números</a>
           </nav>
 
-          {/* Botón hamburguesa — visible solo en móvil (menor a md) */}
+          {/* Botón hamburguesa — solo móvil */}
           <button
             className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5
-                       rounded-lg border border-white/15 bg-white/5 hover:bg-white/10
-                       transition-colors"
+                       rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 transition-colors"
             onClick={() => setMenuOpen(prev => !prev)}
             aria-label="Abrir menú"
           >
-            <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200
-                              ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
-            <span className={`block w-5 h-0.5 bg-white/70 transition-opacity duration-200
-                              ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200
-                              ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200 ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white/70 transition-opacity duration-200 ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
           </button>
 
         </div>
 
         {/* Menú desplegable móvil */}
         {menuOpen && (
-          <nav className="md:hidden border-t border-white/10 px-6 py-3 flex flex-col gap-1"
-               style={{ background: APP_BG }}>
-            <a href="#funcionalidades"
-               onClick={() => setMenuOpen(false)}
+          <nav className="md:hidden border-t border-white/10 px-6 py-3 flex flex-col gap-1" style={{ background: APP_BG }}>
+            <a href="#funcionalidades" onClick={() => setMenuOpen(false)}
                className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">
               Funcionalidades
             </a>
-            <a href="#historia"
-               onClick={() => setMenuOpen(false)}
+            <a href="#historia" onClick={() => setMenuOpen(false)}
                className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">
               Historia
             </a>
-            <a href="#stats"
-               onClick={() => setMenuOpen(false)}
+            <a href="#stats" onClick={() => setMenuOpen(false)}
                className="py-2.5 text-sm text-white/70 hover:text-white transition-colors">
               En números
             </a>
@@ -427,9 +398,9 @@ export default function LandingPage() {
         <JapanesePattern />
 
         {/* ── Hero ── */}
-        <section className="relative z-10 py-16 px-8">
+        <section className="relative z-10 py-12 px-6">
           <div className="max-w-5xl mx-auto">
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-6">
               <div className="inline-flex items-center gap-2 bg-purple-900/40 border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-300 text-xs font-medium">
                 <span>✨</span>
                 <span>v3.0 — Bonsais · Agente IA · Sprints · Hojas · Bitácora</span>
@@ -443,7 +414,11 @@ export default function LandingPage() {
                   en segundos
                 </h1>
                 <p className="text-white/60 text-base leading-relaxed mb-4">
-                  Describe tu proyecto en lenguaje natural. KanbanBonsai y Claude lo convierten en un plan ejecutable al instante — con <strong className="text-purple-300">Bonsais</strong>, <strong className="text-green-300">Sprints</strong> y <strong className="text-emerald-300">Hojas</strong> listos para trabajar.
+                  Describe tu proyecto en lenguaje natural.
+                  KanbanBonsai y Claude lo convierten en un plan ejecutable al instante — con{" "}
+                  <strong className="text-purple-300">Bonsais</strong>,{" "}
+                  <strong className="text-green-300">Sprints</strong> y{" "}
+                  <strong className="text-emerald-300">Hojas</strong> listos para trabajar.
                 </p>
                 <p className="text-white/40 text-sm leading-relaxed mb-8">
                   Sin manuales. Sin reuniones de planificación de 3 horas. Sin la barrera del ¿por dónde empiezo?
@@ -469,8 +444,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Propuesta de valor central ── */}
-        <section className="relative z-10 border-t border-white/10 py-16 px-8">
+        {/* ── Propuesta de valor ── */}
+        <section className="relative z-10 border-t border-white/10 py-16 px-6">
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-white/30 text-xs uppercase tracking-widest mb-6">El problema que resolvemos</p>
             <blockquote className="text-2xl lg:text-3xl font-light text-white/80 leading-relaxed mb-8 italic">
@@ -495,64 +470,53 @@ export default function LandingPage() {
         </section>
 
         {/* ── Funcionalidades ── */}
-        <section id="funcionalidades" className="relative z-10 border-t border-white/10 py-24 px-8">
+        <section id="funcionalidades" className="relative z-10 border-t border-white/10 py-20 px-6">
           <div className="max-w-5xl mx-auto">
             <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">Funcionalidades v3.0</p>
             <h2 className="text-3xl font-bold text-white text-center mb-4">Todo lo que necesitas, nada que no</h2>
-            <p className="text-white/45 text-center mb-3 max-w-lg mx-auto text-sm">
+            <p className="text-white/45 text-center mb-12 max-w-lg mx-auto text-sm">
               Cada funcionalidad fue una Hoja en nuestro propio Sprint de desarrollo.
             </p>
-            <p className="text-white/30 text-center mb-14 text-xs">
-              Haz clic en cualquier caja para ver los detalles →
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {features.map(f => {
                 const c = colorMap[f.color]
                 return (
-                  <div
-                    key={f.title}
-                    onClick={() => setActiveFeature(f)}
-                    className={`${c.bg} border ${c.border} rounded-xl p-6 cursor-pointer relative
-                      transition-all hover:scale-[1.03] hover:border-opacity-60 hover:brightness-110 group`}
-                  >
-                    {f.isNew && (
-                      <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-700/60 border border-purple-400/30 text-purple-200">
-                        Nuevo
-                      </span>
-                    )}
-                    <div className="text-3xl mb-4">{f.icon}</div>
-                    <div className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${c.badge} mb-3`}>
-                      {f.badge}
+                  <button key={f.title} onClick={() => setActiveFeature(f)}
+                    className={`text-left p-5 rounded-xl border ${c.bg} ${c.border} hover:border-opacity-60 transition-all group`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="text-3xl">{f.icon}</span>
+                      <div className="flex gap-1.5">
+                        {f.isNew && <span className="text-xs bg-purple-800/60 border border-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full">Nuevo</span>}
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${c.badge}`}>{f.badge}</span>
+                      </div>
                     </div>
-                    <h3 className={`text-lg font-bold ${c.text} mb-2`}>{f.title}</h3>
+                    <h3 className={`font-bold text-base mb-2 ${c.text}`}>{f.title}</h3>
                     <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
-                    <p className={`mt-4 text-xs ${c.text} opacity-0 group-hover:opacity-70 transition-opacity`}>
-                      Ver más →
-                    </p>
-                  </div>
+                    <p className={`mt-3 text-xs ${c.text} opacity-0 group-hover:opacity-100 transition-opacity`}>Ver detalles →</p>
+                  </button>
                 )
               })}
             </div>
           </div>
         </section>
 
-        {/* ── Metáfora ── */}
-        <section className="relative z-10 border-t border-white/10 py-20 px-8">
+        {/* ── Jerarquía visual ── */}
+        <section className="relative z-10 border-t border-white/10 py-16 px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-8">La jerarquía</p>
-            <div className="flex items-center justify-center gap-3 flex-wrap">
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-8">La jerarquía de KanbanBonsai</p>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
               {[
-                {emoji:"🌳", label:"Bonsai",  sub:"El proyecto"},
-                {arrow:true},
-                {emoji:"🌿", label:"Sprint",  sub:"La etapa"},
-                {arrow:true},
-                {emoji:"🍃", label:"Hoja",    sub:"La actividad"},
-                {arrow:true},
-                {emoji:"☐",  label:"Tarea",   sub:"El paso"},
+                { emoji:"🌳", label:"Bonsai",  sub:"Proyecto" },
+                null,
+                { emoji:"🌿", label:"Sprint",  sub:"Etapa" },
+                null,
+                { emoji:"🍃", label:"Hoja",    sub:"Tarea" },
+                null,
+                { emoji:"✓",  label:"Subtarea",sub:"Acción" },
               ].map((item, i) =>
-                "arrow" in item
+                item === null
                   ? <span key={i} className="text-white/20 text-xl">→</span>
-                  : <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-center min-w-[90px]">
+                  : <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-center min-w-[80px]">
                       <div className="text-2xl mb-1">{item.emoji}</div>
                       <div className="text-white font-semibold text-xs">{item.label}</div>
                       <div className="text-white/40 text-xs mt-0.5">{item.sub}</div>
@@ -568,7 +532,7 @@ export default function LandingPage() {
 
         {/* ── Estadísticas ── */}
         {stats && (
-          <section id="stats" className="relative z-10 border-t border-white/10 py-16 px-8">
+          <section id="stats" className="relative z-10 border-t border-white/10 py-16 px-6">
             <div className="max-w-3xl mx-auto">
               <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-10">En uso ahora mismo</p>
               <div className="grid grid-cols-3 gap-8">
@@ -581,7 +545,7 @@ export default function LandingPage() {
         )}
 
         {/* ── Historia ── */}
-        <section id="historia" className="relative z-10 border-t border-white/10 py-20 px-8">
+        <section id="historia" className="relative z-10 border-t border-white/10 py-20 px-6">
           <div className="max-w-3xl mx-auto">
             <p className="text-green-400 text-xs uppercase tracking-widest mb-4 text-center">El origen</p>
             <h2 className="text-3xl font-bold text-white text-center mb-4">Construido con la herramienta que construye</h2>
@@ -595,11 +559,17 @@ export default function LandingPage() {
                  :s.color==="yellow" ? "bg-yellow-800/60 border-yellow-500/30 text-yellow-400"
                  :s.color==="blue"   ? "bg-blue-800/60 border-blue-500/30 text-blue-400"
                  :s.color==="purple" ? "bg-purple-800/60 border-purple-500/30 text-purple-400"
-                 :                    "bg-indigo-800/60 border-indigo-500/30 text-indigo-400"
+                 :s.color==="indigo" ? "bg-indigo-800/60 border-indigo-500/30 text-indigo-400"
+                 : "bg-gray-800/60 border-gray-500/30 text-gray-400"
                 return (
-                  <div key={s.num} className="flex gap-6">
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full border ${badge} flex items-center justify-center font-bold text-sm`}>{s.num}</div>
-                    <div><h3 className="text-white font-semibold mb-2">{s.title}</h3><p>{s.text}</p></div>
+                  <div key={s.num} className="flex gap-5">
+                    <div className={`flex-shrink-0 w-9 h-9 rounded-full border flex items-center justify-center text-sm font-bold ${badge}`}>
+                      {s.num}
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold mb-1">{s.title}</h3>
+                      <p className="text-sm">{s.text}</p>
+                    </div>
                   </div>
                 )
               })}
@@ -608,32 +578,31 @@ export default function LandingPage() {
         </section>
 
         {/* ── CTA final ── */}
-        <section className="relative z-10 border-t border-white/10 py-24 px-8">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="text-5xl mb-6">🌳</div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-              ¿Listo para pasar del QUÉ al CÓMO?
-            </h2>
-            <p className="text-white/50 mb-10 text-lg">Gratis. Sin tarjeta de crédito. Sin complicaciones.</p>
+        <section className="relative z-10 border-t border-white/10 py-20 px-6 text-center">
+          <div className="max-w-lg mx-auto">
+            <p className="text-4xl mb-6">🌳</p>
+            <h2 className="text-3xl font-bold text-white mb-4">¿Listo para empezar?</h2>
+            <p className="text-white/50 mb-8 text-sm leading-relaxed">
+              Gratis. Sin tarjeta de crédito. Tu primer Bonsai en menos de 2 minutos.
+            </p>
             <Link href="/register"
-              className="inline-block bg-green-600 hover:bg-green-500 text-white font-semibold px-12 py-4 rounded-xl transition-colors text-base shadow-xl shadow-green-900/30">
-              Comenzar gratis →
+              className="inline-block bg-green-600 hover:bg-green-500 text-white font-semibold px-10 py-4 rounded-xl transition-colors text-base shadow-lg shadow-green-900/30">
+              Crear cuenta gratis →
             </Link>
           </div>
         </section>
+
       </div>
 
       {/* ── Footer ── */}
       <footer className="relative z-20 border-t border-white/10" style={{ background: APP_BG }}>
-        <div className="max-w-5xl mx-auto px-8 py-8 flex flex-col items-center gap-3 text-center">
-          <Image src="/logo.svg" alt="kanbanbonsai" width={200} height={60} className="h-14 w-auto opacity-100"/>
-          <p className="text-sm text-white/40">
-            vibe-coded by{" "}
-            <a href="https://umbusk.com" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Umbusk</a>
-            {" "}y{" "}
-            <a href="https://anthropic.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Claude de Anthropic</a>
+        <div className="max-w-5xl mx-auto px-6 py-5 text-center">
+          <p className="text-xs text-white/25">
+            © 2026 kanbanbonsai · vibe-coded by{" "}
+            <a href="https://umbusk.com" target="_blank" rel="noopener noreferrer"
+               className="text-white/40 hover:text-white/60">Umbusk</a>
+            {" "}y Claude de Anthropic
           </p>
-          <p className="text-xs text-white/20">© 2026 Umbusk, LLC · Todos los derechos reservados</p>
         </div>
       </footer>
 
