@@ -363,14 +363,64 @@ export default function LandingPage() {
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-30 border-b border-white/10" style={{ background: APP_BG }}>
-        <div className="max-w-5xl mx-auto px-8 py-4 flex justify-between items-center">
-          <Image src="/logo.svg" alt="kanbanbonsai" width={260} height={80} className="h-[80px] w-auto" priority />
-          <nav className="flex items-center gap-6 text-sm text-white/60">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+
+          {/* Logo — igual que antes */}
+          <Image
+            src="/logo.svg"
+            alt="kanbanbonsai"
+            width={260}
+            height={80}
+            className="h-[60px] md:h-[80px] w-auto"
+            priority
+          />
+
+          {/* Nav desktop — visible solo en md y arriba */}
+          <nav className="hidden md:flex items-center gap-6 text-sm text-white/60">
             <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#historia"        className="hover:text-white transition-colors">Historia</a>
             <a href="#stats"           className="hover:text-white transition-colors">En números</a>
           </nav>
+
+          {/* Botón hamburguesa — visible solo en móvil (menor a md) */}
+          <button
+            className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5
+                       rounded-lg border border-white/15 bg-white/5 hover:bg-white/10
+                       transition-colors"
+            onClick={() => setMenuOpen(prev => !prev)}
+            aria-label="Abrir menú"
+          >
+            <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200
+                              ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white/70 transition-opacity duration-200
+                              ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200
+                              ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+          </button>
+
         </div>
+
+        {/* Menú desplegable móvil */}
+        {menuOpen && (
+          <nav className="md:hidden border-t border-white/10 px-6 py-3 flex flex-col gap-1"
+               style={{ background: APP_BG }}>
+            <a href="#funcionalidades"
+               onClick={() => setMenuOpen(false)}
+               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">
+              Funcionalidades
+            </a>
+            <a href="#historia"
+               onClick={() => setMenuOpen(false)}
+               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">
+              Historia
+            </a>
+            <a href="#stats"
+               onClick={() => setMenuOpen(false)}
+               className="py-2.5 text-sm text-white/70 hover:text-white transition-colors">
+              En números
+            </a>
+          </nav>
+        )}
       </header>
 
       <div className="relative flex-1 flex flex-col">
