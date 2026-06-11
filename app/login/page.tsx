@@ -20,20 +20,20 @@ function JapanesePattern() {
             <text x="30"   y="420" fontSize="170" fill="#4ade80" opacity="0.042" fontFamily="serif" transform="rotate(-4,30,420)">看</text>
             <text x="290"  y="490" fontSize="175" fill="#16a34a" opacity="0.040" fontFamily="serif" transform="rotate(7,290,490)">板</text>
             <g transform="translate(160,230) rotate(25)" opacity="0.07">
-              <ellipse cx="0" cy="0" rx="14" ry="38" fill="#4ade80"/>
+              <ellipse cx="0" cy="0" rx="14" ry="38" fill="#4ade"/>
               <line x1="0" y1="-38" x2="0" y2="38" stroke="#22c55e" strokeWidth="1.5"/>
               <line x1="0" y1="-10" x2="-10" y2="-24" stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="-10" x2="10"  y2="-24" stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="8"   x2="-12" y2="-4"  stroke="#22c55e" strokeWidth="0.8"/>
               <line x1="0" y1="8"   x2="12"  y2="-4"  stroke="#22c55e" strokeWidth="0.8"/>
             </g>
-            <g transform="translate(430,180) rotate(-18)" opacity="0.065">
+            <g transform="translate(430,1) rotate(-18)" opacity="0.065">
               <ellipse cx="0" cy="0" rx="12" ry="32" fill="#86efac"/>
-              <line x1="0" y1="-32" x2="0" y2="32" stroke="#4ade80" strokeWidth="1.2"/>
-              <line x1="0" y1="-6"  x2="-9"  y2="-18" stroke="#4ade80" strokeWidth="0.7"/>
-              <line x1="0" y1="-6"  x2="9"   y2="-18" stroke="#4ade80" strokeWidth="0.7"/>
+              <line x1="0" y1="-32" x2="0" y2="32" stroke="#4ade" strokeWidth="1.2"/>
+              <line x1="0" y1="-6"  x2="-9"  y2="-18" stroke="#4ade" strokeWidth="0.7"/>
+              <line x1="0" y1="-6"  x2="9"   y2="-18" stroke="#4ade" strokeWidth="0.7"/>
             </g>
-            <g transform="translate(80,350) rotate(42)" opacity="0.06">
+            <g transform="translate(,350) rotate(42)" opacity="0.06">
               <ellipse cx="0" cy="0" rx="16" ry="44" fill="#22c55e"/>
               <line x1="0" y1="-44" x2="0" y2="44" stroke="#16a34a" strokeWidth="1.8"/>
               <line x1="0" y1="-12" x2="-14" y2="-28" stroke="#16a34a" strokeWidth="1"/>
@@ -41,20 +41,20 @@ function JapanesePattern() {
               <line x1="0" y1="10"  x2="-13" y2="-2"  stroke="#16a34a" strokeWidth="1"/>
               <line x1="0" y1="10"  x2="13"  y2="-2"  stroke="#16a34a" strokeWidth="1"/>
             </g>
-            <g transform="translate(390,380) rotate(-33)" opacity="0.055">
-              <ellipse cx="0" cy="0" rx="11" ry="30" fill="#4ade80"/>
+            <g transform="translate(390,3) rotate(-33)" opacity="0.055">
+              <ellipse cx="0" cy="0" rx="11" ry="30" fill="#4ade"/>
               <line x1="0" y1="-30" x2="0" y2="30" stroke="#22c55e" strokeWidth="1.2"/>
             </g>
             <g transform="translate(270,290)" opacity="0.065">
-              <path d="M0,0 Q-12,-20 0,-44 Q12,-20 0,0" fill="#4ade80"/>
+              <path d="M0,0 Q-12,-20 0,-44 Q12,-20 0,0" fill="#4ade"/>
               <line x1="0" y1="0" x2="0" y2="22" stroke="#22c55e" strokeWidth="1.5"/>
             </g>
             <g transform="translate(460,430)" opacity="0.055">
               <path d="M0,0 Q-9,-16 0,-34 Q9,-16 0,0" fill="#86efac"/>
-              <line x1="0" y1="0" x2="0" y2="16" stroke="#4ade80" strokeWidth="1.2"/>
+              <line x1="0" y1="0" x2="0" y2="16" stroke="#4ade" strokeWidth="1.2"/>
             </g>
-            <g transform="translate(340,80) rotate(15)" opacity="0.06">
-              <ellipse cx="0" cy="0" rx="7" ry="18" fill="#4ade80"/>
+            <g transform="translate(340,) rotate(15)" opacity="0.06">
+              <ellipse cx="0" cy="0" rx="7" ry="18" fill="#4ade"/>
               <line x1="0" y1="-18" x2="0" y2="18" stroke="#22c55e" strokeWidth="0.8"/>
             </g>
             <g transform="translate(490,260) rotate(-50)" opacity="0.05">
@@ -270,13 +270,13 @@ const features: Feature[] = [
 ]
 
 const colorMap: Record<ColorKey, { bg: string; border: string; text: string; badge: string; modalAccent: string }> = {
-  green:   { bg:"bg-green-900/20",   border:"border-green-500/20",   text:"text-green-300",   badge:"bg-green-800/40 border-green-500/30 text-green-300",   modalAccent:"border-green-500/40" },
-  emerald: { bg:"bg-emerald-900/20", border:"border-emerald-500/20", text:"text-emerald-300", badge:"bg-emerald-800/40 border-emerald-500/30 text-emerald-300", modalAccent:"border-emerald-500/40" },
-  teal:    { bg:"bg-teal-900/20",    border:"border-teal-500/20",    text:"text-teal-300",    badge:"bg-teal-800/40 border-teal-500/30 text-teal-300",    modalAccent:"border-teal-500/40" },
-  blue:    { bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-800/40 border-blue-500/30 text-blue-300",    modalAccent:"border-blue-500/40" },
-  indigo:  { bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-800/40 border-indigo-500/30 text-indigo-300",  modalAccent:"border-indigo-500/40" },
-  yellow:  { bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-800/40 border-yellow-500/30 text-yellow-300",  modalAccent:"border-yellow-500/40" },
-  purple:  { bg:"bg-purple-900/20",  border:"border-purple-500/20",  text:"text-purple-300",  badge:"bg-purple-800/40 border-purple-500/30 text-purple-300",  modalAccent:"border-purple-500/40" },
+  green:   { bg:"bg-green-900/20",   border:"border-green-500/20",   text:"text-green-300",   badge:"bg-green-0/40 border-green-500/30 text-green-300",   modalAccent:"border-green-500/40" },
+  emerald: { bg:"bg-emerald-900/20", border:"border-emerald-500/20", text:"text-emerald-300", badge:"bg-emerald-0/40 border-emerald-500/30 text-emerald-300", modalAccent:"border-emerald-500/40" },
+  teal:    { bg:"bg-teal-900/20",    border:"border-teal-500/20",    text:"text-teal-300",    badge:"bg-teal-0/40 border-teal-500/30 text-teal-300",    modalAccent:"border-teal-500/40" },
+  blue:    { bg:"bg-blue-900/20",    border:"border-blue-500/20",    text:"text-blue-300",    badge:"bg-blue-0/40 border-blue-500/30 text-blue-300",    modalAccent:"border-blue-500/40" },
+  indigo:  { bg:"bg-indigo-900/20",  border:"border-indigo-500/20",  text:"text-indigo-300",  badge:"bg-indigo-0/40 border-indigo-500/30 text-indigo-300",  modalAccent:"border-indigo-500/40" },
+  yellow:  { bg:"bg-yellow-900/20",  border:"border-yellow-500/20",  text:"text-yellow-300",  badge:"bg-yellow-0/40 border-yellow-500/30 text-yellow-300",  modalAccent:"border-yellow-500/40" },
+  purple:  { bg:"bg-purple-900/20",  border:"border-purple-500/20",  text:"text-purple-300",  badge:"bg-purple-0/40 border-purple-500/30 text-purple-300",  modalAccent:"border-purple-500/40" },
 }
 
 // ── Modal de funcionalidad ──
@@ -312,7 +312,7 @@ function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => v
           ))}
         </ul>
         <div className={`border-t ${c.modalAccent} pt-4`}>
-          <p className={`text-xs italic ${c.text} opacity-80`}>{feature.modal.footer}</p>
+          <p className={`text-xs italic ${c.text} opacity-`}>{feature.modal.footer}</p>
         </div>
       </div>
     </div>
