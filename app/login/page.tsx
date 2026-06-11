@@ -8,7 +8,7 @@ import Image from "next/image"
 
 type Stats = { boards: number; cards: number; users: number }
 
-// ── Trama japonesa  ──
+// ── Trama japonesa ──
 function JapanesePattern() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
