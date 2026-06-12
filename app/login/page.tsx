@@ -181,7 +181,7 @@ function FeatureModal({ feature, onClose }: { feature: Feature; onClose: () => v
   )
 }
 
-// ── Funcionalidades v3.0 ──
+// ── Funcionalidades v4.0 ──
 const features: Feature[] = [
   {
     icon: "🌳", title: "Bonsais", badge: "Proyectos completos", color: "purple", isNew: true,
@@ -308,9 +308,9 @@ const historySteps = [
     text:"Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y hasta filosófica: usar KANBAN para construir KANBAN. Cada funcionalidad fue una Hoja. Cada entrega, un Sprint." },
   { num:"3", color:"indigo", title:"Vibe-coded junto a Claude de Anthropic",
     text:"Una colaboración inusual: un consultor con 45 años de experiencia sin escribir una línea de código, y una IA generando cada componente, explicando cada decisión, corrigiendo cada error. Sprint tras sprint, pestaña tras pestaña." },
-  { num:"4", color:"purple", title:"v3.0: del QUÉ al CÓMO",
+  { num:"4", color:"purple", title:"v4.0: del QUÉ al CÓMO",
     text:"La barrera más fastidiosa de cualquier proyecto siempre fue la misma: saber qué quieres lograr no es suficiente — el cuello de botella está en estructurarlo. Con el Agente IA y la capa Bonsai, KanbanBonsai rompe esa barrera. Describes tu proyecto en lenguaje natural y el sistema lo convierte en un plan ejecutable al instante." },
-  { num:"✓", color:"green",  title:"El resultado: kanbanbonsai v3.0",
+  { num:"✓", color:"green",  title:"El resultado: kanbanbonsai v4.0",
     text:"Una app en producción que demuestra que la experiencia humana + inteligencia artificial pueden crear herramientas reales, simples y con alma propia. Como un bonsai: pequeño, cuidado y perfectamente formado." },
 ]
 
@@ -403,7 +403,7 @@ export default function LandingPage() {
             <div className="flex justify-center mb-6">
               <div className="inline-flex items-center gap-2 bg-purple-900/40 border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-300 text-xs font-medium">
                 <span>✨</span>
-                <span>v3.0 — Bonsais · Agente IA · Sprints · Hojas · Bitácora</span>
+                <span>v4.0 — Bonsais · Agente IA · Sprints · Hojas · Bitácora</span>
               </div>
             </div>
             <div className="flex flex-col lg:flex-row items-center justify-center gap-10">
@@ -462,7 +462,7 @@ export default function LandingPage() {
             <div className="mt-10 inline-flex items-center gap-3 bg-purple-900/30 border border-purple-500/20 rounded-xl px-6 py-4">
               <span className="text-2xl">✨</span>
               <p className="text-purple-200 text-sm text-left leading-relaxed">
-                <strong>KanbanBonsai v3.0 elimina esa barrera.</strong><br/>
+                <strong>KanbanBonsai v4.0 elimina esa barrera.</strong><br/>
                 Describes tu proyecto. Claude lo estructura. Tú lo ejecutas.
               </p>
             </div>
@@ -472,7 +472,7 @@ export default function LandingPage() {
         {/* ── Funcionalidades ── */}
         <section id="funcionalidades" className="relative z-10 border-t border-white/10 py-20 px-6">
           <div className="max-w-5xl mx-auto">
-            <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">Funcionalidades v3.0</p>
+            <p className="text-green-400 text-xs uppercase tracking-widest mb-3 text-center">Funcionalidades v4.0</p>
             <h2 className="text-3xl font-bold text-white text-center mb-4">Todo lo que necesitas, nada que no</h2>
             <p className="text-white/45 text-center mb-12 max-w-lg mx-auto text-sm">
               Cada funcionalidad fue una Hoja en nuestro propio Sprint de desarrollo.
