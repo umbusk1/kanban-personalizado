@@ -690,15 +690,10 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                       className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
                       ☐ Por hacer
                     </button>
-                    <button type="button" title="Insertar tarea completada"
+                    <button type="button" title="Marcar tarea como hecha"
                       onClick={() => {
-                        const ta=descRef.current; if (!ta) return
-                        const pos=ta.selectionStart ?? formData.description.length
-                        const before=formData.description.slice(0,pos), after=formData.description.slice(pos)
-                        const nl=before.length>0&&!before.endsWith('\n')?'\n':''
-                        const newD=before+nl+'- [x] '+after
-                        setFormData({...formData,description:newD})
-                        setTimeout(()=>{ if(ta){ta.focus();ta.selectionStart=ta.selectionEnd=pos+nl.length+6} },0)
+                        const newD = formData.description.replace(/^- \[ \] /m, '- [x] ')
+                        setFormData({...formData, description: newD})
                       }}
                       className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
                       ☑ Hecho
