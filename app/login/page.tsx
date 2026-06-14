@@ -592,7 +592,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
               {[
                 { icon: "📱", title: "Tablero con pestañas", desc: "Las tres columnas se convierten en pestañas con conteo de hojas. Una columna a la vez, sin scroll horizontal." },
-                { icon: "👆", title: "Mover con un toque", desc: "Un panel deslizable reemplaza el drag & drop. Toca "Mover" en cualquier hoja y elige la columna destino." },
+                { icon: "👆", title: "Mover con un toque", desc: "Un panel deslizable reemplaza el drag & drop. Toca \"Mover\" en cualquier hoja y elige la columna destino." },
                 { icon: "🌳", title: "Bonsais y sprints adaptados", desc: "El dashboard y la vista de bonsais muestran tarjetas expandibles en lugar del layout de tres columnas." },
                 { icon: "☰",  title: "Navegación colapsable", desc: "El menú hamburguesa reemplaza la barra de navegación horizontal en todas las pantallas de la app." },
               ].map((item, i) => (
