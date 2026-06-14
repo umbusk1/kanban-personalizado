@@ -308,8 +308,8 @@ const historySteps = [
     text:"Para construir un KANBAN colaborativo, necesitábamos gestionar el propio desarrollo. La solución fue obvia y hasta filosófica: usar KANBAN para construir KANBAN. Cada funcionalidad fue una Hoja. Cada entrega, un Sprint." },
   { num:"3", color:"indigo", title:"Vibe-coded junto a Claude de Anthropic",
     text:"Una colaboración inusual: un consultor con 45 años de experiencia sin escribir una línea de código, y una IA generando cada componente, explicando cada decisión, corrigiendo cada error. Sprint tras sprint, pestaña tras pestaña." },
-  { num:"4", color:"purple", title:"v4.0: del QUÉ al CÓMO",
-    text:"La barrera más fastidiosa de cualquier proyecto siempre fue la misma: saber qué quieres lograr no es suficiente — el cuello de botella está en estructurarlo. Con el Agente IA y la capa Bonsai, KanbanBonsai rompe esa barrera. Describes tu proyecto en lenguaje natural y el sistema lo convierte en un plan ejecutable al instante." },
+  { num:"4", color:"purple", title:"v4.0: ahora en tu bolsillo",
+    text:"La interfaz completa se adapta a dispositivos móviles. Tablero con pestañas, mover hojas con un toque, bonsais y dashboard como tarjetas expandibles. Construido — como siempre — usando KanbanBonsai para gestionar el desarrollo de KanbanBonsai." },
   { num:"✓", color:"green",  title:"El resultado: kanbanbonsai v4.0",
     text:"Una app en producción que demuestra que la experiencia humana + inteligencia artificial pueden crear herramientas reales, simples y con alma propia. Como un bonsai: pequeño, cuidado y perfectamente formado." },
 ]
@@ -344,7 +344,6 @@ export default function LandingPage() {
       {/* ── Header ── */}
       <header className="sticky top-0 z-30 border-b border-white/10" style={{ background: APP_BG }}>
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-
           <Image
             src="/logo.svg"
             alt="kanbanbonsai"
@@ -353,15 +352,12 @@ export default function LandingPage() {
             className="h-[50px] md:h-[80px] w-auto"
             priority
           />
-
-          {/* Nav desktop */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-white/60">
+            <a href="#novedades"       className="hover:text-white transition-colors">v4.0</a>
             <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#historia"        className="hover:text-white transition-colors">Historia</a>
             <a href="#stats"           className="hover:text-white transition-colors">En números</a>
           </nav>
-
-          {/* Botón hamburguesa — solo móvil */}
           <button
             className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5
                        rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 transition-colors"
@@ -372,24 +368,17 @@ export default function LandingPage() {
             <span className={`block w-5 h-0.5 bg-white/70 transition-opacity duration-200 ${menuOpen ? "opacity-0" : ""}`} />
             <span className={`block w-5 h-0.5 bg-white/70 transition-transform duration-200 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
           </button>
-
         </div>
-
-        {/* Menú desplegable móvil */}
         {menuOpen && (
           <nav className="md:hidden border-t border-white/10 px-6 py-3 flex flex-col gap-1" style={{ background: APP_BG }}>
+            <a href="#novedades" onClick={() => setMenuOpen(false)}
+               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">v4.0</a>
             <a href="#funcionalidades" onClick={() => setMenuOpen(false)}
-               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">
-              Funcionalidades
-            </a>
+               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">Funcionalidades</a>
             <a href="#historia" onClick={() => setMenuOpen(false)}
-               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">
-              Historia
-            </a>
+               className="py-2.5 text-sm text-white/70 hover:text-white border-b border-white/8 transition-colors">Historia</a>
             <a href="#stats" onClick={() => setMenuOpen(false)}
-               className="py-2.5 text-sm text-white/70 hover:text-white transition-colors">
-              En números
-            </a>
+               className="py-2.5 text-sm text-white/70 hover:text-white transition-colors">En números</a>
           </nav>
         )}
       </header>
@@ -403,7 +392,7 @@ export default function LandingPage() {
             <div className="flex justify-center mb-6">
               <div className="inline-flex items-center gap-2 bg-purple-900/40 border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-300 text-xs font-medium">
                 <span>✨</span>
-                <span>v4.0 — Bonsais · Agente IA · Sprints · Hojas · Bitácora</span>
+                <span>v4.0 — Bonsais · Agente IA · Sprints · Hojas · Bitácora · Móvil</span>
               </div>
             </div>
             <div className="flex flex-col lg:flex-row items-center justify-center gap-10">
@@ -444,6 +433,195 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── v4.0 — Anuncio responsive ── */}
+        <section id="novedades" className="relative z-10 border-t border-white/10 py-16 px-6">
+          <div className="max-w-5xl mx-auto">
+
+            {/* Badge + título */}
+            <div className="flex justify-center mb-3">
+              <div className="inline-flex items-center gap-2 bg-green-900/40 border border-green-500/30 rounded-full px-4 py-1.5 text-green-300 text-xs font-medium">
+                📱 v4.0 — ahora disponible
+              </div>
+            </div>
+            <h2 className="text-2xl lg:text-3xl font-bold text-white text-center mb-3">
+              KanbanBonsai ahora en tu bolsillo
+            </h2>
+            <p className="text-white/50 text-center text-sm leading-relaxed mb-10 max-w-xl mx-auto">
+              La interfaz completa se adapta a dispositivos móviles. Gestiona tus proyectos desde cualquier lugar, con la misma potencia que en desktop.
+            </p>
+
+            {/* Mockups SVG */}
+            <div className="mb-10 overflow-hidden rounded-2xl border border-white/10 bg-white/3 p-4 sm:p-8">
+              <svg width="100%" viewBox="0 0 640 220" role="img" xmlns="http://www.w3.org/2000/svg">
+                <title>Pantallas móviles de KanbanBonsai v4.0</title>
+                <desc>Landing page, dashboard y tablero kanban adaptados para móvil, junto al bonsai del proyecto responsive</desc>
+
+                {/* Teléfono 1: Landing */}
+                <g transform="translate(20, 10)">
+                  <rect x="0" y="0" width="105" height="185" rx="12" fill="#0a1a10" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5"/>
+                  <rect x="35" y="3" width="35" height="4" rx="2" fill="rgba(255,255,255,0.12)"/>
+                  <rect x="0" y="10" width="105" height="18" fill="#0a1a10"/>
+                  <rect x="7" y="14" width="44" height="8" rx="4" fill="#1a3a1a"/>
+                  <rect x="88" y="14" width="10" height="8" rx="3" fill="rgba(255,255,255,0.08)"/>
+                  <line x1="2" y1="27" x2="103" y2="27" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5"/>
+                  <rect x="15" y="34" width="75" height="10" rx="5" fill="rgba(168,85,247,0.2)" stroke="rgba(168,85,247,0.35)" strokeWidth="0.5"/>
+                  <text x="52" y="42" textAnchor="middle" fontSize="6" fill="#c4b5fd" fontFamily="sans-serif">v4.0 · Bonsais · IA · Móvil</text>
+                  <rect x="10" y="50" width="52" height="7" rx="3" fill="rgba(255,255,255,0.75)"/>
+                  <rect x="10" y="61" width="40" height="7" rx="3" fill="#4ade80"/>
+                  <rect x="10" y="75" width="85" height="3" rx="1.5" fill="rgba(255,255,255,0.18)"/>
+                  <rect x="10" y="82" width="68" height="3" rx="1.5" fill="rgba(255,255,255,0.12)"/>
+                  <rect x="14" y="92" width="77" height="15" rx="5" fill="#16a34a"/>
+                  <text x="52" y="103" textAnchor="middle" fontSize="6" fill="#fff" fontFamily="sans-serif">Comenzar gratis →</text>
+                  <rect x="7" y="114" width="91" height="55" rx="7" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+                  <rect x="14" y="122" width="77" height="10" rx="4" fill="rgba(255,255,255,0.07)"/>
+                  <rect x="14" y="136" width="77" height="10" rx="4" fill="rgba(255,255,255,0.07)"/>
+                  <rect x="14" y="150" width="77" height="12" rx="4" fill="#16a34a"/>
+                  <text x="52" y="159" textAnchor="middle" fontSize="6" fill="#fff" fontFamily="sans-serif">Iniciar sesión</text>
+                  <text x="52" y="200" textAnchor="middle" fontSize="8" fill="#4ade80" fontFamily="sans-serif">Landing</text>
+                </g>
+
+                {/* Flecha 1→2 */}
+                <line x1="132" y1="100" x2="155" y2="100" stroke="#4ade80" strokeWidth="1" strokeDasharray="3,2"/>
+                <polygon points="155,97 160,100 155,103" fill="#4ade80"/>
+
+                {/* Teléfono 2: Dashboard */}
+                <g transform="translate(163, 10)">
+                  <rect x="0" y="0" width="105" height="185" rx="12" fill="#111827" stroke="rgba(255,255,255,0.13)" strokeWidth="1.5"/>
+                  <rect x="35" y="3" width="35" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
+                  <rect x="0" y="10" width="105" height="18" fill="#111827"/>
+                  <rect x="7" y="14" width="44" height="8" rx="4" fill="rgba(255,255,255,0.06)"/>
+                  <rect x="88" y="14" width="10" height="8" rx="3" fill="rgba(255,255,255,0.06)"/>
+                  <line x1="2" y1="27" x2="103" y2="27" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
+                  <text x="7" y="40" fontSize="7" fill="rgba(255,255,255,0.7)" fontWeight="500" fontFamily="sans-serif">Bienvenido, Moisesp</text>
+                  <rect x="68" y="31" width="16" height="9" rx="3" fill="#7c3aed"/>
+                  <rect x="86" y="31" width="14" height="9" rx="3" fill="#4338ca"/>
+                  <text x="7" y="53" fontSize="6" fill="#818cf8" fontFamily="sans-serif">🔄 EN PROCESO · 7 ACTIVOS</text>
+                  <rect x="7" y="58" width="91" height="30" rx="5" fill="rgba(99,102,241,0.1)" stroke="rgba(99,102,241,0.25)" strokeWidth="0.5"/>
+                  <rect x="13" y="64" width="58" height="5" rx="2.5" fill="rgba(255,255,255,0.65)"/>
+                  <rect x="13" y="73" width="26" height="5" rx="2.5" fill="#818cf8"/>
+                  <rect x="42" y="73" width="20" height="5" rx="2.5" fill="rgba(255,255,255,0.18)"/>
+                  <rect x="13" y="82" width="85" height="2" rx="1" fill="rgba(255,255,255,0.08)"/>
+                  <rect x="13" y="82" width="36" height="2" rx="1" fill="#4ade80"/>
+                  <rect x="7" y="92" width="91" height="24" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5"/>
+                  <rect x="13" y="98" width="48" height="5" rx="2.5" fill="rgba(255,255,255,0.45)"/>
+                  <rect x="13" y="107" width="26" height="5" rx="2.5" fill="#818cf8"/>
+                  <rect x="7" y="120" width="91" height="24" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5"/>
+                  <rect x="13" y="126" width="55" height="5" rx="2.5" fill="rgba(255,255,255,0.35)"/>
+                  <rect x="13" y="135" width="26" height="5" rx="2.5" fill="#818cf8"/>
+                  <text x="52" y="200" textAnchor="middle" fontSize="8" fill="#4ade80" fontFamily="sans-serif">Dashboard</text>
+                </g>
+
+                {/* Flecha 2→3 */}
+                <line x1="275" y1="100" x2="298" y2="100" stroke="#4ade80" strokeWidth="1" strokeDasharray="3,2"/>
+                <polygon points="298,97 303,100 298,103" fill="#4ade80"/>
+
+                {/* Teléfono 3: Tablero */}
+                <g transform="translate(306, 10)">
+                  <rect x="0" y="0" width="105" height="185" rx="12" fill="#111827" stroke="rgba(255,255,255,0.13)" strokeWidth="1.5"/>
+                  <rect x="35" y="3" width="35" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
+                  <rect x="0" y="10" width="105" height="18" fill="#111827"/>
+                  <rect x="7" y="14" width="44" height="8" rx="4" fill="rgba(255,255,255,0.06)"/>
+                  <rect x="88" y="14" width="10" height="8" rx="3" fill="rgba(255,255,255,0.06)"/>
+                  <line x1="2" y1="27" x2="103" y2="27" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
+                  <text x="7" y="39" fontSize="7" fill="rgba(255,255,255,0.7)" fontWeight="500" fontFamily="sans-serif">Sprint · Dashboard móvil</text>
+                  {/* pestañas con números */}
+                  <circle cx="20" cy="56" r="9" fill="rgba(255,255,255,0.08)"/>
+                  <text x="20" y="60" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.35)" fontFamily="sans-serif">4</text>
+                  <text x="20" y="72" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.3)" fontFamily="sans-serif">Por Hacer</text>
+                  <circle cx="52" cy="56" r="9" fill="#4338ca"/>
+                  <text x="52" y="60" textAnchor="middle" fontSize="7" fill="#fff" fontFamily="sans-serif">1</text>
+                  <text x="52" y="72" textAnchor="middle" fontSize="6" fill="#818cf8" fontFamily="sans-serif">En Progreso</text>
+                  <line x1="35" y1="77" x2="69" y2="77" stroke="#818cf8" strokeWidth="1.5"/>
+                  <circle cx="85" cy="56" r="9" fill="rgba(255,255,255,0.08)"/>
+                  <text x="85" y="60" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.35)" fontFamily="sans-serif">2</text>
+                  <text x="85" y="72" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.3)" fontFamily="sans-serif">Completado</text>
+                  <line x1="3" y1="77" x2="102" y2="77" stroke="rgba(255,255,255,0.07)" strokeWidth="0.5"/>
+                  {/* tarjeta */}
+                  <rect x="7" y="83" width="91" height="46" rx="5" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5"/>
+                  <rect x="7" y="83" width="3" height="46" rx="0" fill="#eab308"/>
+                  <rect x="14" y="89" width="60" height="5" rx="2.5" fill="rgba(255,255,255,0.65)"/>
+                  <rect x="14" y="98" width="76" height="3" rx="1.5" fill="rgba(255,255,255,0.18)"/>
+                  <rect x="14" y="105" width="50" height="3" rx="1.5" fill="rgba(255,255,255,0.12)"/>
+                  <rect x="14" y="112" width="76" height="2" rx="1" fill="rgba(255,255,255,0.08)"/>
+                  <rect x="14" y="112" width="38" height="2" rx="1" fill="#4ade80"/>
+                  <line x1="7" y1="120" x2="98" y2="120" stroke="rgba(255,255,255,0.07)" strokeWidth="0.5"/>
+                  <text x="28" y="128" textAnchor="middle" fontSize="6" fill="#818cf8" fontFamily="sans-serif">✏️ Editar</text>
+                  <line x1="56" y1="120" x2="56" y2="129" stroke="rgba(255,255,255,0.07)" strokeWidth="0.5"/>
+                  <text x="75" y="128" textAnchor="middle" fontSize="6" fill="#4ade80" fontFamily="sans-serif">↔️ Mover</text>
+                  {/* bottom sheet */}
+                  <rect x="0" y="138" width="105" height="47" rx="7" fill="#1e293b" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+                  <rect x="43" y="142" width="19" height="2" rx="1" fill="rgba(255,255,255,0.18)"/>
+                  <text x="52" y="153" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.35)" fontFamily="sans-serif">Mover a:</text>
+                  <rect x="8" y="157" width="89" height="9" rx="3.5" fill="rgba(99,102,241,0.18)" stroke="rgba(99,102,241,0.35)" strokeWidth="0.5"/>
+                  <text x="52" y="164" textAnchor="middle" fontSize="6" fill="#818cf8" fontFamily="sans-serif">📍 En Progreso (actual)</text>
+                  <rect x="8" y="170" width="89" height="9" rx="3.5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5"/>
+                  <text x="52" y="177" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.4)" fontFamily="sans-serif">Completado → 2 hojas</text>
+                  <text x="52" y="200" textAnchor="middle" fontSize="8" fill="#4ade80" fontFamily="sans-serif">Tablero</text>
+                </g>
+
+                {/* Bonsai */}
+                <g transform="translate(432, 5)">
+                  <text x="94" y="14" textAnchor="middle" fontSize="8" fill="#4ade80" fontWeight="500" fontFamily="sans-serif">Responsive Design v4.0</text>
+                  <line x1="94" y1="185" x2="94" y2="120" stroke="#639922" strokeWidth="2.5"/>
+                  <line x1="94" y1="155" x2="60" y2="105" stroke="#639922" strokeWidth="1.5"/>
+                  <line x1="94" y1="138" x2="128" y2="98" stroke="#639922" strokeWidth="1.5"/>
+                  <line x1="94" y1="120" x2="72" y2="75" stroke="#639922" strokeWidth="1"/>
+                  <line x1="94" y1="120" x2="116" y2="70" stroke="#639922" strokeWidth="1"/>
+                  <circle cx="60" cy="97" r="14" fill="rgba(99,153,34,0.12)" stroke="rgba(99,153,34,0.4)" strokeWidth="0.5"/>
+                  <text x="60" y="94" textAnchor="middle" fontSize="6" fill="#3B6D11" fontFamily="sans-serif">Sprint 0</text>
+                  <text x="60" y="103" textAnchor="middle" fontSize="5.5" fill="#639922" fontFamily="sans-serif">Entorno</text>
+                  <circle cx="128" cy="90" r="14" fill="rgba(99,153,34,0.12)" stroke="rgba(99,153,34,0.4)" strokeWidth="0.5"/>
+                  <text x="128" y="87" textAnchor="middle" fontSize="6" fill="#3B6D11" fontFamily="sans-serif">Sprint 1</text>
+                  <text x="128" y="96" textAnchor="middle" fontSize="5.5" fill="#639922" fontFamily="sans-serif">Landing</text>
+                  <circle cx="72" cy="66" r="14" fill="rgba(99,153,34,0.18)" stroke="#4ade80" strokeWidth="0.8"/>
+                  <text x="72" y="63" textAnchor="middle" fontSize="6" fill="#3B6D11" fontFamily="sans-serif">Sprint 2</text>
+                  <text x="72" y="72" textAnchor="middle" fontSize="5.5" fill="#639922" fontFamily="sans-serif">Dashboard</text>
+                  <circle cx="116" cy="61" r="14" fill="rgba(99,153,34,0.18)" stroke="#4ade80" strokeWidth="0.8"/>
+                  <text x="116" y="58" textAnchor="middle" fontSize="6" fill="#3B6D11" fontFamily="sans-serif">Sprint 3</text>
+                  <text x="116" y="67" textAnchor="middle" fontSize="5.5" fill="#639922" fontFamily="sans-serif">Tablero</text>
+                  <ellipse cx="94" cy="38" rx="30" ry="20" fill="rgba(99,153,34,0.1)" stroke="rgba(99,153,34,0.3)" strokeWidth="0.5"/>
+                  <text x="94" y="35" textAnchor="middle" fontSize="7" fill="#3B6D11" fontWeight="500" fontFamily="sans-serif">✓ Merged</text>
+                  <text x="94" y="46" textAnchor="middle" fontSize="6" fill="#639922" fontFamily="sans-serif">main</text>
+                  <rect x="74" y="185" width="40" height="12" rx="3" fill="rgba(99,153,34,0.18)" stroke="rgba(99,153,34,0.35)" strokeWidth="0.5"/>
+                  <rect x="69" y="181" width="50" height="6" rx="2" fill="rgba(99,153,34,0.22)" stroke="rgba(99,153,34,0.35)" strokeWidth="0.5"/>
+                </g>
+              </svg>
+            </div>
+
+            {/* 4 tarjetas de mejoras */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+              {[
+                { icon: "📱", title: "Tablero con pestañas", desc: "Las tres columnas se convierten en pestañas con conteo de hojas. Una columna a la vez, sin scroll horizontal." },
+                { icon: "👆", title: "Mover con un toque", desc: "Un panel deslizable reemplaza el drag & drop. Toca "Mover" en cualquier hoja y elige la columna destino." },
+                { icon: "🌳", title: "Bonsais y sprints adaptados", desc: "El dashboard y la vista de bonsais muestran tarjetas expandibles en lugar del layout de tres columnas." },
+                { icon: "☰",  title: "Navegación colapsable", desc: "El menú hamburguesa reemplaza la barra de navegación horizontal en todas las pantallas de la app." },
+              ].map((item, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-5">
+                  <div className="text-2xl mb-3">{item.icon}</div>
+                  <p className="text-white font-medium text-sm mb-1">{item.title}</p>
+                  <p className="text-white/50 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Historia de cómo lo construimos */}
+            <div className="border border-green-500/20 bg-green-900/10 rounded-2xl px-6 py-6">
+              <p className="text-green-400 text-xs uppercase tracking-widest mb-3">Cómo lo construimos</p>
+              <p className="text-white/65 text-sm leading-relaxed">
+                Usamos KanbanBonsai para gestionar el desarrollo de KanbanBonsai. Creamos un Bonsai llamado{" "}
+                <span className="text-white/85">"Responsive Design v4.0"</span> con cuatro sprints: preparación del entorno,
+                páginas públicas, dashboard y bonsais, y tablero kanban. Cada pantalla fue una Hoja. Cada decisión de diseño,
+                una subtarea marcada. La rama <span className="text-green-400 font-mono text-xs">responsive</span> vivió
+                en paralelo a producción — los usuarios existentes no sintieron ninguna interrupción. Cuando todo estuvo
+                aprobado en la URL de preview, un solo merge lo publicó todo.{" "}
+                <span className="text-white/85">La paradoja sigue siendo la misma: usamos Kanban para construir Kanban.
+                Ahora también desde el teléfono.</span>
+              </p>
+            </div>
+
+          </div>
+        </section>
+
         {/* ── Propuesta de valor ── */}
         <section className="relative z-10 border-t border-white/10 py-16 px-6">
           <div className="max-w-3xl mx-auto text-center">
@@ -463,7 +641,7 @@ export default function LandingPage() {
               <span className="text-2xl">✨</span>
               <p className="text-purple-200 text-sm text-left leading-relaxed">
                 <strong>KanbanBonsai v4.0 elimina esa barrera.</strong><br/>
-                Describes tu proyecto. Claude lo estructura. Tú lo ejecutas.
+                Describes tu proyecto. Claude lo estructura. Tú lo ejecutas. Desde cualquier dispositivo.
               </p>
             </div>
           </div>
@@ -506,13 +684,13 @@ export default function LandingPage() {
             <p className="text-white/30 text-xs uppercase tracking-widest mb-8">La jerarquía de KanbanBonsai</p>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               {[
-                { emoji:"🌳", label:"Bonsai",  sub:"Proyecto" },
+                { emoji:"🌳", label:"Bonsai",   sub:"Proyecto" },
                 null,
-                { emoji:"🌿", label:"Sprint",  sub:"Etapa" },
+                { emoji:"🌿", label:"Sprint",   sub:"Etapa" },
                 null,
-                { emoji:"🍃", label:"Hoja",    sub:"Tarea" },
+                { emoji:"🍃", label:"Hoja",     sub:"Tarea" },
                 null,
-                { emoji:"✓",  label:"Subtarea",sub:"Acción" },
+                { emoji:"✓",  label:"Subtarea", sub:"Acción" },
               ].map((item, i) =>
                 item === null
                   ? <span key={i} className="text-white/20 text-xl">→</span>
