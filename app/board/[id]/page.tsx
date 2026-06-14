@@ -24,8 +24,8 @@ type Card = {
   dueDate:     string | null
   alertDate:   string | null
   resources:   string | null
-  blockedById: string | null                                           // ← 5E
-  blockedBy:   { id: string; title: string; columnId: string } | null // ← 5E
+  blockedById: string | null
+  blockedBy:   { id: string; title: string; columnId: string } | null
   assignee: { id: string; name: string | null; email: string } | null
   creator:  { id: string; name: string | null; email: string } | null
 }
@@ -118,93 +118,197 @@ function ActivityColumn({ boardId }: { boardId: string }) {
   for (const log of logs) {
     const mk=getMonthKey(log.createdAt), dk=getDayKey(log.createdAt)
     if (!byMonth.has(mk)) byMonth.set(mk, new Map())
-    const days=byMonth.get(mk)!; if (!days.has(dk)) days.set(dk,[])
+    const days=byMonth.get(mk)!
+    if (!days.has(dk)) days.set(dk,[])
     days.get(dk)!.push(log)
   }
 
   return (
-    <div className="flex-shrink-0 w-72 bg-[#2d3d35] rounded-lg shadow-md flex flex-col self-start">
-      <div className="p-4 border-b-4 border-[#3d5045]">
-        <h2 className="font-semibold text-lg text-gray-100">📋 Bitácora</h2>
+    <div className="flex-shrink-0 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-md self-start">
+      <div className="p-4 border-b-4 border-gray-300 dark:border-gray-600">
+        <h2 className="font-semibold text-lg">📋 Bitácora</h2>
+        <p className="text-xs text-gray-400 mt-1">{logs.length} eventos</p>
       </div>
-      <div className="overflow-y-auto max-h-[600px] divide-y divide-[#3d5045]">
+      <div className="p-3 max-h-[600px] overflow-y-auto space-y-1">
         {logs.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm py-8">Sin actividad aún</p>
-        ) : Array.from(byMonth.entries()).map(([mk, days]) => {
-          const monthOpen = openMonths.has(mk); const firstLog = Array.from(days.values())[0][0]
-          return (
-            <div key={mk}>
-              <button onClick={() => toggleMonth(mk)}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-bold text-gray-200 hover:bg-[#364840] transition-colors">
-                <span>{getMonthLabel(firstLog.createdAt)}</span>
-                <span className="text-gray-500">{monthOpen?'▾':'▸'}</span>
-              </button>
-              {monthOpen && <div className="divide-y divide-[#3d5045]">
-                {Array.from(days.entries()).map(([dk, dayLogs]) => {
-                  const dayOpen = openDays.has(dk)
-                  return (
-                    <div key={dk}>
-                      <button onClick={() => toggleDay(dk)}
-                        className="w-full flex items-center justify-between pl-6 pr-4 py-2 text-xs font-semibold text-gray-400 hover:bg-[#364840] transition-colors">
-                        <span>{getDayLabel(dayLogs[0].createdAt)}</span>
-                        <span className="text-gray-600">{dayOpen?'▾':'▸'}</span>
-                      </button>
-                      {dayOpen && <div className="bg-[#263530] pl-8 pr-4 py-2 space-y-3">
-                        {dayLogs.map(log => (
-                          <div key={log.id} className="text-xs text-gray-300 pb-2 border-b border-[#3d5045] last:border-0">
-                            <div className="flex justify-between mb-0.5">
-                              <span className="font-medium text-gray-200">{log.user.name||log.user.email}</span>
-                              <span className="text-gray-500 ml-2 whitespace-nowrap">{timeAgo(log.createdAt)}</span>
-                            </div>
-                            <div className="text-gray-400">
-                              movió <span className="italic text-gray-300">"{log.cardTitle}"</span>
-                              {log.fromCol&&log.toCol&&(<> de <span className="text-blue-400">{log.fromCol}</span>{' → '}<span className="text-green-400">{log.toCol}</span></>)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>}
-                    </div>
-                  )
-                })}
-              </div>}
-            </div>
-          )
-        })}
+          <p className="text-center text-gray-400 text-sm py-6">Sin actividad aún</p>
+        ) : Array.from(byMonth.entries()).map(([mk, days]) => (
+          <div key={mk}>
+            <button onClick={() => toggleMonth(mk)}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded capitalize">
+              <span>{getMonthLabel(Array.from(days.values())[0][0].createdAt)}</span>
+              <span>{openMonths.has(mk)?'▾':'▸'}</span>
+            </button>
+            {openMonths.has(mk) && Array.from(days.entries()).map(([dk, dayLogs]) => (
+              <div key={dk} className="ml-2">
+                <button onClick={() => toggleDay(dk)}
+                  className="w-full flex items-center justify-between px-2 py-1 text-xs font-semibold text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                  <span>{getDayLabel(dayLogs[0].createdAt)}</span>
+                  <span>{openDays.has(dk)?'▾':'▸'}</span>
+                </button>
+                {openDays.has(dk) && dayLogs.map(log => (
+                  <div key={log.id} className="ml-2 px-2 py-1.5 text-xs border-l-2 border-gray-100 dark:border-gray-700">
+                    <p className="text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">{log.user.name||log.user.email}</span>
+                      {log.fromCol && log.toCol ? ` movió "${log.cardTitle}" de ${log.fromCol} → ${log.toCol}` : ` editó "${log.cardTitle}"`}
+                    </p>
+                    <p className="text-gray-400 mt-0.5">{timeAgo(log.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
-// ── Página principal ──
-export default function BoardDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const { data: session } = useSession()
+// ── Tarjeta móvil simple (sin drag) ──
+function MobileCard({ card, columnId, isBlocked, blockedByTitle, isOwner, columns, onEdit, onDelete, onMove }: {
+  card: Card
+  columnId: string
+  isBlocked: boolean
+  blockedByTitle: string | null
+  isOwner: boolean
+  columns: Column[]
+  onEdit: (card: Card, columnId: string) => void
+  onDelete: (cardId: string) => void
+  onMove: (cardId: string, targetColumnId: string) => void
+}) {
+  const [showMoveSheet, setShowMoveSheet] = useState(false)
 
-  const [board, setBoard]                     = useState<Board | null>(null)
-  const [loading, setLoading]                 = useState(true)
-  const [showModal, setShowModal]             = useState(false)
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [showSprintModal, setShowSprintModal] = useState(false)
-  const [modalMode, setModalMode]             = useState<'create' | 'edit'>('create')
-  const [formData, setFormData]               = useState<CardFormData>({
-    columnId: '', title: '', description: '', priority: '', assignedTo: '',
-    dueDate: '', alertDate: '', resources: '',
-  })
-  const [sprintForm, setSprintForm] = useState({ name: '', description: '', insights: '', dependsOnId: '' })
-  const [boardsForSelect, setBoardsForSelect] = useState<{ id: string; name: string }[]>([])  // ← 5E
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState('')
-  const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const PRIORITIES: Record<string, { label: string; badge: string }> = {
+    alta:  { label: 'Alta',  badge: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+    media: { label: 'Media', badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
+    baja:  { label: 'Baja',  badge: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+  }
+  const p = card.priority ? PRIORITIES[card.priority] : null
+
+  const lines = (card.description || '').split('\n')
+  const total = lines.filter(l => l.match(/^- \[[ x]\] /i)).length
+  const done  = lines.filter(l => l.match(/^- \[x\] /i)).length
+  const pct   = total > 0 ? Math.round((done/total)*100) : 0
+
+  return (
+    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-l-4 ${
+      card.priority === 'alta'  ? 'border-l-red-500' :
+      card.priority === 'media' ? 'border-l-yellow-400' :
+      card.priority === 'baja'  ? 'border-l-green-400' : 'border-l-gray-300'
+    } shadow-sm overflow-hidden ${isBlocked ? 'opacity-60' : ''}`}>
+
+      {isBlocked && blockedByTitle && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-700 px-3 py-1.5">
+          <p className="text-xs text-amber-700 dark:text-amber-300">⏳ Bloqueada por: <strong>{blockedByTitle}</strong></p>
+        </div>
+      )}
+
+      <div className="p-3">
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">{card.title}</p>
+        {card.description && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">{card.description.replace(/^- \[[ x]\] /gim, '').substring(0,80)}</p>
+        )}
+        {total > 0 && (
+          <div className="mb-2">
+            <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <span>{done}/{total} tareas</span><span>{pct}%</span>
+            </div>
+            <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full ${pct===100?'bg-green-500':'bg-blue-500'}`} style={{ width:`${pct}%` }} />
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {p && <span className={`text-xs px-1.5 py-0.5 rounded ${p.badge}`}>{p.label}</span>}
+          {card.dueDate && (
+            <span className="text-xs text-gray-400">📅 {formatDate(card.dueDate)}</span>
+          )}
+          {card.assignee && (
+            <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">
+              {card.assignee.name || card.assignee.email}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Barra de acciones */}
+      <div className="border-t border-gray-100 dark:border-gray-700 flex">
+        <button onClick={() => onEdit(card, columnId)}
+          className="flex-1 py-2 text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+          ✏️ Editar
+        </button>
+        <button onClick={() => setShowMoveSheet(true)}
+          className="flex-1 py-2 text-xs text-green-600 dark:text-green-400 font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors border-l border-gray-100 dark:border-gray-700">
+          ↔️ Mover
+        </button>
+        {isOwner && (
+          <button onClick={() => onDelete(card.id)}
+            className="flex-1 py-2 text-xs text-red-500 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-l border-gray-100 dark:border-gray-700">
+            🗑️
+          </button>
+        )}
+      </div>
+
+      {/* Bottom sheet para mover */}
+      {showMoveSheet && (
+        <div className="fixed inset-0 z-50 flex items-end" onClick={() => setShowMoveSheet(false)}>
+          <div className="w-full bg-white dark:bg-gray-800 rounded-t-2xl border-t border-gray-200 dark:border-gray-700 p-4"
+               onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full mx-auto mb-4" />
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center mb-3">
+              Mover "{card.title.substring(0,30)}{card.title.length>30?'...':''}"
+            </p>
+            <div className="space-y-2">
+              {columns.map(col => (
+                <button key={col.id} onClick={() => { onMove(card.id, col.id); setShowMoveSheet(false) }}
+                  className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                    col.id === columnId
+                      ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}>
+                  {col.id === columnId ? '📍 ' : ''}{col.name}
+                  {col.id === columnId ? ' (actual)' : ` → ${col.cards.length} hoja${col.cards.length!==1?'s':''}`}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setShowMoveSheet(false)}
+              className="w-full mt-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function BoardPage({ params }: { params: { id: string } }) {
+  const router  = useRouter()
+  const { data: session } = useSession()
   const descRef = useRef<HTMLTextAreaElement>(null)
 
-  // ← 5E: estado de selección de prelación
+  const [board, setBoard]           = useState<Board | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [activeColIndex, setActiveColIndex] = useState(0) // para pestañas móvil
+
+  const [showModal, setShowModal]   = useState(false)
+  const [modalMode, setModalMode]   = useState<'create'|'edit'>('create')
+  const [formData, setFormData]     = useState<CardFormData>({ columnId:'', title:'', description:'', priority:'', assignedTo:'', dueDate:'', alertDate:'', resources:'' })
+  const [error, setError]           = useState('')
+  const [saving, setSaving]         = useState(false)
+
+  const [showSprintModal, setShowSprintModal]   = useState(false)
+  const [sprintForm, setSprintForm]             = useState({ name:'', description:'', insights:'', dependsOnId:'' })
+  const [boardsForSelect, setBoardsForSelect]   = useState<{ id: string; name: string }[]>([])
+
+  const [showInviteModal, setShowInviteModal] = useState(false)
   const [selectingPredFor, setSelectingPredFor] = useState<string | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   useEffect(() => { fetchBoard() }, [])
 
-  // ← 5E: ESC cancela el modo de selección
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectingPredFor(null) }
     window.addEventListener('keydown', handleEsc)
@@ -220,7 +324,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     finally { setLoading(false) }
   }
 
-  // ← 5E: cargar lista de sprints para el dropdown del modal
   const fetchBoardsForSelect = async () => {
     try {
       const res = await fetch('/api/dashboard')
@@ -233,7 +336,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
   const handleCreateCard = (columnId: string) => {
     setModalMode('create')
-    setFormData({ columnId, title: '', description: '', priority: '', assignedTo: '', dueDate: '', alertDate: '', resources: '' })
+    setFormData({ columnId, title:'', description:'', priority:'', assignedTo:'', dueDate:'', alertDate:'', resources:'' })
     setShowModal(true); setError('')
   }
 
@@ -273,16 +376,20 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     catch (e) { console.error('Error al eliminar:', e) }
   }
 
-  const handleKickMember = async (userId: string, userName: string) => {
-    if (!confirm(`¿Retirar a ${userName} del sprint?`)) return
-    const res = await fetch(`/api/boards/${board!.id}/members/${userId}`, { method: 'DELETE' })
-    if (res.ok) fetchBoard()
+  const handleMoveCard = async (cardId: string, targetColumnId: string) => {
+    try {
+      const res = await fetch(`/api/cards/${cardId}/move`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ columnId: targetColumnId, position: 1 }),
+      })
+      if (res.ok) fetchBoard()
+    } catch (e) { console.error('Error al mover:', e) }
   }
 
   const handleEditSprint = () => {
     if (!board) return
     setSprintForm({ name: board.name, description: board.description||'', insights: board.insights||'', dependsOnId: board.dependsOnId||'' })
-    fetchBoardsForSelect()  // ← 5E
+    fetchBoardsForSelect()
     setShowSprintModal(true)
   }
 
@@ -292,14 +399,13 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     try {
       const res = await fetch(`/api/boards/${board.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...sprintForm, dependsOnId: sprintForm.dependsOnId || null }),  // ← 5E
+        body: JSON.stringify({ ...sprintForm, dependsOnId: sprintForm.dependsOnId || null }),
       })
       if (res.ok) { setShowSprintModal(false); fetchBoard() }
     } catch (e) { console.error('Error al guardar sprint:', e) }
     finally { setSaving(false) }
   }
 
-  // ── 5E: handlers de prelación de hojas ──
   const handlePClick = (cardId: string) => {
     setSelectingPredFor(prev => prev === cardId ? null : cardId)
   }
@@ -367,25 +473,22 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const dueTimes   = allCards.filter(c => c.dueDate).map(c => new Date(c.dueDate!).getTime())
   const lapsoStart = cardTimes.length > 0 ? formatDate(new Date(Math.min(...cardTimes)).toISOString()) : null
   const lapsoEnd   = dueTimes.length  > 0 ? formatDate(new Date(Math.max(...dueTimes)).toISOString())  : null
-
-  // ← 5E: última columna = columna "hecho"
-  const lastColId = board.columns[board.columns.length - 1]?.id || ''
+  const lastColId  = board.columns[board.columns.length - 1]?.id || ''
+  const activeColumn = board.columns[activeColIndex] || board.columns[0]
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-        <div className="sticky top-0 z-30">
-          <AppHeader />
-        </div>
+        <div className="sticky top-0 z-30"><AppHeader /></div>
 
-        <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
 
           {/* Encabezado del Sprint */}
-          <div className="mb-8">
-            <div className="flex justify-between items-start mb-4">
+          <div className="mb-6">
+            <div className="flex justify-between items-start mb-3">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                 {board.bonsai && (
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {board.bonsai && (
                     <>
                       <a href={`/bonsais?id=${board.bonsai.id}`}
                         className="text-xs font-semibold uppercase tracking-wider text-amber-500 hover:text-amber-600 transition-colors">
@@ -399,58 +502,37 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     <button onClick={handleEditSprint} className="text-xs text-gray-400 hover:text-indigo-500 transition-colors" title="Editar sprint">✏️</button>
                   )}
                 </div>
-                <h1 className="text-3xl font-bold mb-2">{board.name}</h1>
-                {board.description && <p className="text-gray-600 dark:text-gray-400 mb-2">{board.description}</p>}
+                <h1 className="text-xl sm:text-3xl font-bold mb-1">{board.name}</h1>
+                {board.description && <p className="text-gray-600 dark:text-gray-400 mb-1 text-sm">{board.description}</p>}
                 {(lapsoStart||lapsoEnd) && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                     📅 Lapso: <strong>{lapsoStart||'—'}</strong> → <strong>{lapsoEnd||'sin fecha límite'}</strong>
                   </p>
                 )}
-                {/* ← 5E: badge de prelación del sprint */}
                 {board.dependsOn && (
-                  <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-sm px-3 py-1.5 rounded-lg mb-2">
+                  <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-xs px-3 py-1.5 rounded-lg mb-1">
                     <span>⏳ Requiere completar primero:</span>
                     <strong>{board.dependsOn.name}</strong>
                   </div>
                 )}
                 {board.insights && (
-                  <div className="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-4 py-3 max-w-2xl">
-                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">💡 Insights</p>
-                    <p className="text-sm text-amber-900 dark:text-amber-200 whitespace-pre-line">{board.insights}</p>
+                  <div className="mt-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2 max-w-2xl">
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-0.5">💡 Insights</p>
+                    <p className="text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line">{board.insights}</p>
                   </div>
                 )}
-                <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
-                  <span>Propietario: {board.owner.name||board.owner.email}</span>
-                  <span>•</span>
-                  <span>{allCards.length} hojas</span>
-                </div>
               </div>
-              {isOwner && (
-                <button onClick={() => setShowInviteModal(true)}
-                  className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm">
-                  📨 Invitar usuario
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Equipo:</span>
-              <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs px-3 py-1 rounded-full">
-                👑 {board.owner.name||board.owner.email}
-              </span>
-              {board.members.filter(m => m.user.id !== board.owner.id).map(member => (
-                <span key={member.user.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
-                  🤝 {member.user.name||member.user.email}
-                  {isOwner && (
-                    <button onClick={() => handleKickMember(member.user.id, member.user.name||member.user.email)}
-                      className="ml-1 text-red-400 hover:text-red-600 font-bold leading-none" title="Retirar del sprint">×</button>
-                  )}
-                </span>
-              ))}
+              <div className="flex gap-2 flex-shrink-0">
+                {isOwner && (
+                  <button onClick={() => setShowInviteModal(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
+                    👥 <span className="hidden sm:inline">Invitar</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* ← 5E: banner de modo prelación */}
           {selectingPredFor && (
             <div className="mb-4 flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg px-4 py-3">
               <span className="text-amber-700 dark:text-amber-300 text-sm font-medium">
@@ -463,8 +545,70 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             </div>
           )}
 
-          {/* Columnas Kanban + Actividad */}
-          <div className="flex gap-6 overflow-x-auto pb-4 items-start justify-center">
+          {/* ════════════════════════════════════════
+              VISTA MÓVIL — pestañas por columna
+          ════════════════════════════════════════ */}
+          <div className="md:hidden">
+            {/* Pestañas */}
+            <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4 -mx-4 px-4 overflow-x-auto">
+              {board.columns.map((col, idx) => (
+                <button key={col.id} onClick={() => setActiveColIndex(idx)}
+                  className={`flex-1 px-2 py-2.5 text-sm font-medium border-b-2 transition-colors text-center leading-tight ${
+                    idx === activeColIndex
+                      ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}>
+                  <span className={`block text-lg font-bold mb-0.5 px-2 py-0.5 rounded-full mx-auto w-fit ${
+                    idx === activeColIndex
+                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  }`}>
+                    {col.cards.length}
+                  </span>
+                  <span className="block text-xs">{col.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Contenido de la columna activa */}
+            {activeColumn && (
+              <div>
+                <button onClick={() => handleCreateCard(activeColumn.id)}
+                  className="w-full mb-3 py-2.5 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 transition-colors">
+                  + Agregar Hoja en {activeColumn.name}
+                </button>
+                <div className="space-y-3">
+                  {activeColumn.cards.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <p className="text-3xl mb-2">📋</p>
+                      <p className="text-sm">No hay hojas en esta columna</p>
+                    </div>
+                  ) : activeColumn.cards.map(card => {
+                    const isBlocked = !!card.blockedById && card.blockedBy !== null && card.blockedBy.columnId !== lastColId
+                    return (
+                      <MobileCard
+                        key={card.id}
+                        card={card}
+                        columnId={activeColumn.id}
+                        isBlocked={isBlocked}
+                        blockedByTitle={card.blockedBy?.title || null}
+                        isOwner={isOwner}
+                        columns={board.columns}
+                        onEdit={handleEditCard}
+                        onDelete={handleDelete}
+                        onMove={handleMoveCard}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ════════════════════════════════════════
+              VISTA DESKTOP — columnas + drag & drop
+          ════════════════════════════════════════ */}
+          <div className="hidden md:flex gap-6 overflow-x-auto pb-4 items-start justify-center">
             {board.columns.map(col => (
               <DroppableColumn
                 key={col.id}
@@ -482,12 +626,13 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             ))}
             <ActivityColumn boardId={board.id} />
           </div>
+
         </main>
 
         <AppFooter />
       </div>
 
-      {/* Drag Overlay */}
+      {/* Drag Overlay — solo desktop */}
       <DragOverlay>
         {activeCard ? (
           <div className="w-80 bg-white dark:bg-gray-700 border-2 border-blue-500 rounded-lg p-4 shadow-xl opacity-90 rotate-3">
@@ -499,10 +644,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
       {/* ── Modal Crear / Editar hoja ── */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 my-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-lg w-full sm:max-w-md max-h-[90vh] overflow-y-auto p-6">
+            <div className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full mx-auto mb-4 sm:hidden" />
             <h2 className="text-xl font-bold mb-4">{modalMode==='create' ? 'Nueva Hoja' : 'Editar Hoja'}</h2>
-            {/* ← 5D: barra de progreso en modal */}
             {(() => {
               const lines = formData.description.split('\n')
               const total = lines.filter(l => l.match(/^- \[[ x]\] /i)).length
@@ -528,76 +673,52 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Título de la hoja" />
               </div>
-              {/* Descripción con botones de tarea */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium">Descripción</label>
                   <div className="flex gap-1">
-<button type="button" title="Insertar tarea por hacer"
+                    <button type="button" title="Insertar tarea por hacer"
                       onClick={() => {
                         const ta=descRef.current; if (!ta) return
-                        const pos=ta.selectionStart??formData.description.length
-                        const scrollTop=ta.scrollTop
-                        const lines=formData.description.split('\n')
-                        let cc=0,li=0; for(let i=0;i<lines.length;i++){cc+=lines[i].length+1;if(cc>pos){li=i;break}}
-                        if (lines[li].match(/^- \[x\] /i)) {
-                          lines[li]=lines[li].replace(/^- \[x\] /i,'- [ ] ')
-                          setFormData({...formData,description:lines.join('\n')})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos,pos);ta.scrollTop=scrollTop},0)
-                        } else {
-                          const before=formData.description.substring(0,pos),after=formData.description.substring(pos)
-                          const prefix=(before.length>0&&!before.endsWith('\n'))?'\n':''
-                          const insert=`${prefix}- [ ] `
-                          setFormData({...formData,description:before+insert+after})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos+insert.length,pos+insert.length);ta.scrollTop=scrollTop},0)
-                        }
+                        const pos=ta.selectionStart ?? formData.description.length
+                        const before=formData.description.slice(0,pos), after=formData.description.slice(pos)
+                        const nl=before.length>0&&!before.endsWith('\n')?'\n':''
+                        const newD=before+nl+'- [ ] '+after
+                        setFormData({...formData,description:newD})
+                        setTimeout(()=>{ if(ta){ta.focus();ta.selectionStart=ta.selectionEnd=pos+nl.length+6} },0)
                       }}
-                      className="text-xs text-gray-600 hover:text-gray-800 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-2 py-1 rounded font-medium">
+                      className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
                       ☐ Por hacer
                     </button>
                     <button type="button" title="Marcar tarea como hecha"
                       onClick={() => {
-                        const ta=descRef.current; if (!ta) return
-                        const pos=ta.selectionStart??formData.description.length
-                        const scrollTop=ta.scrollTop
-                        const lines=formData.description.split('\n')
-                        let cc=0,li=0; for(let i=0;i<lines.length;i++){cc+=lines[i].length+1;if(cc>pos){li=i;break}}
-                        if (lines[li].match(/^- \[ \] /)) {
-                          lines[li]=lines[li].replace('- [ ] ','- [x] ')
-                          setFormData({...formData,description:lines.join('\n')})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos,pos);ta.scrollTop=scrollTop},0)
-                        } else {
-                          const before=formData.description.substring(0,pos),after=formData.description.substring(pos)
-                          const prefix=(before.length>0&&!before.endsWith('\n'))?'\n':''
-                          const insert=`${prefix}- [x] `
-                          setFormData({...formData,description:before+insert+after})
-                          setTimeout(()=>{ta.focus();ta.setSelectionRange(pos+insert.length,pos+insert.length);ta.scrollTop=scrollTop},0)
-                        }
+                        const newD = formData.description.replace(/^- \[ \] /m, '- [x] ')
+                        setFormData({...formData, description: newD})
                       }}
-                      className="text-xs text-green-700 hover:text-green-800 dark:text-green-400 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-2 py-1 rounded font-medium">
-                      ✅ Hecho
+                      className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
+                      ☑ Hecho
                     </button>
                   </div>
                 </div>
                 <textarea ref={descRef} value={formData.description}
-                  onChange={e => setFormData({...formData,description:e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={8} placeholder="Describe la tarea..." />
+                  onChange={e => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  rows={4} placeholder="Descripción o subtareas:&#10;- [ ] Tarea pendiente&#10;- [x] Tarea completada" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">Prioridad</label>
-                  <select value={formData.priority} onChange={e => setFormData({...formData,priority:e.target.value})}
+                  <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Sin prioridad</option>
-                    <option value="baja">Baja</option>
-                    <option value="media">Media</option>
-                    <option value="alta">Alta</option>
+                    <option value="baja">🟢 Baja</option>
+                    <option value="media">🟡 Media</option>
+                    <option value="alta">🔴 Alta</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Asignar a</label>
-                  <select value={formData.assignedTo} onChange={e => setFormData({...formData,assignedTo:e.target.value})}
+                  <select value={formData.assignedTo} onChange={e => setFormData({...formData, assignedTo: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Sin asignar</option>
                     {allMembers.map(m => <option key={m.id} value={m.id}>{m.name||m.email}</option>)}
@@ -606,30 +727,30 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">📅 Fecha límite</label>
-                  <input type="date" value={formData.dueDate} onChange={e => setFormData({...formData,dueDate:e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [color-scheme:light] dark:[color-scheme:dark]" />
+                  <label className="block text-sm font-medium mb-1">Fecha límite</label>
+                  <input type="date" value={formData.dueDate} onChange={e => setFormData({...formData, dueDate: e.target.value})}
+                    className="w-full px-3 py-2 h-[42px] border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">🔔 Alerta</label>
-                  <input type="date" value={formData.alertDate} onChange={e => setFormData({...formData,alertDate:e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm [color-scheme:light] dark:[color-scheme:dark]" />
+                  <label className="block text-sm font-medium mb-1">Fecha de alerta</label>
+                  <input type="date" value={formData.alertDate} onChange={e => setFormData({...formData, alertDate: e.target.value})}
+                    className="w-full px-3 py-2 h-[42px] border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">📝 Notas</label>
-                <textarea value={formData.resources} onChange={e => setFormData({...formData,resources:e.target.value})}
+                <label className="block text-sm font-medium mb-1">Recursos (URLs, uno por línea)</label>
+                <textarea value={formData.resources} onChange={e => setFormData({...formData, resources: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  rows={3} placeholder="" />
+                  rows={2} placeholder="https://..." />
               </div>
               {error && <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg"><p className="text-sm text-red-800 dark:text-red-200">{error}</p></div>}
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3">
                 <button type="button" onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving||!formData.title.trim()}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
                   {saving ? 'Guardando...' : modalMode==='create' ? 'Crear' : 'Guardar'}
                 </button>
               </div>
@@ -641,7 +762,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       {/* ── Modal Editar Sprint ── */}
       {showSprintModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">✏️ Editar Sprint</h2>
             <div className="space-y-4">
               <div>
@@ -661,7 +782,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   rows={4} placeholder="¿Qué aprendimos en este sprint?" />
               </div>
-              {/* ← 5E: prelación entre sprints */}
               <div>
                 <label className="block text-sm font-medium mb-1">⏳ Este sprint requiere completar primero</label>
                 <select value={sprintForm.dependsOnId} onChange={e => setSprintForm({...sprintForm,dependsOnId:e.target.value})}
@@ -690,7 +810,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   )
 }
 
-// ── Columna Droppable ──
+// ── Columna Droppable (solo desktop) ──
 import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DraggableCard } from "./DraggableCard"
@@ -727,7 +847,6 @@ function DroppableColumn({
           {column.cards.length === 0 ? (
             <p className="text-center text-gray-400 text-sm py-8">Arrastra hojas aquí</p>
           ) : column.cards.map(card => {
-            // ← 5E: calcular si está realmente bloqueada
             const isBlocked = !!card.blockedById && card.blockedBy !== null && card.blockedBy.columnId !== lastColId
             return (
               <DraggableCard
