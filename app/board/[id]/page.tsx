@@ -553,7 +553,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
             <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4 -mx-4 px-4 overflow-x-auto">
               {board.columns.map((col, idx) => (
                 <button key={col.id} onClick={() => setActiveColIndex(idx)}
-                  className={`flex-shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex-1 px-2 py-2.5 text-sm font-medium border-b-2 transition-colors text-center leading-tight ${
                     idx === activeColIndex
                       ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
