@@ -558,14 +558,14 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                       ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}>
-                  {col.name}
-                  <span className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
+                  <span className={`block text-lg font-bold mb-0.5 px-2 py-0.5 rounded-full mx-auto w-fit ${
                     idx === activeColIndex
                       ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                   }`}>
                     {col.cards.length}
                   </span>
+                  <span className="block text-xs">{col.name}</span>
                 </button>
               ))}
             </div>
