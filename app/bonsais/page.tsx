@@ -26,13 +26,15 @@ type Sprint = {
 }
 
 type Bonsai = {
-  id: string
-  name: string
-  description: string | null
-  createdAt: string
-  sprints: Sprint[]
+  id:            string
+  name:          string
+  description:   string | null
+  createdAt:     string
   generatedByAI: boolean
-  aiPrompt: string | null
+  aiPrompt:      string | null
+  userRole:      "owner" | "member"          // ← NUEVO
+  owner:         { id: string; name: string | null; email: string } | null  // ← NUEVO
+  sprints: Sprint[]
 }
 
 function isCompleted(b: Bonsai) {
@@ -467,9 +469,14 @@ export default function BonsaisPage() {
                                   ? "text-indigo-700 dark:text-indigo-300 font-semibold"
                                   : "text-gray-700 dark:text-gray-300"
                               }`}>
-                              <span className="block truncate">
-                                {bonsai.generatedByAI && <span className="mr-1 text-xs">✨</span>}
-                                🌳 {bonsai.name}
+                              <span className="block truncate text-sm">
+                                {bonsai.generatedByAI && (
+                                  <span className="mr-1 text-xs" title="Generado con IA">✨</span>
+                                )}
+                                {bonsai.userRole === "member" && (
+                                  <span className="text-green-500 mr-1" title={`Proyecto de ${bonsai.owner?.name || bonsai.owner?.email}`}>🤝</span>
+                                )}
+                                {bonsai.name}
                               </span>
                               <span className="text-xs text-gray-400 mt-0.5 block">
                                 {done}/{bonsai.sprints.length} sprints · {bonsai.sprints.length === 0 ? "sin sprints" : `${Math.round((done/bonsai.sprints.length)*100)}% listo`}
