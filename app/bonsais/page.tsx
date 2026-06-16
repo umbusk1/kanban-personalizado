@@ -32,8 +32,8 @@ type Bonsai = {
   createdAt:     string
   generatedByAI: boolean
   aiPrompt:      string | null
-  userRole:      "owner" | "member"          // ← NUEVO
-  owner:         { id: string; name: string | null; email: string } | null  // ← NUEVO
+  userRole:      "owner" | "member"
+  owner:         { id: string; name: string | null; email: string } | null
   sprints: Sprint[]
 }
 
@@ -93,6 +93,7 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
   const totalSprints = bonsai.sprints.length
   const doneSprints = bonsai.sprints.filter(s => !s.inProgress).length
   const pct = totalSprints === 0 ? 0 : Math.round((doneSprints / totalSprints) * 100)
+  const isOwner = bonsai.userRole === "owner"
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden ${
@@ -104,6 +105,9 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1">
               🌳 {bonsai.generatedByAI && <span className="text-xs">✨</span>}
+              {bonsai.userRole === "member" && (
+                <span className="text-green-500 text-xs" title={`Proyecto de ${bonsai.owner?.name || bonsai.owner?.email}`}>🤝</span>
+              )}
               <span className="truncate">{bonsai.name}</span>
             </p>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -114,6 +118,12 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
               }`}>
                 {completed ? "✅ Completado" : "🔄 En proceso"}
               </span>
+              {/* Badge de invitado en móvil */}
+              {bonsai.userRole === "member" && bonsai.owner && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                  🤝 {bonsai.owner.name || bonsai.owner.email}
+                </span>
+              )}
               <span className="text-xs text-gray-400">
                 {totalSprints} sprint{totalSprints !== 1 ? "s" : ""} · {pct}%
               </span>
@@ -163,31 +173,36 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
                       className="px-2 py-1 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
                       Abrir
                     </Link>
-                    <button onClick={() => onDelete({ ...bonsai, sprints: [sprint] } as any)}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors text-xs">
-                      🗑️
-                    </button>
+                    {/* Solo el dueño puede eliminar sprints */}
+                    {isOwner && (
+                      <button onClick={() => onDelete({ ...bonsai, sprints: [sprint] } as any)}
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors text-xs">
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Acciones del bonsai */}
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button onClick={() => onAddSprintAI(bonsai)}
-              className="flex-1 text-center bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
-              ✨ Sprint con IA
-            </button>
-            <button onClick={() => onAddSprint(bonsai)}
-              className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
-              + Sprint manual
-            </button>
-            <button onClick={() => onDelete(bonsai)}
-              className="px-3 py-2 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-              🗑️ Eliminar bonsai
-            </button>
-          </div>
+          {/* Acciones del bonsai — solo para el dueño */}
+          {isOwner && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button onClick={() => onAddSprintAI(bonsai)}
+                className="flex-1 text-center bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                ✨ Sprint con IA
+              </button>
+              <button onClick={() => onAddSprint(bonsai)}
+                className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                + Sprint manual
+              </button>
+              <button onClick={() => onDelete(bonsai)}
+                className="px-3 py-2 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                🗑️ Eliminar bonsai
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -580,9 +595,24 @@ export default function BonsaisPage() {
                             }} />
                           )}
                         </div>
-                        <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg ml-4 flex-shrink-0">🗑️</button>
+
+                        {/* Botón eliminar — solo para el dueño */}
+                        {selected.userRole === "owner" && (
+                          <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg ml-4 flex-shrink-0">
+                            🗑️
+                          </button>
+                        )}
+
+                        {/* Badge de invitado — solo para miembros */}
+                        {selected.userRole === "member" && selected.owner && (
+                          <span className="ml-4 flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium
+                                           bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                            🤝 {selected.owner.name || selected.owner.email}
+                          </span>
+                        )}
                       </div>
+
                       <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-500">
                         <span>🌿 {selected.sprints.length} sprint{selected.sprints.length !== 1 ? "s" : ""}</span>
                         <span>✅ {selected.sprints.filter(s => !s.inProgress).length} completados</span>
@@ -593,25 +623,31 @@ export default function BonsaisPage() {
                           </span>
                         )}
                       </div>
-                      <div className="mt-4 flex gap-2">
-                        <button onClick={() => setShowAgenteSprintModal(true)}
-                          className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
-                          ✨ Generar Sprint con IA
-                        </button>
-                        <button onClick={() => setShowSprintModal(true)}
-                          className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
-                          + Nuevo Sprint
-                        </button>
-                      </div>
+
+                      {/* Botones agregar sprint — solo para el dueño */}
+                      {selected.userRole === "owner" && (
+                        <div className="mt-4 flex gap-2">
+                          <button onClick={() => setShowAgenteSprintModal(true)}
+                            className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                            ✨ Generar Sprint con IA
+                          </button>
+                          <button onClick={() => setShowSprintModal(true)}
+                            className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                            + Nuevo Sprint
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {selected.sprints.length === 0 ? (
                       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
                         <p className="text-gray-400 mb-4">Este bonsai aún no tiene sprints</p>
-                        <button onClick={() => setShowAgenteSprintModal(true)}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium">
-                          ✨ Generar Sprint con IA
-                        </button>
+                        {selected.userRole === "owner" && (
+                          <button onClick={() => setShowAgenteSprintModal(true)}
+                            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium">
+                            ✨ Generar Sprint con IA
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -644,10 +680,13 @@ export default function BonsaisPage() {
                                 className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
                                 Abrir Sprint →
                               </Link>
-                              <button onClick={() => setDeleteSprintTarget(sprint)}
-                                className="px-2 py-1.5 text-gray-400 hover:text-red-500 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors text-xs">
-                                🗑️
-                              </button>
+                              {/* Botón eliminar sprint — solo para el dueño */}
+                              {selected.userRole === "owner" && (
+                                <button onClick={() => setDeleteSprintTarget(sprint)}
+                                  className="px-2 py-1.5 text-gray-400 hover:text-red-500 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors text-xs">
+                                  🗑️
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
