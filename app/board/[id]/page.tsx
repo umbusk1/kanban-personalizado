@@ -290,7 +290,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
   const [board, setBoard]           = useState<Board | null>(null)
   const [loading, setLoading]       = useState(true)
   const [activeCard, setActiveCard] = useState<Card | null>(null)
-  const [activeColIndex, setActiveColIndex] = useState(0) // para pestañas móvil
+  const [activeColIndex, setActiveColIndex] = useState(0)
 
   const [showModal, setShowModal]   = useState(false)
   const [modalMode, setModalMode]   = useState<'create'|'edit'>('create')
@@ -463,6 +463,46 @@ export default function BoardPage({ params }: { params: { id: string } }) {
     }
   }
 
+  // ── Helpers para botones Por hacer / Hecho ──
+  // Si hay texto seleccionado → opera sobre todas las tareas en la selección
+  // Si no → opera sobre la tarea más cercana al cursor
+  const toggleTasks = (markAsDone: boolean) => {
+    const ta = descRef.current
+    if (!ta) return
+    const text = formData.description
+    const selStart = ta.selectionStart ?? 0
+    const selEnd   = ta.selectionEnd   ?? 0
+    const hasSelection = selEnd > selStart
+
+    if (hasSelection) {
+      // Opera sobre todas las tareas dentro de la selección
+      const before  = text.slice(0, selStart)
+      const middle  = text.slice(selStart, selEnd)
+      const after   = text.slice(selEnd)
+      const from = markAsDone ? /^- \[ \] /gim : /^- \[x\] /gim
+      const to   = markAsDone ? '- [x] '       : '- [ ] '
+      const newMiddle = middle.replace(from, to)
+      setFormData({ ...formData, description: before + newMiddle + after })
+    } else {
+      // Opera sobre la tarea más cercana al cursor
+      const before = text.slice(0, selStart)
+      const after  = text.slice(selStart)
+      const from   = markAsDone ? /^- \[ \] /im : /^- \[x\] /im
+      const to     = markAsDone ? '- [x] '      : '- [ ] '
+      const matchBefore = [...before.matchAll(markAsDone ? /^- \[ \] /gim : /^- \[x\] /gim)].pop()
+      const matchAfter  = after.match(from)
+      const match = matchBefore
+        ? { index: matchBefore.index! }
+        : matchAfter
+        ? { index: selStart + matchAfter.index! }
+        : null
+      if (match) {
+        const newD = text.slice(0, match.index) + to + text.slice(match.index + 6)
+        setFormData({ ...formData, description: newD })
+      }
+    }
+  }
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><p>Cargando...</p></div>
   if (!board)  return <div className="min-h-screen flex items-center justify-center"><p>Sprint no encontrado</p></div>
 
@@ -549,7 +589,6 @@ export default function BoardPage({ params }: { params: { id: string } }) {
               VISTA MÓVIL — pestañas por columna
           ════════════════════════════════════════ */}
           <div className="md:hidden">
-            {/* Pestañas */}
             <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4 -mx-4 px-4 overflow-x-auto">
               {board.columns.map((col, idx) => (
                 <button key={col.id} onClick={() => setActiveColIndex(idx)}
@@ -570,7 +609,6 @@ export default function BoardPage({ params }: { params: { id: string } }) {
               ))}
             </div>
 
-            {/* Contenido de la columna activa */}
             {activeColumn && (
               <div>
                 <button onClick={() => handleCreateCard(activeColumn.id)}
@@ -677,19 +715,13 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium">Descripción</label>
                   <div className="flex gap-1">
-                    <button type="button" title="Marcar tarea como pendiente"
-                      onClick={() => {
-                        const newD = formData.description.replace(/^- \[x\] /mi, '- [ ] ')
-                        setFormData({...formData, description: newD})
-                      }}
+                    <button type="button" title="Marcar tarea como pendiente. Selecciona varias líneas para operar en grupo."
+                      onClick={() => toggleTasks(false)}
                       className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
                       ☐ Por hacer
                     </button>
-                    <button type="button" title="Marcar tarea como hecha"
-                      onClick={() => {
-                        const newD = formData.description.replace(/^- \[ \] /m, '- [x] ')
-                        setFormData({...formData, description: newD})
-                      }}
+                    <button type="button" title="Marcar tarea como hecha. Selecciona varias líneas para operar en grupo."
+                      onClick={() => toggleTasks(true)}
                       className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
                       ☑ Hecho
                     </button>
