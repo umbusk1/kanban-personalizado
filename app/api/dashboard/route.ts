@@ -14,10 +14,16 @@ export async function GET() {
 
     const boards = await prisma.board.findMany({
       where: {
-        bonsaiId: null,  // ← solo sprints huérfanos (sin Bonsai padre)
         OR: [
-          { ownerId: session.user.id },
-          { members: { some: { userId: session.user.id } } },
+          // Sprints propios: solo los huérfanos (sin bonsai padre) — igual que antes
+          {
+            ownerId: session.user.id,
+            bonsaiId: null,
+          },
+          // Sprints donde soy invitado: aparecen TODOS, tengan bonsai o no
+          {
+            members: { some: { userId: session.user.id } },
+          },
         ],
       },
       include: {
@@ -39,11 +45,11 @@ export async function GET() {
       const totalCards = board.columns.reduce((sum, col) => sum + col._count.cards, 0)
       const maxPosition = Math.max(...board.columns.map(col => col.position))
       const col3Cards = board.columns
-      .filter(col => col.position === maxPosition)
-      .reduce((sum, col) => sum + col._count.cards, 0)
+        .filter(col => col.position === maxPosition)
+        .reduce((sum, col) => sum + col._count.cards, 0)
       const col1and2Cards = board.columns
-      .filter(col => col.position !== maxPosition)
-      .reduce((sum, col) => sum + col._count.cards, 0)
+        .filter(col => col.position !== maxPosition)
+        .reduce((sum, col) => sum + col._count.cards, 0)
       const inProgress = totalCards > 0 && col1and2Cards > 0
 
       return {
@@ -52,8 +58,8 @@ export async function GET() {
         inProgress,
         totalCards,
         col3Cards,
-        generatedByAI: board.generatedByAI,  // ← NUEVO
-        aiPrompt:      board.aiPrompt,        // ← NUEVO
+        generatedByAI: board.generatedByAI,
+        aiPrompt:      board.aiPrompt,
       }
     })
 
