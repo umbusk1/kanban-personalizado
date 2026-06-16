@@ -7,6 +7,7 @@ import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
 import QuotaSurveyModal from "@/components/QuotaSurveyModal"
+import InviteModal from "@/components/InviteModal"   // ← NUEVO
 import { useSession } from "next-auth/react"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
@@ -81,12 +82,13 @@ function PromptViewer({ prompt, onRegenerate }: { prompt: string; onRegenerate: 
 }
 
 // ── Tarjeta de Bonsai para móvil ──
-function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate }: {
+function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate, onInvite }: {
   bonsai: Bonsai
   onDelete: (b: Bonsai) => void
   onAddSprint: (b: Bonsai) => void
   onAddSprintAI: (b: Bonsai) => void
   onRegenerate: (prompt: string) => void
+  onInvite: (b: Bonsai) => void   // ← NUEVO
 }) {
   const [expanded, setExpanded] = useState(false)
   const completed = isCompleted(bonsai)
@@ -99,7 +101,6 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border overflow-hidden ${
       completed ? "border-green-200 dark:border-green-900" : "border-purple-200 dark:border-purple-900"
     }`}>
-      {/* Cabecera siempre visible */}
       <button onClick={() => setExpanded(e => !e)} className="w-full text-left px-4 py-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -118,7 +119,6 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
               }`}>
                 {completed ? "✅ Completado" : "🔄 En proceso"}
               </span>
-              {/* Badge de invitado en móvil */}
               {bonsai.userRole === "member" && bonsai.owner && (
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
                   🤝 {bonsai.owner.name || bonsai.owner.email}
@@ -139,7 +139,6 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
         )}
       </button>
 
-      {/* Detalle expandido */}
       {expanded && (
         <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-3 space-y-3">
           {bonsai.description && (
@@ -149,7 +148,6 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
             <PromptViewer prompt={bonsai.aiPrompt} onRegenerate={onRegenerate} />
           )}
 
-          {/* Sprints del bonsai */}
           {bonsai.sprints.length > 0 && (
             <div className="space-y-2">
               {bonsai.sprints.map((sprint, idx) => (
@@ -173,7 +171,6 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
                       className="px-2 py-1 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
                       Abrir
                     </Link>
-                    {/* Solo el dueño puede eliminar sprints */}
                     {isOwner && (
                       <button onClick={() => onDelete({ ...bonsai, sprints: [sprint] } as any)}
                         className="p-1 text-gray-400 hover:text-red-500 transition-colors text-xs">
@@ -186,9 +183,13 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
             </div>
           )}
 
-          {/* Acciones del bonsai — solo para el dueño */}
+          {/* Acciones — solo para el dueño */}
           {isOwner && (
             <div className="flex flex-wrap gap-2 pt-1">
+              <button onClick={() => onInvite(bonsai)}   // ← NUEVO
+                className="w-full text-center bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                📨 Invitar al proyecto
+              </button>
               <button onClick={() => onAddSprintAI(bonsai)}
                 className="flex-1 text-center bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 ✨ Sprint con IA
@@ -242,6 +243,8 @@ export default function BonsaisPage() {
 
   const [showQuotaModal, setShowQuotaModal] = useState(false)
   const [quotaType, setQuotaType]           = useState<"sprint" | "bonsai">("bonsai")
+
+  const [showInviteModal, setShowInviteModal] = useState(false)   // ← NUEVO
 
   useEffect(() => { fetchData() }, [])
 
@@ -348,7 +351,6 @@ export default function BonsaisPage() {
 
       <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
 
-        {/* Bienvenida + botones */}
         <div className="mb-5 flex justify-between items-center gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-semibold mb-0.5">
@@ -391,9 +393,7 @@ export default function BonsaisPage() {
           </div>
         ) : (
           <>
-            {/* ════════════════════════════════════════
-                VISTA MÓVIL — tarjetas apiladas
-            ════════════════════════════════════════ */}
+            {/* ════════ VISTA MÓVIL ════════ */}
             <div className="md:hidden space-y-4">
               {inProgressBonsais.length > 0 && (
                 <div>
@@ -406,6 +406,7 @@ export default function BonsaisPage() {
                         onDelete={setDeleteTarget}
                         onAddSprint={(b) => { setSelected(b); setShowSprintModal(true) }}
                         onAddSprintAI={(b) => { setSelected(b); setShowAgenteSprintModal(true) }}
+                        onInvite={(b) => { setSelected(b); setShowInviteModal(true) }}   // ← NUEVO
                         onRegenerate={(prompt) => {
                           setAgenteInitialPrompt(prompt)
                           setAgenteInitialMode("bonsai")
@@ -436,6 +437,7 @@ export default function BonsaisPage() {
                                 onDelete={setDeleteTarget}
                                 onAddSprint={(b) => { setSelected(b); setShowSprintModal(true) }}
                                 onAddSprintAI={(b) => { setSelected(b); setShowAgenteSprintModal(true) }}
+                                onInvite={(b) => { setSelected(b); setShowInviteModal(true) }}   // ← NUEVO
                                 onRegenerate={(prompt) => {
                                   setAgenteInitialPrompt(prompt)
                                   setAgenteInitialMode("bonsai")
@@ -452,12 +454,9 @@ export default function BonsaisPage() {
               )}
             </div>
 
-            {/* ════════════════════════════════════════
-                VISTA DESKTOP — layout original
-            ════════════════════════════════════════ */}
+            {/* ════════ VISTA DESKTOP ════════ */}
             <div className="hidden md:flex gap-5 items-start">
 
-              {/* Columna izquierda: acordeón */}
               <aside className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden self-start">
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20">
                   <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">🌳 En proceso</p>
@@ -527,7 +526,6 @@ export default function BonsaisPage() {
                   </ul>
                 )}
 
-                {/* Histórico desktop */}
                 {historico.length > 0 && (
                   <div className="border-t border-gray-100 dark:border-gray-700">
                     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/40">
@@ -596,7 +594,6 @@ export default function BonsaisPage() {
                           )}
                         </div>
 
-                        {/* Botón eliminar — solo para el dueño */}
                         {selected.userRole === "owner" && (
                           <button onClick={() => setDeleteTarget(selected)} title="Eliminar bonsai"
                             className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded text-lg ml-4 flex-shrink-0">
@@ -604,7 +601,6 @@ export default function BonsaisPage() {
                           </button>
                         )}
 
-                        {/* Badge de invitado — solo para miembros */}
                         {selected.userRole === "member" && selected.owner && (
                           <span className="ml-4 flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium
                                            bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
@@ -624,9 +620,13 @@ export default function BonsaisPage() {
                         )}
                       </div>
 
-                      {/* Botones agregar sprint — solo para el dueño */}
+                      {/* Botones de acción — solo para el dueño */}
                       {selected.userRole === "owner" && (
-                        <div className="mt-4 flex gap-2">
+                        <div className="mt-4 flex gap-2 flex-wrap">
+                          <button onClick={() => setShowInviteModal(true)}   // ← NUEVO
+                            className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                            📨 Invitar al proyecto
+                          </button>
                           <button onClick={() => setShowAgenteSprintModal(true)}
                             className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
                             ✨ Generar Sprint con IA
@@ -680,7 +680,6 @@ export default function BonsaisPage() {
                                 className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
                                 Abrir Sprint →
                               </Link>
-                              {/* Botón eliminar sprint — solo para el dueño */}
                               {selected.userRole === "owner" && (
                                 <button onClick={() => setDeleteSprintTarget(sprint)}
                                   className="px-2 py-1.5 text-gray-400 hover:text-red-500 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors text-xs">
@@ -854,6 +853,14 @@ export default function BonsaisPage() {
       {/* Modal Encuesta de Cuota */}
       {showQuotaModal && (
         <QuotaSurveyModal type={quotaType} onClose={() => setShowQuotaModal(false)} />
+      )}
+
+      {/* Modal Invitar al Bonsai completo */}
+      {showInviteModal && selected && (
+        <InviteModal
+          bonsaiId={selected.id}
+          onClose={() => setShowInviteModal(false)}
+        />
       )}
     </div>
   )
