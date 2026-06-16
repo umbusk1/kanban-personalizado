@@ -3,16 +3,19 @@
 import { useState } from 'react'
 
 interface InviteModalProps {
-  boardId: string
+  boardId?: string   // invitación a un sprint individual (comportamiento original)
+  bonsaiId?: string  // invitación al bonsai completo (nuevo)
   onClose: () => void
 }
 
-export default function InviteModal({ boardId, onClose }: InviteModalProps) {
+export default function InviteModal({ boardId, bonsaiId, onClose }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]       = useState(false)
   const [sentEmails, setSentEmails] = useState<string[]>([])
-  const [errors, setErrors] = useState<string[]>([])
-  const [done, setDone] = useState(false)
+  const [errors, setErrors]         = useState<string[]>([])
+  const [done, setDone]             = useState(false)
+
+  const isBonsai = !!bonsaiId
 
   const handleInvite = async () => {
     const emails = emailInput
@@ -29,10 +32,19 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
 
     for (const email of emails) {
       try {
-        const res = await fetch('/api/invitations', {
+        // Decidir a qué endpoint llamar según si es bonsai o sprint
+        const url = isBonsai
+          ? `/api/bonsais/${bonsaiId}/invite`
+          : '/api/invitations'
+
+        const body = isBonsai
+          ? { email }
+          : { boardId, email }
+
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ boardId, email }),
+          body: JSON.stringify(body),
         })
         const data = await res.json()
         if (!res.ok) {
@@ -56,15 +68,20 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            📨 Invitar colaborador
+            {isBonsai ? '🌳 Invitar al proyecto' : '📨 Invitar colaborador'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none"
-          >
+          <button onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">
             ×
           </button>
         </div>
+
+        {/* Descripción contextual */}
+        {isBonsai && !done && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg">
+            🤝 El invitado tendrá acceso a <strong>todos los sprints</strong> de este proyecto con un solo enlace.
+          </p>
+        )}
 
         {done ? (
           <div className="text-center py-4">
@@ -84,10 +101,8 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
                 {errors.map((err, i) => <p key={i}>⚠️ {err}</p>)}
               </div>
             )}
-            <button
-              onClick={onClose}
-              className="mt-6 w-full bg-indigo-600 text-white py-2 rounded-xl hover:bg-indigo-700 transition-colors"
-            >
+            <button onClick={onClose}
+              className="mt-6 w-full bg-indigo-600 text-white py-2 rounded-xl hover:bg-indigo-700 transition-colors">
               Cerrar
             </button>
           </div>
@@ -116,20 +131,15 @@ export default function InviteModal({ boardId, onClose }: InviteModalProps) {
             )}
 
             <div className="flex gap-3">
-              <button
-                onClick={onClose}
+              <button onClick={onClose}
                 className="flex-1 py-2 border border-gray-200 dark:border-gray-600 rounded-xl
-                           text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
+                           text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 Cancelar
               </button>
-              <button
-                onClick={handleInvite}
-                disabled={loading || !emailInput.trim()}
+              <button onClick={handleInvite} disabled={loading || !emailInput.trim()}
                 className="flex-1 bg-indigo-600 text-white py-2 rounded-xl font-semibold
-                           hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Enviando...' : 'Enviar invitación'}
+                           hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {loading ? 'Enviando…' : isBonsai ? '🌳 Invitar al proyecto' : '📨 Invitar'}
               </button>
             </div>
           </>
