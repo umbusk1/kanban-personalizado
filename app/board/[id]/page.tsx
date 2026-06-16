@@ -677,15 +677,10 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium">Descripción</label>
                   <div className="flex gap-1">
-                    <button type="button" title="Insertar tarea por hacer"
+                    <button type="button" title="Marcar tarea como pendiente"
                       onClick={() => {
-                        const ta=descRef.current; if (!ta) return
-                        const pos=ta.selectionStart ?? formData.description.length
-                        const before=formData.description.slice(0,pos), after=formData.description.slice(pos)
-                        const nl=before.length>0&&!before.endsWith('\n')?'\n':''
-                        const newD=before+nl+'- [ ] '+after
-                        setFormData({...formData,description:newD})
-                        setTimeout(()=>{ if(ta){ta.focus();ta.selectionStart=ta.selectionEnd=pos+nl.length+6} },0)
+                        const newD = formData.description.replace(/^- \[x\] /mi, '- [ ] ')
+                        setFormData({...formData, description: newD})
                       }}
                       className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded font-mono">
                       ☐ Por hacer
