@@ -10,7 +10,8 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const bonsais = await prisma.bonsai.findMany({
+    // ── Bonsais propios ────────────────────────────────────────────────────
+    const ownedBonsais = await prisma.bonsai.findMany({
       where: { ownerId: session.user.id },
       orderBy: { createdAt: "desc" },
       include: {
@@ -26,14 +27,43 @@ export async function GET() {
       },
     })
 
-    const result = bonsais.map((bonsai) => ({
-      id:            bonsai.id,
-      name:          bonsai.name,
-      description:   bonsai.description,
-      createdAt:     bonsai.createdAt,
-      generatedByAI: bonsai.generatedByAI,  // ← AGREGADO
-      aiPrompt:      bonsai.aiPrompt,        // ← AGREGADO
-      sprints: bonsai.sprints.map((board) => {
+    // ── Bonsais ajenos donde soy miembro de al menos un sprint ────────────
+    // Primero obtenemos los sprints (boards) a los que pertenezco como miembro
+    const memberBoards = await prisma.boardMember.findMany({
+      where: { userId: session.user.id },
+      select: { boardId: true },
+    })
+    const memberBoardIds = memberBoards.map(m => m.boardId)
+
+    // Luego buscamos bonsais que contengan alguno de esos sprints
+    // y que NO sean míos (para no duplicar)
+    const sharedBonsais = memberBoardIds.length > 0
+      ? await prisma.bonsai.findMany({
+          where: {
+            ownerId: { not: session.user.id }, // excluir los propios
+            sprints: { some: { id: { in: memberBoardIds } } },
+          },
+          orderBy: { createdAt: "desc" },
+          include: {
+            owner: { select: { id: true, name: true, email: true } },
+            sprints: {
+              // Solo incluir los sprints a los que tengo acceso
+              where: { id: { in: memberBoardIds } },
+              orderBy: { createdAt: "asc" },
+              include: {
+                columns: {
+                  orderBy: { position: "asc" },
+                  include: { _count: { select: { cards: true } } },
+                },
+              },
+            },
+          },
+        })
+      : []
+
+    // ── Función para convertir sprints al formato de respuesta ────────────
+    const formatSprints = (sprints: typeof ownedBonsais[0]["sprints"]) =>
+      sprints.map((board) => {
         const totalCards = board.columns.reduce((sum, col) => sum + col._count.cards, 0)
         const lastCol    = board.columns[board.columns.length - 1]
         const col3Cards  = lastCol?._count.cards ?? 0
@@ -43,17 +73,43 @@ export async function GET() {
           name:          board.name,
           description:   board.description,
           createdAt:     board.createdAt,
-          generatedByAI: board.generatedByAI,  // ← AGREGADO
-          aiPrompt:      board.aiPrompt,        // ← AGREGADO
+          generatedByAI: board.generatedByAI,
+          aiPrompt:      board.aiPrompt,
           totalCards,
           col3Cards,
           inProgress,
           progress: totalCards > 0 ? Math.round((col3Cards / totalCards) * 100) : 0,
         }
-      }),
+      })
+
+    // ── Construir respuesta combinada ─────────────────────────────────────
+    const ownedResult = ownedBonsais.map((bonsai) => ({
+      id:            bonsai.id,
+      name:          bonsai.name,
+      description:   bonsai.description,
+      createdAt:     bonsai.createdAt,
+      generatedByAI: bonsai.generatedByAI,
+      aiPrompt:      bonsai.aiPrompt,
+      userRole:      "owner" as const,
+      owner:         null,
+      sprints:       formatSprints(bonsai.sprints),
     }))
 
-    return NextResponse.json(result)
+    const sharedResult = sharedBonsais.map((bonsai) => ({
+      id:            bonsai.id,
+      name:          bonsai.name,
+      description:   bonsai.description,
+      createdAt:     bonsai.createdAt,
+      generatedByAI: bonsai.generatedByAI,
+      aiPrompt:      bonsai.aiPrompt,
+      userRole:      "member" as const,
+      owner:         (bonsai as any).owner,
+      sprints:       formatSprints(bonsai.sprints),
+    }))
+
+    // Propios primero, luego compartidos
+    return NextResponse.json([...ownedResult, ...sharedResult])
+
   } catch (error) {
     console.error("Error al obtener bonsais:", error)
     return NextResponse.json({ error: "Error al obtener bonsais" }, { status: 500 })
