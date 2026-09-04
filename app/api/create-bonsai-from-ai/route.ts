@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+// CAMBIO: le pedimos a Vercel el máximo de tiempo permitido en el plan Hobby (60s)
+// para esta función, en vez de quedarnos con el límite por defecto de 10s.
+export const maxDuration = 60
+
 const WEEKLY_BONSAI_LIMIT = 1
 
 function getWeekStart() {
@@ -132,7 +136,8 @@ export async function POST(request: Request) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model:      "claude-sonnet-4-6",
+        // CAMBIO: modelo actualizado de claude-sonnet-4-6 a claude-sonnet-5 (el actual)
+        model:      "claude-sonnet-5",
         max_tokens: 6000,
         system: `Eres el Agente Bonsai de KanbanBonsai. Tu función es tomar la descripción de un proyecto y convertirlo en una estructura completa de Bonsai con múltiples Sprints, siguiendo el Principio de la Pirámide de Minto.
 
@@ -225,48 +230,54 @@ ESTRUCTURA JSON REQUERIDA:
       },
     })
 
-    const createdBoards = []
-    for (const sprint of [...bonsai.sprints].sort((a, b) => a.position - b.position)) {
-      const board = await prisma.board.create({
-        data: {
-          name:          sprint.name,
-          description:   sprint.description ?? null,
-          ownerId:       session.user.id,
-          bonsaiId:      newBonsai.id,
-          generatedByAI: true,
-          aiPrompt:      freeText,
-          columns: {
-            create: [
-              {
-                name:     "Por Hacer",
-                position: 0,
-                color:    "#3b82f6",
-                cards: {
-                  create: (sprint.hojas ?? [])
-                    .sort((a, b) => a.position - b.position)
-                    .map((hoja) => ({
-                      title:       hoja.title,
-                      description: hoja.description ?? null,
-                      position:    hoja.position,
-                      priority:    hoja.priority ?? null,
-                      createdBy:   session.user.id,
-                    })),
+    // CAMBIO: antes se creaba un Sprint a la vez, esperando a que cada uno
+    // terminara antes de empezar el siguiente. Ahora se crean todos en paralelo
+    // con Promise.all — el orden final se conserva porque Promise.all respeta
+    // el orden del arreglo de entrada, sin importar cuál termine primero.
+    const sortedSprints = [...bonsai.sprints].sort((a, b) => a.position - b.position)
+
+    const createdBoards = await Promise.all(
+      sortedSprints.map((sprint) =>
+        prisma.board.create({
+          data: {
+            name:          sprint.name,
+            description:   sprint.description ?? null,
+            ownerId:       session.user.id,
+            bonsaiId:      newBonsai.id,
+            generatedByAI: true,
+            aiPrompt:      freeText,
+            columns: {
+              create: [
+                {
+                  name:     "Por Hacer",
+                  position: 0,
+                  color:    "#3b82f6",
+                  cards: {
+                    create: (sprint.hojas ?? [])
+                      .sort((a, b) => a.position - b.position)
+                      .map((hoja) => ({
+                        title:       hoja.title,
+                        description: hoja.description ?? null,
+                        position:    hoja.position,
+                        priority:    hoja.priority ?? null,
+                        createdBy:   session.user.id,
+                      })),
+                  },
                 },
-              },
-              { name: "En Progreso", position: 1, color: "#eab308", wipLimit: 5 },
-              { name: "Completado",  position: 2, color: "#22c55e" },
-            ],
+                { name: "En Progreso", position: 1, color: "#eab308", wipLimit: 5 },
+                { name: "Completado",  position: 2, color: "#22c55e" },
+              ],
+            },
           },
-        },
-        include: {
-          columns: {
-            orderBy: { position: "asc" },
-            include: { cards: { orderBy: { position: "asc" } } },
+          include: {
+            columns: {
+              orderBy: { position: "asc" },
+              include: { cards: { orderBy: { position: "asc" } } },
+            },
           },
-        },
-      })
-      createdBoards.push(board)
-    }
+        })
+      )
+    )
 
     // ── Descontar cupo de Compita DESPUÉS de crear exitosamente ──────────────
     if (esDesdeCompita) {
