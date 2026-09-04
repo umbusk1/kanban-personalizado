@@ -139,6 +139,11 @@ export async function POST(request: Request) {
         // CAMBIO: modelo actualizado de claude-sonnet-4-6 a claude-sonnet-5 (el actual)
         model:      "claude-sonnet-5",
         max_tokens: 6000,
+        // CAMBIO: Sonnet 5 trae razonamiento adaptativo activado por defecto, lo cual
+        // podía anteponer un bloque de "pensamiento" antes del texto y además consumir
+        // tiempo extra. Lo desactivamos aquí: no lo necesitamos para esta tarea y nos
+        // conviene mantenernos dentro del límite de 60 segundos.
+        thinking: { type: "disabled" },
         system: `Eres el Agente Bonsai de KanbanBonsai. Tu función es tomar la descripción de un proyecto y convertirlo en una estructura completa de Bonsai con múltiples Sprints, siguiendo el Principio de la Pirámide de Minto.
 
 JERARQUÍA DE KANBANBONSAI:
@@ -204,7 +209,12 @@ ESTRUCTURA JSON REQUERIDA:
     let bonsaiData: BonsaiPayload
     try {
       const claudeBody = await claudeRes.json()
-      const rawText: string = claudeBody.content[0].text
+      // CAMBIO: se busca el bloque de tipo "text" por su tipo, no por posición fija
+      // (content[0]). Con thinking activado, un bloque de pensamiento puede ocupar
+      // esa primera posición, así que asumir "el texto siempre está en [0]" ya no
+      // es seguro — buscarlo por tipo lo deja a prueba de ese caso.
+      const textBlock = claudeBody.content.find((block: any) => block.type === "text")
+      const rawText: string = textBlock?.text ?? ""
       const cleaned = rawText.replace(/```json|```/g, "").trim()
       bonsaiData = JSON.parse(cleaned)
     } catch {
