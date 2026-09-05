@@ -8,6 +8,7 @@ import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
 import QuotaSurveyModal from "@/components/QuotaSurveyModal"
 import InviteModal from "@/components/InviteModal"   // ← NUEVO
+import { generateBonsaiPdf, cardToPdfCard } from "@/lib/generatePdf"
 import { useSession } from "next-auth/react"
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
@@ -245,7 +246,27 @@ export default function BonsaisPage() {
   const [quotaType, setQuotaType]           = useState<"sprint" | "bonsai">("bonsai")
 
   const [showInviteModal, setShowInviteModal] = useState(false)   // ← NUEVO
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
 
+  const handleDownloadBonsaiPdf = async () => {
+    if (!selected) return
+    setDownloadingPdf(true)
+    try {
+      const results = await Promise.all(
+        selected.sprints.map(sprint => fetch(`/api/boards/${sprint.id}`).then(res => res.json()))
+      )
+      const pdfSprints = results.map((b: any) => ({
+        name: b.name,
+        description: b.description,
+        cards: b.columns.flatMap((col: any) => col.cards).map(cardToPdfCard),
+      }))
+      generateBonsaiPdf({ name: selected.name, description: selected.description }, pdfSprints)
+    } catch (e) {
+      console.error("Error al generar PDF del bonsai:", e)
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
   useEffect(() => { fetchData() }, [])
 
   const fetchData = async () => {
@@ -626,6 +647,10 @@ export default function BonsaisPage() {
                           <button onClick={() => setShowInviteModal(true)}   // ← NUEVO
                             className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
                             📨 Invitar al proyecto
+                          </button>
+                          <button onClick={handleDownloadBonsaiPdf} disabled={downloadingPdf}
+                            className="px-3 py-1.5 text-xs bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">
+                            {downloadingPdf ? "Generando..." : "📄 Descargar PDF"}
                           </button>
                           <button onClick={() => setShowAgenteSprintModal(true)}
                             className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
