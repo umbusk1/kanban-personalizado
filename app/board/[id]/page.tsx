@@ -1,3 +1,5 @@
+//app/board/[id]/page.tsx
+
 "use client"
 
 import { useEffect, useState, useRef } from "react"
@@ -8,6 +10,7 @@ import {
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 import InviteModal from "@/components/InviteModal"
+import { generateSprintPdf, cardToPdfCard } from "@/lib/generatePdf"
 import AppHeader from "@/components/AppHeader"
 import AppFooter from "@/components/AppFooter"
 import { useSession } from "next-auth/react"
@@ -393,6 +396,16 @@ export default function BoardPage({ params }: { params: { id: string } }) {
     setShowSprintModal(true)
   }
 
+  const handleDownloadPdf = () => {
+    if (!board) return
+    const allCards = board.columns.flatMap(col => col.cards)
+    generateSprintPdf({
+      name: board.name,
+      description: board.description,
+      cards: allCards.map(cardToPdfCard),
+    })
+  }
+
   const handleSaveSprint = async () => {
     if (!board || !sprintForm.name) return
     setSaving(true)
@@ -569,6 +582,10 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                     👥 <span className="hidden sm:inline">Invitar</span>
                   </button>
                 )}
+                  <button onClick={handleDownloadPdf}
+		    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
+		    📄 <span className="hidden sm:inline">Descargar PDF</span>
+                  </button>
               </div>
             </div>
           </div>
