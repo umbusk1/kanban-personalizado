@@ -195,7 +195,9 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchData() }, [])
 
-  const fetchData = async () => {
+  // ── FIX: ahora devuelve los boards que trajo, para poder usarlos
+  // inmediatamente después de crear un sprint (ver handleCreateBoard) ──
+  const fetchData = async (): Promise<Board[]> => {
     try {
       const res = await fetch("/api/dashboard")
       if (res.ok) {
@@ -204,9 +206,12 @@ export default function DashboardPage() {
         setBoards(data.boards)
         const inP = data.boards.filter((b: Board) => b.inProgress)
         setSelected(inP.length > 0 ? inP[inP.length - 1] : null)
+        return data.boards
       }
+      return []
     } catch (e) {
       console.error("Error fetching data:", e)
+      return []
     } finally {
       setLoading(false)
     }
@@ -226,6 +231,10 @@ export default function DashboardPage() {
     })
   }
 
+  // ── FIX: ya no usamos directamente la respuesta "cruda" del POST
+  // (esa respuesta no trae el dueño, ni el rol, ni el progreso).
+  // En vez de eso, recargamos la lista completa y buscamos ahí el
+  // sprint recién creado, que sí viene con todos los datos. ──
   const handleCreateBoard = async (e: React.FormEvent) => {
     e.preventDefault(); setCreating(true); setCreateError("")
     try {
@@ -235,10 +244,11 @@ export default function DashboardPage() {
         body: JSON.stringify({ name: newName, description: newDescription }),
       })
       if (!res.ok) { const d = await res.json(); setCreateError(d.error || "Error al crear"); setCreating(false); return }
-      const board = await res.json()
+      const newBoard = await res.json()
       setShowModal(false); setNewName(""); setNewDescription(""); setCreateError("")
-      await fetchData()
-      setSelected(board)
+      const freshBoards = await fetchData()
+      const created = freshBoards.find(b => b.id === newBoard.id)
+      if (created) setSelected(created)
     } catch { setCreateError("Error al crear sprint") }
     finally { setCreating(false) }
   }
@@ -513,7 +523,7 @@ export default function DashboardPage() {
                               ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                               : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                           }`}>
-                            {selected.userRole === "owner" ? "👑 Dueño" : `🤝 ${selected.owner.name || selected.owner.email}`}
+                            {selected.userRole === "owner" ? "👑 Dueño" : `🤝 ${selected.owner?.name || selected.owner?.email || "Colaborador"}`}
                           </span>
                         </div>
                         <Link href={`/board/${selected.id}`}
