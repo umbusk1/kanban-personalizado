@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { aFecha, ordenarFechas, hoyParaPrompt, REGLAS_FECHAS } from "@/lib/fechas"
 
 const WEEKLY_SPRINT_LIMIT = 3
 
@@ -20,6 +21,8 @@ interface SprintHoja {
   description: string | null
   position: number
   priority: string | null
+  startDate?: string | null
+  dueDate?: string | null
 }
 
 interface SprintPayload {
@@ -120,6 +123,9 @@ PRIORIDADES:
 
 IDIOMA: responde siempre en el mismo idioma del brief del usuario.
 
+FECHA DE HOY: ${hoyParaPrompt()}
+${REGLAS_FECHAS}
+
 REGLAS ABSOLUTAS:
 - Responde ÚNICAMENTE con el JSON. Sin texto adicional, sin markdown, sin explicaciones.
 - El JSON debe ser parseable directamente con JSON.parse()
@@ -134,7 +140,9 @@ ESTRUCTURA JSON REQUERIDA:
         "title": "string",
         "description": "string con sub-tareas en markdown o null",
         "position": 0,
-        "priority": "high | medium | low | null"
+        "priority": "high | medium | low | null",
+        "startDate": "AAAA-MM-DD o null",
+        "dueDate": "AAAA-MM-DD o null"
       }
     ]
   }
@@ -192,6 +200,7 @@ ESTRUCTURA JSON REQUERIDA:
                     description: hoja.description ?? null,
                     position: hoja.position,
                     priority: hoja.priority ?? null,
+                    ...(() => { const [ini, fin] = ordenarFechas(aFecha(hoja.startDate), aFecha(hoja.dueDate)); return { startDate: ini, dueDate: fin } })(),
                     createdBy: session.user.id,
                   })),
               },

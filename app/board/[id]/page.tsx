@@ -24,6 +24,7 @@ type Card = {
   position:    number
   createdAt:   string
   updatedAt:   string
+  startDate:   string | null
   dueDate:     string | null
   alertDate:   string | null
   resources:   string | null
@@ -62,6 +63,7 @@ type CardFormData = {
   description: string
   priority:    string
   assignedTo:  string
+  startDate:   string
   dueDate:     string
   alertDate:   string
   resources:   string
@@ -79,7 +81,8 @@ type LogEntry = {
 // ── Helpers ──
 function formatDate(iso: string | null) {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+  // Las fechas se guardan a medianoche UTC: se muestran en UTC para no correr un día
+  return new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
 }
 
 const MESES_LOG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
@@ -223,8 +226,10 @@ function MobileCard({ card, columnId, isBlocked, blockedByTitle, isOwner, column
         )}
         <div className="flex items-center gap-2 flex-wrap">
           {p && <span className={`text-xs px-1.5 py-0.5 rounded ${p.badge}`}>{p.label}</span>}
-          {card.dueDate && (
-            <span className="text-xs text-gray-400">📅 {formatDate(card.dueDate)}</span>
+          {(card.startDate || card.dueDate) && (
+            <span className="text-xs text-gray-400">📅 {card.startDate && card.dueDate
+              ? `${formatDate(card.startDate)} → ${formatDate(card.dueDate)}`
+              : formatDate(card.dueDate || card.startDate)}</span>
           )}
           {card.assignee && (
             <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">
@@ -297,7 +302,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
 
   const [showModal, setShowModal]   = useState(false)
   const [modalMode, setModalMode]   = useState<'create'|'edit'>('create')
-  const [formData, setFormData]     = useState<CardFormData>({ columnId:'', title:'', description:'', priority:'', assignedTo:'', dueDate:'', alertDate:'', resources:'' })
+  const [formData, setFormData]     = useState<CardFormData>({ columnId:'', title:'', description:'', priority:'', assignedTo:'', startDate:'', dueDate:'', alertDate:'', resources:'' })
   const [error, setError]           = useState('')
   const [saving, setSaving]         = useState(false)
 
@@ -339,7 +344,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
 
   const handleCreateCard = (columnId: string) => {
     setModalMode('create')
-    setFormData({ columnId, title:'', description:'', priority:'', assignedTo:'', dueDate:'', alertDate:'', resources:'' })
+    setFormData({ columnId, title:'', description:'', priority:'', assignedTo:'', startDate:'', dueDate:'', alertDate:'', resources:'' })
     setShowModal(true); setError('')
   }
 
@@ -351,6 +356,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
       description: card.description  || '',
       priority:    card.priority     || '',
       assignedTo:  card.assignee?.id || '',
+      startDate:   card.startDate ? card.startDate.substring(0,10) : '',
       dueDate:     card.dueDate   ? card.dueDate.substring(0,10)   : '',
       alertDate:   card.alertDate ? card.alertDate.substring(0,10) : '',
       resources:   card.resources || '',
@@ -365,7 +371,7 @@ export default function BoardPage({ params }: { params: { id: string } }) {
       const method = modalMode === 'create' ? 'POST' : 'PATCH'
       const res = await fetch(url, {
         method, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, assignedTo: formData.assignedTo||null, dueDate: formData.dueDate||null, alertDate: formData.alertDate||null, resources: formData.resources||null }),
+        body: JSON.stringify({ ...formData, assignedTo: formData.assignedTo||null, startDate: formData.startDate||null, dueDate: formData.dueDate||null, alertDate: formData.alertDate||null, resources: formData.resources||null }),
       })
       if (!res.ok) { const d=await res.json(); setError(d.error||'Error al guardar hoja'); setSaving(false); return }
       setShowModal(false); fetchBoard()
@@ -582,6 +588,11 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                     👥 <span className="hidden sm:inline">Invitar</span>
                   </button>
                 )}
+                  <a href={`/api/boards/${params.id}/ics`}
+                    title="Descargar las hojas con fecha como calendario (.ics) para YouRadar, Google o Apple"
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
+                    🗓️ <span className="hidden sm:inline">Calendario</span>
+                  </a>
                   <button onClick={handleDownloadPdf}
 		    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
 		    📄 <span className="hidden sm:inline">Descargar PDF</span>
@@ -769,7 +780,12 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Fecha de inicio</label>
+                  <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})}
+                    className="w-full px-3 py-2 h-[42px] border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100" />
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Fecha límite</label>
                   <input type="date" value={formData.dueDate} onChange={e => setFormData({...formData, dueDate: e.target.value})}

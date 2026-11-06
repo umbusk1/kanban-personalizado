@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendCardAssignedEmail } from "@/lib/email"  // ← NUEVO
+import { aFecha, ordenarFechas } from "@/lib/fechas"
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { columnId, title, description, priority, assignedTo } = await request.json()
+    const { columnId, title, description, priority, assignedTo, startDate, dueDate, alertDate, resources } = await request.json()
 
     if (!columnId || !title) {
       return NextResponse.json(
@@ -70,6 +71,10 @@ export async function POST(request: Request) {
         description: description || null,
         priority:    priority    || null,
         assignedTo:  assignedTo  || null,
+        // Antes las fechas y recursos del formulario se perdían al crear la hoja
+        ...(() => { const [ini, fin] = ordenarFechas(aFecha(startDate), aFecha(dueDate)); return { startDate: ini, dueDate: fin } })(),
+        alertDate:   aFecha(alertDate),
+        resources:   resources   || null,
         createdBy:   session.user.id,
         position:    newPosition,
       },

@@ -199,6 +199,11 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
                 className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 + Sprint manual
               </button>
+              <a href={`/api/bonsais/${bonsai.id}/ics`}
+                title="Descargar todas las hojas con fecha como calendario (.ics) para YouRadar, Google o Apple"
+                className="flex-1 text-center bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                🗓️ Calendario (.ics)
+              </a>
               <button onClick={() => onDelete(bonsai)}
                 className="px-3 py-2 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                 🗑️ Eliminar bonsai

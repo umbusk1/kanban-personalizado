@@ -10,6 +10,7 @@ type Card = {
   position: number
   createdAt: string
   updatedAt: string
+  startDate:   string | null
   dueDate:     string | null
   alertDate:   string | null
   resources:   string | null
@@ -31,7 +32,8 @@ function getPriority(v: string | null) {
 
 function formatDate(iso: string | null): string {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+  // Las fechas se guardan a medianoche UTC: se muestran en UTC para no correr un día
+  return new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
 }
 
 function getDueDateStatus(d: string | null): 'overdue' | 'soon' | 'ok' | null {
@@ -248,7 +250,7 @@ export function DraggableCard({
       {card.dueDate && dueStatus && (
         <div className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded mb-2 font-medium ${DUE_STYLES[dueStatus]}`}>
           <span>{dueStatus === 'overdue' ? '⚠️' : '📅'}</span>
-          <span>{dueStatus === 'overdue' ? 'Venció ' : 'Límite '}{formatDate(card.dueDate)}</span>
+          <span>{dueStatus === 'overdue' ? 'Venció ' : (card.startDate ? `${formatDate(card.startDate)} → ` : 'Límite ')}{formatDate(card.dueDate)}</span>
         </div>
       )}
 

@@ -18,7 +18,7 @@ export async function PATCH(
       )
     }
 
-    const { title, description, priority, assignedTo, dueDate, alertDate, resources, blockedById } = await request.json()
+    const { title, description, priority, assignedTo, startDate, dueDate, alertDate, resources, blockedById } = await request.json()
 
     // Verificar que la hoja existe y el usuario tiene acceso
     const card = await prisma.card.findUnique({
@@ -64,6 +64,7 @@ export async function PATCH(
         description: description !== undefined ? description : card.description,
         priority:    priority    !== undefined ? priority    : card.priority,
         assignedTo:  assignedTo  !== undefined ? (assignedTo || null) : card.assignedTo,
+        startDate:   startDate   !== undefined ? (startDate ? new Date(startDate) : null) : card.startDate,
         dueDate:     dueDate     !== undefined ? (dueDate   ? new Date(dueDate)   : null) : card.dueDate,
         alertDate:   alertDate   !== undefined ? (alertDate ? new Date(alertDate) : null) : card.alertDate,
         resources:   resources   !== undefined ? resources   : card.resources,

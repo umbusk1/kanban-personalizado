@@ -94,6 +94,7 @@ model Card {
   createdBy   String
   position    Int
   priority    String?
+  startDate   DateTime?
   dueDate     DateTime?
   alertDate   DateTime?
   resources   String?
