@@ -528,7 +528,10 @@ export default function BoardPage({ params }: { params: { id: string } }) {
   const isOwner = session?.user?.id === board.owner.id || session?.user?.email === board.owner.email
   const allMembers = [board.owner, ...board.members.map(m => m.user)]
   const allCards   = board.columns.flatMap(c => c.cards)
-  const cardTimes  = allCards.map(c => new Date(c.createdAt).getTime())
+  // El lapso empieza en la primera fecha de inicio de las hojas; si ninguna la tiene,
+  // en la fecha en que se creó la primera hoja (como antes)
+  const startTimes = allCards.filter(c => c.startDate).map(c => new Date(c.startDate!).getTime())
+  const cardTimes  = startTimes.length > 0 ? startTimes : allCards.map(c => new Date(c.createdAt).getTime())
   const dueTimes   = allCards.filter(c => c.dueDate).map(c => new Date(c.dueDate!).getTime())
   const lapsoStart = cardTimes.length > 0 ? formatDate(new Date(Math.min(...cardTimes)).toISOString()) : null
   const lapsoEnd   = dueTimes.length  > 0 ? formatDate(new Date(Math.max(...dueTimes)).toISOString())  : null
