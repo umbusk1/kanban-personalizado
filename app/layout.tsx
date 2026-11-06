@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth"
 import SessionProviderWrapper from "@/components/SessionProviderWrapper"
 
 export const metadata: Metadata = {
-  title: "KANBAN Personalizado",
+  title: "KanbanBonsai",
   description: "Sistema de gestión de proyectos colaborativo",
 }
 
