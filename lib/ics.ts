@@ -20,7 +20,7 @@ const ahoraUtc = () => {
   return `${dia(d)}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
 }
 const escapar = (t: string) =>
-  t.replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n")
+  t.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n")
 
 // Las líneas de más de 75 bytes se doblan (continúan en la siguiente con un espacio)
 function doblar(linea: string): string {
