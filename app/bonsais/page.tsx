@@ -184,6 +184,13 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
             </div>
           )}
 
+          {/* Calendario del bonsai — dueño y miembros (cada quien recibe los sprints a los que tiene acceso) */}
+          <a href={`/api/bonsais/${bonsai.id}/ics`}
+            title="Descargar todas las hojas con fecha de todos los sprints como un solo calendario (.ics) para YouRadar, Google o Apple"
+            className="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+            🗓️ Calendario (.ics)
+          </a>
+
           {/* Acciones — solo para el dueño */}
           {isOwner && (
             <div className="flex flex-wrap gap-2 pt-1">
@@ -199,11 +206,6 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
                 className="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 + Sprint manual
               </button>
-              <a href={`/api/bonsais/${bonsai.id}/ics`}
-                title="Descargar todas las hojas con fecha como calendario (.ics) para YouRadar, Google o Apple"
-                className="flex-1 text-center bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
-                🗓️ Calendario (.ics)
-              </a>
               <button onClick={() => onDelete(bonsai)}
                 className="px-3 py-2 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                 🗑️ Eliminar bonsai
@@ -657,6 +659,11 @@ export default function BonsaisPage() {
                             className="px-3 py-1.5 text-xs bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">
                             {downloadingPdf ? "Generando..." : "📄 Descargar PDF"}
                           </button>
+                          <a href={`/api/bonsais/${selected.id}/ics`}
+                            title="Descargar todas las hojas con fecha de todos los sprints como un solo calendario (.ics) para YouRadar, Google o Apple"
+                            className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
+                            🗓️ Calendario (.ics)
+                          </a>
                           <button onClick={() => setShowAgenteSprintModal(true)}
                             className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
                             ✨ Generar Sprint con IA
@@ -665,6 +672,17 @@ export default function BonsaisPage() {
                             className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
                             + Nuevo Sprint
                           </button>
+                        </div>
+                      )}
+
+                      {/* Los miembros también pueden llevarse el calendario del bonsai (solo verán sus sprints) */}
+                      {selected.userRole === "member" && (
+                        <div className="mt-4 flex gap-2 flex-wrap">
+                          <a href={`/api/bonsais/${selected.id}/ics`}
+                            title="Descargar las hojas con fecha de tus sprints como un solo calendario (.ics) para YouRadar, Google o Apple"
+                            className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
+                            🗓️ Calendario (.ics)
+                          </a>
                         </div>
                       )}
                     </div>
