@@ -216,7 +216,7 @@ export default function DesdeCompitaPage() {
         </button>
 
         <p className="text-xs text-center text-gray-400 mt-4">
-          Descuenta 1 uso del cupo mensual de tu plan Compita Enterprise
+          Descuenta 1 uso del cupo mensual de tu Plan Platinum de Compita
         </p>
 
       </div>
