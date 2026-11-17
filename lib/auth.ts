@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
+import { verifyCompitaToken } from "./compitaToken"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -53,20 +54,19 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Token de Compita requerido")
         }
 
-        // Decodificar el token base64-JSON de Compita
-        let decoded: { empresaId: number; email: string; plan?: string }
-        try {
-          const parts   = credentials.compitaToken.split('.')
-          const segment = parts.length === 3 ? parts[1] : credentials.compitaToken
-          const base64  = segment.replace(/-/g, '+').replace(/_/g, '/')
-          const padded  = base64 + '='.repeat((4 - base64.length % 4) % 4)
-          decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf-8"))
-        } catch {
-          throw new Error("Token de Compita inválido")
+        // Verificar la firma y el vencimiento del pase de Compita
+        const decoded = verifyCompitaToken(credentials.compitaToken)
+        if (!decoded) {
+          throw new Error("Token de Compita inválido o vencido")
         }
 
-        if (!decoded.email || !decoded.empresaId) {
-          throw new Error("Token de Compita incompleto")
+        // Las cuentas de administrador de KanbanBonsai entran solo con contraseña
+        const existing = await prisma.user.findUnique({
+          where:  { email: decoded.email },
+          select: { isAdmin: true },
+        })
+        if (existing?.isAdmin) {
+          throw new Error("Esta cuenta entra con correo y contraseña, no con Compita.")
         }
 
         const user = await prisma.user.upsert({

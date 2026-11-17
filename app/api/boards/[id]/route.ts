@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { publicUserSelect } from "@/lib/publicUser"
 
 export async function GET(
   request: Request,
@@ -21,8 +22,8 @@ export async function GET(
             cards: {
               orderBy: { position: 'asc' },
               include: {
-                assignee: true,
-                creator:  true,
+                assignee: { select: publicUserSelect },
+                creator:  { select: publicUserSelect },
                 blockedBy: {
                   select: { id: true, title: true, columnId: true },
                 },
@@ -30,8 +31,8 @@ export async function GET(
             },
           },
         },
-        owner:   true,
-        members: { include: { user: true } },
+        owner:   { select: publicUserSelect },
+        members: { include: { user: { select: publicUserSelect } } },
         dependsOn: { select: { id: true, name: true } },
         bonsai:    { select: { id: true, name: true } },  // ← NUEVO
       },

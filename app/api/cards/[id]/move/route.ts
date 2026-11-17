@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { publicUserSelect } from "@/lib/publicUser"
 
 export async function PATCH(
   request: Request,
@@ -48,7 +49,7 @@ export async function PATCH(
     const updatedCard = await prisma.card.update({
       where: { id: params.id },
       data: { columnId, position: position ?? card.position },
-      include: { assignee: true },
+      include: { assignee: { select: publicUserSelect } },
     })
 
     // ── NUEVO: Registrar en el log solo si cambia de columna ──
