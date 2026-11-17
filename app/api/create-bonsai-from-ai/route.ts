@@ -34,11 +34,24 @@ async function checkCompitaQuota(empresaId: number): Promise<{ ok: boolean; erro
       },
       body: JSON.stringify({ accion: "kb-entitlements", empresa_id: empresaId }),
     })
-    if (!res.ok) return { ok: false, error: "Error al verificar cupo de Compita" }
+    if (!res.ok) {
+      // Decir la causa real: código de Compita y su mensaje, si lo trae
+      let detalle = ""
+      try {
+        const err = await res.json()
+        if (err?.error) detalle = `: ${err.error}`
+      } catch {}
+      return { ok: false, error: `Compita no pudo verificar tu cupo (código ${res.status})${detalle}` }
+    }
     const data = await res.json()
     // kb-entitlements siempre devuelve 200 — hay que leer el cuerpo
     if (!data.tiene_acceso) return { ok: false, error: data.razon ?? "Plan no incluye KanbanBonsai IA" }
-    if (data.restantes <= 0) return { ok: false, error: "Cupo mensual de Compita agotado" }
+    if (data.restantes <= 0) {
+      return {
+        ok: false,
+        error: `Cupo mensual de Compita agotado: usaste ${data.usados} de ${data.limite} usos este mes (el Coach y KanbanBonsai comparten este cupo).`,
+      }
+    }
     return { ok: true }
   } catch {
     return { ok: false, error: "No se pudo verificar el cupo de Compita" }

@@ -101,9 +101,10 @@ export default function DesdeCompitaPage() {
       if (!res.ok) {
         const data = await res.json()
         if (res.status === 403) {
-          setErrorMsg("Tu empresa no tiene cupo disponible este mes. Contacta al administrador de Compita.")
+          // Mostrar la causa real que devuelve el servidor
+          setErrorMsg(data.error || "Tu empresa no tiene cupo disponible este mes. Contacta al administrador de Compita.")
         } else if (res.status === 429) {
-          setErrorMsg("Cupo mensual de Compita agotado.")
+          setErrorMsg(data.error || "Cupo mensual de Compita agotado.")
         } else {
           setErrorMsg(data.error || "Error al generar el bonsai.")
         }
