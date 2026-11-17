@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendCardAssignedEmail, sendCardEditedEmail, sendCardUnassignedEmail } from "@/lib/email"  // ← añadido sendCardUnassignedEmail
+import { publicUserSelect } from "@/lib/publicUser"
 
 // PATCH - Editar hoja
 export async function PATCH(
@@ -33,7 +34,7 @@ export async function PATCH(
             },
           },
         },
-        assignee: true,  // ← necesario para obtener datos del asignado anterior
+        assignee: { select: publicUserSelect },  // ← necesario para obtener datos del asignado anterior
       },
     })
 
@@ -71,8 +72,8 @@ export async function PATCH(
         blockedById: blockedById !== undefined ? (blockedById || null) : card.blockedById,
       },
       include: {
-        assignee: true,
-        creator:  true,
+        assignee: { select: publicUserSelect },
+        creator:  { select: publicUserSelect },
         blockedBy: { select: { id: true, title: true, columnId: true } },
       },
     })

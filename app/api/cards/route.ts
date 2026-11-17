@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendCardAssignedEmail } from "@/lib/email"  // ← NUEVO
 import { aFecha, ordenarFechas } from "@/lib/fechas"
+import { publicUserSelect } from "@/lib/publicUser"
 
 export async function POST(request: Request) {
   try {
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
         position:    newPosition,
       },
       include: {
-        assignee: true,
+        assignee: { select: publicUserSelect },
       },
     })
 
