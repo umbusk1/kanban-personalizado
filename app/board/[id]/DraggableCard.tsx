@@ -38,7 +38,14 @@ function formatDate(iso: string | null): string {
 
 function getDueDateStatus(d: string | null): 'overdue' | 'soon' | 'ok' | null {
   if (!d) return null
-  const diff = (new Date(d).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  // Comparar días enteros: la fecha límite (guardada a medianoche UTC) contra
+  // el día de hoy en la hora local de quien mira. Así el mismo día límite
+  // no sale como vencido; vence recién al día siguiente.
+  const limite = new Date(d)
+  const diaLimite = Date.UTC(limite.getUTCFullYear(), limite.getUTCMonth(), limite.getUTCDate())
+  const hoy = new Date()
+  const diaHoy = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+  const diff = Math.round((diaLimite - diaHoy) / (1000 * 60 * 60 * 24))
   if (diff < 0)  return 'overdue'
   if (diff <= 3) return 'soon'
   return 'ok'
