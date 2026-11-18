@@ -8,6 +8,7 @@ import AppFooter from "@/components/AppFooter"
 import AgenteSprintModal, { GeneratedBoard, GeneratedBonsai } from "@/components/AgenteSprintModal"
 import QuotaSurveyModal from "@/components/QuotaSurveyModal"
 import InviteModal from "@/components/InviteModal"   // ← NUEVO
+import EnlaceCalendario from "@/components/EnlaceCalendario"
 import { generateBonsaiPdf, cardToPdfCard } from "@/lib/generatePdf"
 import { useSession } from "next-auth/react"
 
@@ -190,6 +191,7 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
             className="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
             🗓️ Calendario (.ics)
           </a>
+          <EnlaceCalendario bonsaiId={bonsai.id} compacto />
 
           {/* Acciones — solo para el dueño */}
           {isOwner && (
@@ -664,6 +666,7 @@ export default function BonsaisPage() {
                             className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
                             🗓️ Calendario (.ics)
                           </a>
+                          <EnlaceCalendario bonsaiId={selected.id} />
                           <button onClick={() => setShowAgenteSprintModal(true)}
                             className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
                             ✨ Generar Sprint con IA
@@ -683,6 +686,7 @@ export default function BonsaisPage() {
                             className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
                             🗓️ Calendario (.ics)
                           </a>
+                          <EnlaceCalendario bonsaiId={selected.id} />
                         </div>
                       )}
                     </div>

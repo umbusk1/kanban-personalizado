@@ -23,6 +23,7 @@ model User {
   assignedCards Card[]        @relation("CardAssignee")
   activityLogs  ActivityLog[]
   kbIaUso       KbIaUso[]                       // ← NUEVO: relación con cuota semanal nativa
+  enlacesCalendario EnlaceCalendario[]          // enlaces privados de calendario (YouRadar)
   @@map("users")
 }
 
@@ -47,6 +48,7 @@ model Bonsai {
   sprints       Board[]
   generatedByAI Boolean  @default(false)
   aiPrompt      String?
+  enlacesCalendario EnlaceCalendario[]
   @@map("bonsais")
 }
 
@@ -155,4 +157,20 @@ model UsageSurvey {
   sprintsPerWeek Int?
   createdAt      DateTime @default(now())
   @@map("usage_surveys")
+}
+
+// ── Enlace privado de calendario (nov 2026) ──────────────────────────────────
+// Una llave secreta por persona y bonsai. Con ella, una app de calendario (la extensión
+// de YouRadar, Google, Apple) lee el .ics del bonsai sin iniciar sesión.
+// Cambiar el enlace = nueva llave; la anterior deja de servir al instante.
+model EnlaceCalendario {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  bonsaiId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bonsai    Bonsai   @relation(fields: [bonsaiId], references: [id], onDelete: Cascade)
+  @@unique([userId, bonsaiId])
+  @@map("enlaces_calendario")
 }
