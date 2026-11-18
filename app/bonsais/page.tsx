@@ -85,8 +85,10 @@ function PromptViewer({ prompt, onRegenerate }: { prompt: string; onRegenerate: 
 }
 
 // ── Tarjeta de Bonsai para móvil ──
-function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate, onInvite, onMoverSprint, onOrdenarPorFecha, guardandoOrden }: {
+function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate, onInvite, onMoverSprint, onOrdenarPorFecha, guardandoOrden, onDownloadPdf, descargandoPdf }: {
   bonsai: Bonsai
+  onDownloadPdf: (b: Bonsai) => void
+  descargandoPdf: boolean
   onMoverSprint: (b: Bonsai, indice: number, direccion: -1 | 1) => void
   onOrdenarPorFecha: (b: Bonsai) => void
   guardandoOrden: boolean
@@ -223,6 +225,11 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
                 className="w-full text-center bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 📨 Invitar al proyecto
               </button>
+              <button onClick={() => onDownloadPdf(bonsai)} disabled={descargandoPdf || totalSprints === 0}
+                title="Descargar un PDF con los sprints, hojas, tareas y fechas del bonsai"
+                className="w-full text-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
+                {descargandoPdf ? "Generando..." : "📄 Descargar PDF"}
+              </button>
               {totalSprints > 1 && (
                 <button onClick={() => onOrdenarPorFecha(bonsai)} disabled={guardandoOrden}
                   title="Pone los sprints en orden cronológico según la primera fecha de inicio de sus hojas"
@@ -338,19 +345,19 @@ export default function BonsaisPage() {
     } finally { setGuardandoOrden(false) }
   }
 
-  const handleDownloadBonsaiPdf = async () => {
-    if (!selected) return
+  const handleDownloadBonsaiPdf = async (bonsai: Bonsai | null) => {
+    if (!bonsai || downloadingPdf) return
     setDownloadingPdf(true)
     try {
       const results = await Promise.all(
-        selected.sprints.map(sprint => fetch(`/api/boards/${sprint.id}`).then(res => res.json()))
+        bonsai.sprints.map(sprint => fetch(`/api/boards/${sprint.id}`).then(res => res.json()))
       )
       const pdfSprints = results.map((b: any) => ({
         name: b.name,
         description: b.description,
         cards: b.columns.flatMap((col: any) => col.cards).map(cardToPdfCard),
       }))
-      generateBonsaiPdf({ name: selected.name, description: selected.description }, pdfSprints)
+      generateBonsaiPdf({ name: bonsai.name, description: bonsai.description }, pdfSprints)
     } catch (e) {
       console.error("Error al generar PDF del bonsai:", e)
     } finally {
@@ -527,6 +534,8 @@ export default function BonsaisPage() {
                         onMoverSprint={handleMoverSprint}
                         onOrdenarPorFecha={handleOrdenarPorFecha}
                         guardandoOrden={guardandoOrden}
+                        onDownloadPdf={handleDownloadBonsaiPdf}
+                        descargandoPdf={downloadingPdf}
                         onRegenerate={(prompt) => {
                           setAgenteInitialPrompt(prompt)
                           setAgenteInitialMode("bonsai")
@@ -561,6 +570,8 @@ export default function BonsaisPage() {
                                 onMoverSprint={handleMoverSprint}
                                 onOrdenarPorFecha={handleOrdenarPorFecha}
                                 guardandoOrden={guardandoOrden}
+                                onDownloadPdf={handleDownloadBonsaiPdf}
+                                descargandoPdf={downloadingPdf}
                                 onRegenerate={(prompt) => {
                                   setAgenteInitialPrompt(prompt)
                                   setAgenteInitialMode("bonsai")
@@ -750,7 +761,7 @@ export default function BonsaisPage() {
                             className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
                             📨 Invitar al proyecto
                           </button>
-                          <button onClick={handleDownloadBonsaiPdf} disabled={downloadingPdf}
+                          <button onClick={() => handleDownloadBonsaiPdf(selected)} disabled={downloadingPdf}
                             className="px-3 py-1.5 text-xs bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">
                             {downloadingPdf ? "Generando..." : "📄 Descargar PDF"}
                           </button>
