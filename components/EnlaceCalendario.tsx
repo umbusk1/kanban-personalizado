@@ -40,15 +40,22 @@ export default function EnlaceCalendario({ bonsaiId, compacto = false }: { bonsa
     ? "block w-full text-center bg-cyan-700 hover:bg-cyan-800 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors"
     : "px-3 py-1.5 text-xs bg-cyan-700 text-white rounded-lg hover:bg-cyan-800 transition-colors font-medium"
 
+  // El panel es un elemento aparte (ocupa toda la fila, debajo de los botones) para no estirar los demás botones
   return (
-    <div className={compacto ? "w-full" : ""}>
-      <button type="button" onClick={abrir} className={boton}
+    <>
+      <button type="button" onClick={abrir} className={boton} aria-expanded={abierto}
         title="Un enlace privado para suscribirte al calendario de este bonsai desde YouRadar: se actualiza solo">
         🔗 Enlace para YouRadar
       </button>
       {abierto && (
-        <div className="mt-2 p-3 rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50 dark:bg-cyan-950/40 text-xs text-gray-700 dark:text-gray-300 space-y-2 max-w-xl">
-          <p>Pega este enlace en YouRadar (extensión de Chrome → Opciones → agregar calendario). Lo relee solo, cada 30 minutos. Solo verás los sprints a los que tienes acceso.</p>
+        <div className="basis-full w-full mt-1 p-3 rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50 dark:bg-cyan-950/40 text-xs text-gray-700 dark:text-gray-300 space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <p>Pega este enlace en YouRadar: «Mis calendarios» → «Conectar con otros calendarios» → «Pegar direcciones secretas». Lo relee solo, cada 30 minutos. También sirve para suscribirte desde Outlook o Apple. Solo verás los sprints a los que tienes acceso.</p>
+            <button type="button" onClick={() => setAbierto(false)} aria-label="Cerrar"
+              className="flex-shrink-0 px-2 py-0.5 rounded text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800 text-base leading-none">
+              ✕
+            </button>
+          </div>
           {estado === "cargando" && <p className="text-gray-500">Preparando el enlace…</p>}
           {estado === "error" && <p className="text-red-600">No pude preparar el enlace. Inténtalo de nuevo.</p>}
           {url && (
@@ -64,6 +71,10 @@ export default function EnlaceCalendario({ bonsaiId, compacto = false }: { bonsa
                   className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-800">
                   Cambiar enlace
                 </button>
+                <button type="button" onClick={() => setAbierto(false)}
+                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-800">
+                  Cerrar
+                </button>
                 {estado === "cambiado" && <span className="text-green-700 dark:text-green-400">Enlace nuevo listo; el anterior ya no sirve.</span>}
               </div>
               <p className="text-gray-500">Es privado, como una contraseña: quien lo tenga puede ver las hojas. Si se filtra, usa «Cambiar enlace».</p>
@@ -71,6 +82,6 @@ export default function EnlaceCalendario({ bonsaiId, compacto = false }: { bonsa
           )}
         </div>
       )}
-    </div>
+    </>
   )
 }

@@ -1,6 +1,9 @@
 // Exportación a calendario (.ics, RFC 5545) — nov 2026
-// Cada Hoja con fechas se vuelve una actividad de día completo, desde su inicio
-// hasta su fin. La lee cualquier calendario: YouRadar, Google, Apple, Outlook.
+// Cada Hoja con fechas se vuelve una actividad desde su inicio hasta su fin. La lee cualquier
+// calendario: YouRadar, Google, Apple, Outlook.
+// Las Hojas no tienen hora, así que se les asigna una: las que empiezan el mismo día se reparten
+// cada 3 horas desde las 8:00 (8, 11, 14, 17); si son más de 4, se aprietan entre las 8:00 y las 18:00.
+// La hora es "flotante" (sin zona): 8:00 en el lugar donde se mire el calendario.
 
 type HojaIcs = {
   id: string
@@ -10,6 +13,7 @@ type HojaIcs = {
   dueDate: Date | null
   columnName: string
   sprintName: string
+  createdAt?: Date
 }
 
 const CRLF = "\r\n"
@@ -18,6 +22,17 @@ const dia = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(
 const ahoraUtc = () => {
   const d = new Date()
   return `${dia(d)}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
+}
+const DIA_MS = 86400000
+// Hora flotante (sin Z ni zona): día de la fecha (guardada a medianoche UTC) + minutos desde la medianoche
+const conHora = (d: Date, min: number) => {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + min * 60000)
+  return `${dia(t)}T${pad(t.getUTCHours())}${pad(t.getUTCMinutes())}00`
+}
+// Minuto del día para la posición i de n Hojas que empiezan el mismo día
+export function minutoDelTurno(i: number, n: number): number {
+  const paso = n <= 4 ? 180 : Math.floor(600 / (n - 1) / 15) * 15
+  return 8 * 60 + i * paso
 }
 const escapar = (t: string) =>
   t.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n")
@@ -46,14 +61,28 @@ export function generarIcs(nombreCalendario: string, hojas: HojaIcs[], urlBase: 
     "X-WR-CALNAME:" + escapar(nombreCalendario),
   ]
   const sello = ahoraUtc()
+  const conFechas = hojas.filter((h) => h.startDate || h.dueDate)
+  // Turnos del día: las Hojas que empiezan el mismo día, en el orden en que se crearon
+  // (así una Hoja nueva se suma al final y no le mueve la hora a las demás, mientras sean 4 o menos)
+  const porDia = new Map<string, HojaIcs[]>()
+  for (const h of conFechas) {
+    const k = dia((h.startDate || h.dueDate)!)
+    porDia.set(k, [...(porDia.get(k) || []), h])
+  }
+  const minuto = new Map<string, number>()
+  porDia.forEach((grupo) => {
+    grupo.sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0) || a.id.localeCompare(b.id))
+    grupo.forEach((h, i) => minuto.set(h.id, minutoDelTurno(i, grupo.length)))
+  })
   let conFecha = 0
-  for (const h of hojas) {
-    const inicio = h.startDate || h.dueDate
-    const fin = h.dueDate || h.startDate
-    if (!inicio || !fin) continue
+  for (const h of conFechas) {
+    const inicio = (h.startDate || h.dueDate)!
+    let fin = (h.dueDate || h.startDate)!
+    if (fin.getTime() < inicio.getTime()) fin = inicio
     conFecha++
-    // En .ics el fin de una actividad de día completo es el día siguiente al último
-    const finExclusivo = new Date(fin.getTime() + 86400000)
+    const min = minuto.get(h.id) ?? 8 * 60
+    // Dura 1 hora; si la Hoja abarca varios días, termina el último día a la misma hora + 1 h
+    const finMin = Math.round((fin.getTime() - inicio.getTime()) / DIA_MS) * 24 * 60 + min + 60
     const hecho = /complet|hecho|done/i.test(h.columnName)
     const notas = [
       `Sprint: ${h.sprintName} · Estado: ${h.columnName}`,
@@ -64,8 +93,8 @@ export function generarIcs(nombreCalendario: string, hojas: HojaIcs[], urlBase: 
       "BEGIN:VEVENT",
       `UID:hoja-${h.id}@kanbanbonsai`,
       `DTSTAMP:${sello}`,
-      `DTSTART;VALUE=DATE:${dia(inicio)}`,
-      `DTEND;VALUE=DATE:${dia(finExclusivo)}`,
+      `DTSTART:${conHora(inicio, min)}`,
+      `DTEND:${conHora(inicio, finMin)}`,
       "SUMMARY:" + escapar((hecho ? "✓ " : "") + h.title),
       "DESCRIPTION:" + escapar(notas),
       "CATEGORIES:" + escapar(h.sprintName),

@@ -652,7 +652,7 @@ export default function BonsaisPage() {
 
                       {/* Botones de acción — solo para el dueño */}
                       {selected.userRole === "owner" && (
-                        <div className="mt-4 flex gap-2 flex-wrap">
+                        <div className="mt-4 flex gap-2 flex-wrap items-start">
                           <button onClick={() => setShowInviteModal(true)}   // ← NUEVO
                             className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
                             📨 Invitar al proyecto
@@ -680,7 +680,7 @@ export default function BonsaisPage() {
 
                       {/* Los miembros también pueden llevarse el calendario del bonsai (solo verán sus sprints) */}
                       {selected.userRole === "member" && (
-                        <div className="mt-4 flex gap-2 flex-wrap">
+                        <div className="mt-4 flex gap-2 flex-wrap items-start">
                           <a href={`/api/bonsais/${selected.id}/ics`}
                             title="Descargar las hojas con fecha de tus sprints como un solo calendario (.ics) para YouRadar, Google o Apple"
                             className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
