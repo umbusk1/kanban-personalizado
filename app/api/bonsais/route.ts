@@ -16,7 +16,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       include: {
         sprints: {
-          orderBy: { createdAt: "asc" },
+          orderBy: [{ position: "asc" }, { createdAt: "asc" }],
           include: {
             columns: {
               orderBy: { position: "asc" },
@@ -49,7 +49,7 @@ export async function GET() {
             sprints: {
               // Solo incluir los sprints a los que tengo acceso
               where: { id: { in: memberBoardIds } },
-              orderBy: { createdAt: "asc" },
+              orderBy: [{ position: "asc" }, { createdAt: "asc" }],
               include: {
                 columns: {
                   orderBy: { position: "asc" },
@@ -73,6 +73,7 @@ export async function GET() {
           name:          board.name,
           description:   board.description,
           createdAt:     board.createdAt,
+          position:      board.position,
           generatedByAI: board.generatedByAI,
           aiPrompt:      board.aiPrompt,
           totalCards,

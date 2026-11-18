@@ -20,6 +20,7 @@ type Sprint = {
   name: string
   description: string | null
   createdAt: string
+  position: number
   totalCards: number
   col3Cards: number
   inProgress: boolean
@@ -84,8 +85,11 @@ function PromptViewer({ prompt, onRegenerate }: { prompt: string; onRegenerate: 
 }
 
 // ── Tarjeta de Bonsai para móvil ──
-function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate, onInvite }: {
+function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate, onInvite, onMoverSprint, onOrdenarPorFecha, guardandoOrden }: {
   bonsai: Bonsai
+  onMoverSprint: (b: Bonsai, indice: number, direccion: -1 | 1) => void
+  onOrdenarPorFecha: (b: Bonsai) => void
+  guardandoOrden: boolean
   onDelete: (b: Bonsai) => void
   onAddSprint: (b: Bonsai) => void
   onAddSprintAI: (b: Bonsai) => void
@@ -155,6 +159,25 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
               {bonsai.sprints.map((sprint, idx) => (
                 <div key={sprint.id}
                   className="bg-gray-50 dark:bg-gray-900 rounded-lg px-3 py-2.5 flex items-center justify-between gap-2">
+                  {/* Flechas para cambiar el orden — solo el dueño; los miembros solo ven el orden */}
+                  {isOwner && totalSprints > 1 && (
+                    <div className="flex flex-col gap-1 flex-shrink-0">
+                      <button onClick={() => onMoverSprint(bonsai, idx, -1)}
+                        disabled={idx === 0 || guardandoOrden}
+                        aria-label={`Subir el sprint ${sprint.name}`}
+                        className="w-9 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700
+                                   text-gray-500 dark:text-gray-300 text-sm active:bg-gray-200 dark:active:bg-gray-700 disabled:opacity-30">
+                        ▲
+                      </button>
+                      <button onClick={() => onMoverSprint(bonsai, idx, 1)}
+                        disabled={idx === totalSprints - 1 || guardandoOrden}
+                        aria-label={`Bajar el sprint ${sprint.name}`}
+                        className="w-9 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700
+                                   text-gray-500 dark:text-gray-300 text-sm active:bg-gray-200 dark:active:bg-gray-700 disabled:opacity-30">
+                        ▼
+                      </button>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
                       {sprint.generatedByAI && <span className="mr-1">✨</span>}
@@ -200,6 +223,13 @@ function BonsaiCard({ bonsai, onDelete, onAddSprint, onAddSprintAI, onRegenerate
                 className="w-full text-center bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 📨 Invitar al proyecto
               </button>
+              {totalSprints > 1 && (
+                <button onClick={() => onOrdenarPorFecha(bonsai)} disabled={guardandoOrden}
+                  title="Pone los sprints en orden cronológico según la primera fecha de inicio de sus hojas"
+                  className="w-full text-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors disabled:opacity-50">
+                  ↕️ Ordenar sprints por fecha
+                </button>
+              )}
               <button onClick={() => onAddSprintAI(bonsai)}
                 className="flex-1 text-center bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 ✨ Sprint con IA
@@ -256,6 +286,57 @@ export default function BonsaisPage() {
 
   const [showInviteModal, setShowInviteModal] = useState(false)   // ← NUEVO
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [guardandoOrden, setGuardandoOrden] = useState(false)
+  const [errorOrden, setErrorOrden]         = useState("")
+
+  // Cambia la posición de un sprint (▲▼ / ◀▶). Se ve el cambio al instante y se guarda en
+  // el servidor; si falla, se recarga la lista real y se avisa.
+  const handleMoverSprint = async (bonsai: Bonsai, indice: number, direccion: -1 | 1) => {
+    const destino = indice + direccion
+    if (guardandoOrden || destino < 0 || destino >= bonsai.sprints.length) return
+    const sprints = [...bonsai.sprints]
+    ;[sprints[indice], sprints[destino]] = [sprints[destino], sprints[indice]]
+    const actualizado: Bonsai = { ...bonsai, sprints }
+    setErrorOrden("")
+    setBonsais(prev => prev.map(b => (b.id === bonsai.id ? actualizado : b)))
+    setSelected(prev => (prev && prev.id === bonsai.id ? actualizado : prev))
+    setGuardandoOrden(true)
+    try {
+      const res = await fetch(`/api/bonsais/${bonsai.id}/orden`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orden: sprints.map(s => s.id) }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        setErrorOrden(d.error || "No se pudo guardar el orden de los sprints")
+        await fetchData()
+      }
+    } catch {
+      setErrorOrden("No se pudo guardar el orden de los sprints")
+      await fetchData()
+    } finally { setGuardandoOrden(false) }
+  }
+
+  // Pone los sprints en orden cronológico (por la primera fecha de inicio de sus hojas)
+  const handleOrdenarPorFecha = async (bonsai: Bonsai) => {
+    if (guardandoOrden) return
+    if (!confirm("Se reordenarán los sprints de este bonsai por la primera fecha de inicio de sus hojas. Los sprints sin fechas quedarán al final. ¿Continuar?")) return
+    setErrorOrden("")
+    setGuardandoOrden(true)
+    try {
+      const res = await fetch(`/api/bonsais/${bonsai.id}/orden`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ordenarPorFecha: true }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        setErrorOrden(d.error || "No se pudo ordenar los sprints por fecha")
+      }
+      await fetchData()
+    } catch {
+      setErrorOrden("No se pudo ordenar los sprints por fecha")
+    } finally { setGuardandoOrden(false) }
+  }
 
   const handleDownloadBonsaiPdf = async () => {
     if (!selected) return
@@ -423,6 +504,12 @@ export default function BonsaisPage() {
           </div>
         ) : (
           <>
+            {errorOrden && (
+              <div className="mb-4 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex justify-between items-center gap-2">
+                <span>{errorOrden}</span>
+                <button onClick={() => setErrorOrden("")} aria-label="Cerrar aviso" className="text-red-400 hover:text-red-600 px-1">✕</button>
+              </div>
+            )}
             {/* ════════ VISTA MÓVIL ════════ */}
             <div className="md:hidden space-y-4">
               {inProgressBonsais.length > 0 && (
@@ -437,6 +524,9 @@ export default function BonsaisPage() {
                         onAddSprint={(b) => { setSelected(b); setShowSprintModal(true) }}
                         onAddSprintAI={(b) => { setSelected(b); setShowAgenteSprintModal(true) }}
                         onInvite={(b) => { setSelected(b); setShowInviteModal(true) }}   // ← NUEVO
+                        onMoverSprint={handleMoverSprint}
+                        onOrdenarPorFecha={handleOrdenarPorFecha}
+                        guardandoOrden={guardandoOrden}
                         onRegenerate={(prompt) => {
                           setAgenteInitialPrompt(prompt)
                           setAgenteInitialMode("bonsai")
@@ -468,6 +558,9 @@ export default function BonsaisPage() {
                                 onAddSprint={(b) => { setSelected(b); setShowSprintModal(true) }}
                                 onAddSprintAI={(b) => { setSelected(b); setShowAgenteSprintModal(true) }}
                                 onInvite={(b) => { setSelected(b); setShowInviteModal(true) }}   // ← NUEVO
+                                onMoverSprint={handleMoverSprint}
+                                onOrdenarPorFecha={handleOrdenarPorFecha}
+                                guardandoOrden={guardandoOrden}
                                 onRegenerate={(prompt) => {
                                   setAgenteInitialPrompt(prompt)
                                   setAgenteInitialMode("bonsai")
@@ -661,6 +754,13 @@ export default function BonsaisPage() {
                             className="px-3 py-1.5 text-xs bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">
                             {downloadingPdf ? "Generando..." : "📄 Descargar PDF"}
                           </button>
+                          {selected.sprints.length > 1 && (
+                            <button onClick={() => handleOrdenarPorFecha(selected)} disabled={guardandoOrden}
+                              title="Pone los sprints en orden cronológico según la primera fecha de inicio de sus hojas"
+                              className="px-3 py-1.5 text-xs bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">
+                              ↕️ Ordenar por fecha
+                            </button>
+                          )}
                           <a href={`/api/bonsais/${selected.id}/ics`}
                             title="Descargar todas las hojas con fecha de todos los sprints como un solo calendario (.ics) para YouRadar, Google o Apple"
                             className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
@@ -708,7 +808,28 @@ export default function BonsaisPage() {
                             <div>
                               <div className="flex items-center justify-between mb-0.5">
                                 <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Sprint {idx + 1}</span>
-                                {sprint.generatedByAI && <span className="text-xs text-purple-500 font-medium">✨ IA</span>}
+                                <div className="flex items-center gap-1">
+                                  {sprint.generatedByAI && <span className="text-xs text-purple-500 font-medium mr-1">✨ IA</span>}
+                                  {/* Flechas para cambiar el orden — solo el dueño; los miembros solo ven el orden */}
+                                  {selected.userRole === "owner" && selected.sprints.length > 1 && (
+                                    <>
+                                      <button onClick={() => handleMoverSprint(selected, idx, -1)}
+                                        disabled={idx === 0 || guardandoOrden}
+                                        title="Mover antes" aria-label={`Mover antes el sprint ${sprint.name}`}
+                                        className="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 dark:border-gray-700
+                                                   text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:hover:bg-transparent">
+                                        ◀
+                                      </button>
+                                      <button onClick={() => handleMoverSprint(selected, idx, 1)}
+                                        disabled={idx === selected.sprints.length - 1 || guardandoOrden}
+                                        title="Mover después" aria-label={`Mover después el sprint ${sprint.name}`}
+                                        className="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 dark:border-gray-700
+                                                   text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:hover:bg-transparent">
+                                        ▶
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                               <h3 className="font-semibold text-gray-900 dark:text-gray-100 leading-snug">{sprint.name}</h3>
                               {sprint.description && (

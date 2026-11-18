@@ -177,6 +177,13 @@ ESTRUCTURA JSON REQUERIDA:
       )
     }
 
+    // Si el sprint va dentro de un bonsai, queda al final de los que ya tiene
+    let position = 0
+    if (bonsaiId) {
+      const ultimo = await prisma.board.aggregate({ where: { bonsaiId }, _max: { position: true } })
+      position = (ultimo._max.position ?? -1) + 1
+    }
+
     // ── Insertar en Neon ──────────────────────────────────────────────────────
     const board = await prisma.board.create({
       data: {
@@ -184,6 +191,7 @@ ESTRUCTURA JSON REQUERIDA:
         description: sprint.description ?? null,
         ownerId: session.user.id,
         bonsaiId: bonsaiId ?? null,
+        position,
         generatedByAI: true,
         aiPrompt: freeText,
         columns: {
