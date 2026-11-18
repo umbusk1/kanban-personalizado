@@ -2,11 +2,17 @@
 //
 // Genera "fotos" en PDF de un Bonsai completo o de un Sprint individual,
 // enteramente en el navegador (sin pasar por el servidor ni por Claude).
+//
+// Fechas: el PDF muestra el lapso del Sprint / del Bonsai (primera fecha de inicio
+// y última fecha límite de sus hojas) y las fechas de cada Hoja que las tenga.
 
 import jsPDF from "jspdf"
+import { lapsoDeHojas, lapsoDeLapsos, formatearFecha } from "@/lib/lapso"
+
+type Fecha = string | Date | null | undefined
 
 export type PdfTask = { text: string; done: boolean }
-export type PdfCard = { title: string; tasks: PdfTask[] }
+export type PdfCard = { title: string; tasks: PdfTask[]; startDate?: Fecha; dueDate?: Fecha }
 export type PdfSprint = { name: string; description: string | null; cards: PdfCard[] }
 
 const MARGIN        = 15
@@ -29,8 +35,30 @@ function parseTasks(description: string | null): PdfTask[] {
 }
 
 // Convierte una Hoja (card) de KanbanBonsai al formato que espera el PDF.
-export function cardToPdfCard(card: { title: string; description: string | null }): PdfCard {
-  return { title: card.title, tasks: parseTasks(card.description) }
+// Conserva sus fechas de inicio y límite (si las tiene).
+export function cardToPdfCard(card: { title: string; description: string | null; startDate?: Fecha; dueDate?: Fecha }): PdfCard {
+  return { title: card.title, tasks: parseTasks(card.description), startDate: card.startDate, dueDate: card.dueDate }
+}
+
+// Texto con las fechas de una Hoja, o null si no tiene ninguna.
+// (La fuente del PDF no dibuja flechas "→", por eso se usa "Del ... al ...".)
+function textoFechasHoja(card: PdfCard): string | null {
+  const ini = formatearFecha(card.startDate)
+  const fin = formatearFecha(card.dueDate)
+  if (ini && fin) return ini === fin ? `Fecha: ${ini}` : `Del ${ini} al ${fin}`
+  if (fin) return `Límite: ${fin}`
+  if (ini) return `Inicio: ${ini}`
+  return null
+}
+
+// Texto con el lapso de un Sprint o de un Bonsai, o null si no hay ninguna fecha.
+function textoLapso(lapso: { inicio: number | null; fin: number | null }): string | null {
+  const ini = formatearFecha(lapso.inicio)
+  const fin = formatearFecha(lapso.fin)
+  if (ini && fin) return ini === fin ? `Lapso: ${ini}` : `Lapso: ${ini} a ${fin}`
+  if (fin) return `Lapso: hasta ${fin}`
+  if (ini) return `Lapso: desde ${ini}`
+  return null
 }
 
 function checkPageBreak(doc: jsPDF, y: number, needed: number): number {
@@ -51,6 +79,16 @@ function printWrapped(doc: jsPDF, text: string, x: number, y: number, maxWidth: 
   return y
 }
 
+// Línea de fechas en letra más pequeña y gris; al terminar devuelve el texto a negro.
+function printFechas(doc: jsPDF, text: string, x: number, y: number, maxWidth: number, size = 9): number {
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(size)
+  doc.setTextColor(110, 110, 110)
+  y = printWrapped(doc, text, x, y, maxWidth)
+  doc.setTextColor(0, 0, 0)
+  return y
+}
+
 function printCards(doc: jsPDF, cards: PdfCard[], y: number): number {
   if (cards.length === 0) {
     doc.setFont("helvetica", "italic")
@@ -60,10 +98,16 @@ function printCards(doc: jsPDF, cards: PdfCard[], y: number): number {
     return y + LINE_HEIGHT + 2
   }
   for (const card of cards) {
-    y = checkPageBreak(doc, y, LINE_HEIGHT * 2)
+    const fechas = textoFechasHoja(card)
+    // El título, su línea de fechas y la primera tarea se mantienen juntos en la misma página
+    y = checkPageBreak(doc, y, LINE_HEIGHT * (fechas ? 3 : 2))
     doc.setFont("helvetica", "bold")
     doc.setFontSize(11)
     y = printWrapped(doc, `• ${card.title}`, MARGIN + 4, y, USABLE_WIDTH - 4)
+
+    if (fechas) {
+      y = printFechas(doc, fechas, MARGIN + 10, y, USABLE_WIDTH - 10)
+    }
 
     doc.setFont("helvetica", "normal")
     doc.setFontSize(10)
@@ -82,8 +126,8 @@ function printCards(doc: jsPDF, cards: PdfCard[], y: number): number {
   return y
 }
 
-function printSprintHeader(doc: jsPDF, name: string, description: string | null, y: number): number {
-  y = checkPageBreak(doc, y, LINE_HEIGHT * 2)
+function printSprintHeader(doc: jsPDF, name: string, description: string | null, lapso: string | null, y: number): number {
+  y = checkPageBreak(doc, y, LINE_HEIGHT * (lapso ? 3 : 2))
   doc.setFont("helvetica", "bold")
   doc.setFontSize(13)
   y = printWrapped(doc, name, MARGIN, y, USABLE_WIDTH)
@@ -92,10 +136,13 @@ function printSprintHeader(doc: jsPDF, name: string, description: string | null,
     doc.setFontSize(10)
     y = printWrapped(doc, description, MARGIN, y, USABLE_WIDTH)
   }
+  if (lapso) {
+    y = printFechas(doc, lapso, MARGIN, y, USABLE_WIDTH, 10)
+  }
   return y + 3
 }
 
-// PDF de un solo Sprint: nombre, descripción, y cada Hoja con sus tareas.
+// PDF de un solo Sprint: nombre, descripción, lapso, y cada Hoja con sus fechas y tareas.
 export function generateSprintPdf(sprint: { name: string; description: string | null; cards: PdfCard[] }) {
   const doc = new jsPDF()
   let y = MARGIN
@@ -108,6 +155,10 @@ export function generateSprintPdf(sprint: { name: string; description: string | 
     doc.setFontSize(11)
     y = printWrapped(doc, sprint.description, MARGIN, y, USABLE_WIDTH)
   }
+  const lapso = textoLapso(lapsoDeHojas(sprint.cards))
+  if (lapso) {
+    y = printFechas(doc, lapso, MARGIN, y, USABLE_WIDTH, 11)
+  }
   y += 4
 
   y = printCards(doc, sprint.cards, y)
@@ -115,7 +166,8 @@ export function generateSprintPdf(sprint: { name: string; description: string | 
   doc.save(`${sprint.name}.pdf`)
 }
 
-// PDF de un Bonsai completo: nombre, descripción, y cada Sprint con sus Hojas y tareas.
+// PDF de un Bonsai completo: nombre, descripción, lapso total, y cada Sprint
+// (con su propio lapso) con sus Hojas, fechas y tareas.
 export function generateBonsaiPdf(bonsai: { name: string; description: string | null }, sprints: PdfSprint[]) {
   const doc = new jsPDF()
   let y = MARGIN
@@ -128,13 +180,18 @@ export function generateBonsaiPdf(bonsai: { name: string; description: string | 
     doc.setFontSize(11)
     y = printWrapped(doc, bonsai.description, MARGIN, y, USABLE_WIDTH)
   }
+  const lapsosSprints = sprints.map((s) => lapsoDeHojas(s.cards))
+  const lapsoBonsai = textoLapso(lapsoDeLapsos(lapsosSprints))
+  if (lapsoBonsai) {
+    y = printFechas(doc, lapsoBonsai, MARGIN, y, USABLE_WIDTH, 11)
+  }
   y += 6
 
-  for (const sprint of sprints) {
-    y = printSprintHeader(doc, sprint.name, sprint.description, y)
+  sprints.forEach((sprint, i) => {
+    y = printSprintHeader(doc, sprint.name, sprint.description, textoLapso(lapsosSprints[i]), y)
     y = printCards(doc, sprint.cards, y)
     y += 4
-  }
+  })
 
   doc.save(`${bonsai.name}.pdf`)
 }

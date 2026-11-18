@@ -60,6 +60,7 @@ model Board {
   dependsOnId  String?
   ownerId      String
   bonsaiId     String?
+  position     Int      @default(0)   // orden del sprint dentro de su bonsai (0, 1, 2...)
   createdAt    DateTime @default(now())
   owner        User     @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   bonsai       Bonsai?  @relation(fields: [bonsaiId], references: [id])

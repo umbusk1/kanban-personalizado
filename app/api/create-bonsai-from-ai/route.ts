@@ -263,18 +263,21 @@ ESTRUCTURA JSON REQUERIDA:
 
     // CAMBIO: antes se creaba un Sprint a la vez, esperando a que cada uno
     // terminara antes de empezar el siguiente. Ahora se crean todos en paralelo
-    // con Promise.all — el orden final se conserva porque Promise.all respeta
-    // el orden del arreglo de entrada, sin importar cuál termine primero.
+    // con Promise.all. OJO: Promise.all devuelve los resultados en el orden del
+    // arreglo, pero NO garantiza en qué orden se guardan en la base de datos
+    // (createdAt sale con diferencias de milisegundos y al azar). Por eso el orden
+    // propuesto por Claude se guarda explícitamente en `position` (índice 0, 1, 2...).
     const sortedSprints = [...bonsai.sprints].sort((a, b) => a.position - b.position)
 
     const createdBoards = await Promise.all(
-      sortedSprints.map((sprint) =>
+      sortedSprints.map((sprint, indice) =>
         prisma.board.create({
           data: {
             name:          sprint.name,
             description:   sprint.description ?? null,
             ownerId:       session.user.id,
             bonsaiId:      newBonsai.id,
+            position:      indice,
             generatedByAI: true,
             aiPrompt:      freeText,
             columns: {

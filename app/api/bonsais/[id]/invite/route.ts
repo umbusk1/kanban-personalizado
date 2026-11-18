@@ -25,7 +25,7 @@ export async function POST(
     const bonsai = await prisma.bonsai.findFirst({
       where: { id: params.id, ownerId: session.user.id },
       include: {
-        sprints: { select: { id: true, name: true } },
+        sprints: { select: { id: true, name: true }, orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
       },
     })
 

@@ -9,7 +9,7 @@ export async function icsDeBonsai(bonsaiId: string, userId: string, urlBase: str
     where: { id: bonsaiId },
     include: {
       sprints: {
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
         include: { members: true, columns: { orderBy: { position: "asc" }, include: { cards: { orderBy: { position: "asc" } } } } },
       },
     },

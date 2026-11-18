@@ -23,6 +23,13 @@ export async function POST(request: Request) {
       )
     }
 
+    // Si el sprint va dentro de un bonsai, queda al final de los que ya tiene
+    let position = 0
+    if (bonsaiId) {
+      const ultimo = await prisma.board.aggregate({ where: { bonsaiId }, _max: { position: true } })
+      position = (ultimo._max.position ?? -1) + 1
+    }
+
     // Crear tablero con columnas por defecto
     const board = await prisma.board.create({
       data: {
@@ -30,6 +37,7 @@ export async function POST(request: Request) {
         description: description || null,
         ownerId: session.user.id,
         bonsaiId: bonsaiId || null,
+        position,
         columns: {
           create: [
             {
