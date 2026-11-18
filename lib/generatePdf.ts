@@ -89,6 +89,13 @@ function printFechas(doc: jsPDF, text: string, x: number, y: number, maxWidth: n
   return y
 }
 
+// Espacio mínimo para que el título de una hoja, su línea de fechas (si tiene) y su
+// primera tarea queden juntos en la misma página.
+function alturaInicioHoja(card: PdfCard | undefined): number {
+  if (!card) return LINE_HEIGHT  // "Sin hojas."
+  return LINE_HEIGHT * (textoFechasHoja(card) ? 3 : 2)
+}
+
 function printCards(doc: jsPDF, cards: PdfCard[], y: number): number {
   if (cards.length === 0) {
     doc.setFont("helvetica", "italic")
@@ -100,7 +107,7 @@ function printCards(doc: jsPDF, cards: PdfCard[], y: number): number {
   for (const card of cards) {
     const fechas = textoFechasHoja(card)
     // El título, su línea de fechas y la primera tarea se mantienen juntos en la misma página
-    y = checkPageBreak(doc, y, LINE_HEIGHT * (fechas ? 3 : 2))
+    y = checkPageBreak(doc, y, alturaInicioHoja(card))
     doc.setFont("helvetica", "bold")
     doc.setFontSize(11)
     y = printWrapped(doc, `• ${card.title}`, MARGIN + 4, y, USABLE_WIDTH - 4)
@@ -126,8 +133,20 @@ function printCards(doc: jsPDF, cards: PdfCard[], y: number): number {
   return y
 }
 
-function printSprintHeader(doc: jsPDF, name: string, description: string | null, lapso: string | null, y: number): number {
-  y = checkPageBreak(doc, y, LINE_HEIGHT * (lapso ? 3 : 2))
+function printSprintHeader(doc: jsPDF, name: string, description: string | null, lapso: string | null, primeraHoja: PdfCard | undefined, y: number): number {
+  // Se mide el encabezado completo (nombre, descripción y lapso, con sus saltos de línea)
+  // y se exige que quepa junto con el comienzo de su primera hoja: así el encabezado
+  // nunca queda solo al final de una página.
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(13)
+  let lineas = doc.splitTextToSize(name, USABLE_WIDTH).length
+  if (description) {
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10)
+    lineas += doc.splitTextToSize(description, USABLE_WIDTH).length
+  }
+  if (lapso) lineas += 1
+  y = checkPageBreak(doc, y, lineas * LINE_HEIGHT + alturaInicioHoja(primeraHoja))
   doc.setFont("helvetica", "bold")
   doc.setFontSize(13)
   y = printWrapped(doc, name, MARGIN, y, USABLE_WIDTH)
@@ -188,7 +207,7 @@ export function generateBonsaiPdf(bonsai: { name: string; description: string | 
   y += 6
 
   sprints.forEach((sprint, i) => {
-    y = printSprintHeader(doc, sprint.name, sprint.description, textoLapso(lapsosSprints[i]), y)
+    y = printSprintHeader(doc, sprint.name, sprint.description, textoLapso(lapsosSprints[i]), sprint.cards[0], y)
     y = printCards(doc, sprint.cards, y)
     y += 4
   })
